@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "snowblossom.channels.proto";
+option java_outer_classname = "SnowBlossomChannelsProto";
+
+package snowblossom.channels;
+
+import "protolib/snowblossom.proto";
+
+service DialHomeDeviceServer {
+  rpc GetDHTPeers(NullRequest) returns (PeerList) {}
+}
+
+message PeerList {
+  repeated SignedMessage peers = 1;
+}
+message NullRequest {}
+
+
+message SignedMessage {
+  bytes payload = 1; //A serialized SignedMessagePayload
+  repeated SignatureEntry signatures = 2;
+}
+
+message SignedMessagePayload {
+  AddressSpec claim = 1;
+  int64 timestamp = 2;
+  bytes snow_block_hash = 3;
+  oneof z {
+    ChannelPeerInfo peer_info = 4;
+  }
+}
+
+message ChannelPeerInfo {
+  repeated ConnectInfo connect_infos = 1;
+  string version = 2;
+  bytes address_spec_hash = 3; //Also the node ID
+}
+
+message ConnectInfo {
+  string protocol = 1; //ipv4, ipv6, onion
+  string host = 2;
+  int32 port = 3;
+}
+
+

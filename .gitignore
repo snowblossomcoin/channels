@@ -1,0 +1,4 @@
+bazel-*
+.metadata/
+.project/
+.project-data-dir/
