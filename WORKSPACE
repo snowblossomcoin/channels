@@ -1,3 +1,12 @@
+maven_jar(
+  name = "bcpkix",
+  artifact = "org.bouncycastle:bcpkix-jdk15on:1.60",
+  sha1 = "d0c46320fbc07be3a24eb13a56cee4e3d38e0c75",
+)
+
+
+
+
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",

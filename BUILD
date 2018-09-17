@@ -13,6 +13,8 @@ java_library(
     "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
     "@junit_junit//jar",
     "@snowblossom//protolib",
+    "@bcprov//jar",
+    "@bcpkix//jar",
     ":protolib",
   ],
 )
@@ -46,3 +48,17 @@ java_test(
       ":channelslib",
     ],
 )
+
+java_test(
+    name = "cert_gen_test",
+    srcs = ["test/CertGenTest.java"],
+    test_class = "channels.CertGenTest",
+    size="small",
+    deps = [
+      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      ":channelslib",
+    ],
+)
+
