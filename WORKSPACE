@@ -4,13 +4,23 @@ maven_jar(
   sha1 = "d0c46320fbc07be3a24eb13a56cee4e3d38e0c75",
 )
 
+maven_jar(
+  name = "netty_tcnative",
+  artifact = "io.netty:netty-tcnative-boringssl-static:2.0.15.Final",
+  sha1 = "8310b263ddbe3ffa021cdb7963bfdba3f9c50f8d",
+)
 
+git_repository(
+  name = "org_pubref_rules_protobuf",
+  remote = "https://github.com/fireduck64/rules_protobuf",
+  tag = "guava-26-android",
+)
 
 
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-  tag = "1.3.3",
+  tag = "1.3.3.1",
 )
 
 git_repository(
@@ -25,12 +35,6 @@ maven_jar(
   sha1 = "8c3492f7662fa1cbf8ca76a0f5eb1146f7725acd",
 )
 
-
-git_repository(
-  name = "org_pubref_rules_protobuf",
-  remote = "https://github.com/fireduck64/rules_protobuf",
-  tag = "guava-26-android",
-)
 
 load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_repositories")
 java_proto_repositories()

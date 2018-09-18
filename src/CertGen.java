@@ -3,6 +3,8 @@ package snowblossom.channels;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.security.cert.Certificate;
+import java.security.PrivateKey;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 
 import org.bouncycastle.asn1.x500.X500Name;
@@ -15,30 +17,62 @@ import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
+import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
 
 import com.google.protobuf.ByteString;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemWriter;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import io.grpc.netty.GrpcSslContexts;
+import io.netty.handler.ssl.SslContext;
 
+import snowblossom.proto.WalletKeyPair;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.AddressSpec;
+import snowblossom.lib.KeyUtil;
+import snowblossom.client.WalletUtil;
+
+import java.util.Random;
 
 public class CertGen
 {
-  public static ByteString generateSelfSignedCert(KeyPair key_pair)
+  public static SslContext getServerSSLContext(WalletDatabase db)
     throws Exception
   {
-    String password="";
-    KeyStore ks = KeyStore.getInstance("JKS");
-    ks.load(null, password.toCharArray());
+    if (db.getKeysCount() != 1) throw new RuntimeException("Unexpected number of keys in wallet db");
+    if (db.getAddressesCount() != 1) throw new RuntimeException("Unexpected number of addresses in wallet db");
+    WalletKeyPair wkp = db.getKeys(0);
+    AddressSpec address_spec = db.getAddresses(0);
+
+    KeyPair pair = KeyUtil.decodeKeypair(wkp);
+
+    X509Certificate cert = generateSelfSignedCert(pair, address_spec);
+
+    ByteString pem_cert = pemCodeCert(cert);
+    ByteString pem_prv = pemCodeECPrivateKey(pair.getPrivate());
+
+    return GrpcSslContexts.forServer(pem_cert.newInput(), pem_prv.newInput()).build();
+
+  }
+
+  public static X509Certificate generateSelfSignedCert(KeyPair key_pair, AddressSpec spec)
+    throws Exception
+  {
 
     byte[] encoded_pub= key_pair.getPublic().getEncoded();
     SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(
       ASN1Sequence.getInstance(encoded_pub));
 
-    String dn="CN=Test";
+    String dn="CN=Test, O=B";
     X500Name issuer = new X500Name(dn);
     BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
     Date notBefore = new Date(System.currentTimeMillis());
@@ -48,31 +82,66 @@ public class CertGen
     X509v3CertificateBuilder cert_builder = new X509v3CertificateBuilder(
       issuer, serial, notBefore, notAfter, subject, subjectPublicKeyInfo);
 
-    String algorithm = "SHA256withECDSA";
+    System.out.println(org.bouncycastle.asn1.x509.Extension.subjectAlternativeName);
+    ASN1ObjectIdentifier snow_claim_oid = new ASN1ObjectIdentifier("2.5.29.134");
+
+    System.out.println(spec);
+
+    byte[] claim_data = spec.toByteString().toByteArray();
+    System.out.println("Claim size: " + claim_data.length);
+
+    cert_builder.addExtension(snow_claim_oid, true, claim_data);
+
+    String algorithm = "SHA256withRSA";
 
     AsymmetricKeyParameter privateKeyAsymKeyParam = PrivateKeyFactory.createKey(key_pair.getPrivate().getEncoded());
 
     AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
     AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
 
-    ContentSigner sigGen = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(privateKeyAsymKeyParam);
+    //ContentSigner sigGen = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(privateKeyAsymKeyParam);
+    ContentSigner sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(privateKeyAsymKeyParam);
 
     X509CertificateHolder certificateHolder = cert_builder.build(sigGen);
 
-    System.out.println(certificateHolder);
-    
     X509Certificate cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certificateHolder);
-    X509Certificate[] serverChain = new X509Certificate[1];
-    serverChain[0]=cert;
+    return cert;
+  }
 
-    ks.setKeyEntry("alias", key_pair.getPrivate(), password.toCharArray(), serverChain);
+  public static ByteString pemCode(byte[] encoded, String type)
+  {
+    try
+    {
+      PemObject po = new PemObject(type, encoded);
 
-    ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-    ks.store(b_out, password.toCharArray());
+      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
 
-    return ByteString.copyFrom(b_out.toByteArray());
+      PemWriter w = new PemWriter( new OutputStreamWriter(b_out));
+
+      w.writeObject(po);
+      w.flush();
+      w.close();
+
+      return ByteString.copyFrom(b_out.toByteArray());
+    }
+    catch(java.io.IOException e)
+    {
+      throw new RuntimeException(e);
+    }
 
   }
+  public static ByteString pemCodeCert(Certificate cert)
+    throws java.security.cert.CertificateEncodingException
+  {
+    return pemCode(cert.getEncoded(), "CERTIFICATE");
+
+  }
+  public static ByteString pemCodeECPrivateKey(PrivateKey key)
+  {
+    return pemCode(key.getEncoded(), "PRIVATE KEY");
+  }
+
+  
 
 }
 

@@ -8,7 +8,7 @@ package snowblossom.channels;
 
 import "protolib/snowblossom.proto";
 
-service DialHomeDeviceServer {
+service StargateService {
   rpc GetDHTPeers(NullRequest) returns (PeerList) {}
 }
 
@@ -44,4 +44,15 @@ message ConnectInfo {
   int32 port = 3;
 }
 
+message ChannelBlock {
+  bytes channel_id=1;
+  bytes block_hash=2;
+  bytes prev_hash=3;
 
+  repeated ContentInfo referenced_content = 4;
+
+}
+
+message ContentInfo {
+  
+}

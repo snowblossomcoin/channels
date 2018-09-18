@@ -16,6 +16,7 @@ java_library(
     "@bcprov//jar",
     "@bcpkix//jar",
     ":protolib",
+    "@netty_tcnative//jar",
   ],
 )
 
@@ -53,12 +54,15 @@ java_test(
     name = "cert_gen_test",
     srcs = ["test/CertGenTest.java"],
     test_class = "channels.CertGenTest",
-    size="small",
+    size="medium",
     deps = [
       "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@junit_junit//jar",
       "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
       ":channelslib",
+      ":protolib",
     ],
 )
 
