@@ -37,6 +37,10 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
     
   }
 
+  /**
+   * if provided, the expected server spec hash is used to only validate certs
+   * that match that.  If null, then allow any cert.
+   */
   public static TrustManagerFactory getFactory(AddressSpecHash expected_server_spec_hash)
     throws Exception
   {
@@ -90,14 +94,12 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
         throw new CertificateException("Unexpected cert chain length");
       }
       X509Certificate cert = chain[0];
-      System.out.println(cert);
 
       byte[] claim_data = cert.getExtensionValue("2.5.29.134");
       if (claim_data == null)
       {
         throw new CertificateException("Missing snowblossom claim data in oid 2.5.29.134");
       }
-      System.out.println("Decoded claim size: " + claim_data.length);
       AddressSpec address_spec;
 
       try
@@ -134,11 +136,14 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
         String algo = SignatureUtil.getAlgo(address_spec.getSigSpecs(0).getSignatureType());
         PublicKey address_key = KeyUtil.decodeKey(address_spec.getSigSpecs(0).getPublicKey(), algo);
 
+        // Since we can't use verify below, just checking that the keys
+        // are the same
         if (!address_key.equals(cert.getPublicKey()))
         {
           throw new CertificateException("Public key mismatch");
         }
 
+        // This gets into some recusion loop and overflows the stack.  shrug.
         //cert.verify(address_key, provider);
       }
       catch(Exception e)
@@ -147,7 +152,6 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
       }
       logger.info("Certificate checks out");
 
-      //logger.info(cert.toString());
     }
 
 
