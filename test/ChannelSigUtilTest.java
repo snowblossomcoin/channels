@@ -37,7 +37,7 @@ public class ChannelSigUtilTest
   }
 
   @Test
-  public void testGenAndService()
+  public void testSignAndVerify()
     throws Exception
   {
     TreeMap<String,String> config_map = new TreeMap<>();
