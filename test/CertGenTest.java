@@ -53,7 +53,7 @@ public class CertGenTest
   {
     TreeMap<String,String> config_map = new TreeMap<>();
     config_map.put("key_count", "1");
-    config_map.put("key_mode", "tls");
+    //config_map.put("key_mode", "tls");
 
     WalletDatabase db = WalletUtil.makeNewDatabase(new ConfigMem(config_map), new NetworkParamsProd());
 

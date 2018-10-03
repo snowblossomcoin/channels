@@ -40,6 +40,8 @@ import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.AddressSpec;
 import snowblossom.lib.KeyUtil;
 import snowblossom.client.WalletUtil;
+import snowblossom.channels.proto.SignedMessage;
+import snowblossom.channels.proto.SignedMessagePayload;
 
 import java.util.Random;
 
@@ -52,23 +54,24 @@ public class CertGen
     if (db.getAddressesCount() != 1) throw new RuntimeException("Unexpected number of addresses in wallet db");
     WalletKeyPair wkp = db.getKeys(0);
     AddressSpec address_spec = db.getAddresses(0);
+    
+    WalletKeyPair tls_wkp = KeyUtil.generateWalletRSAKey(2048);
+    KeyPair tls_pair = KeyUtil.decodeKeypair(tls_wkp);
 
-    KeyPair pair = KeyUtil.decodeKeypair(wkp);
-
-    X509Certificate cert = generateSelfSignedCert(pair, address_spec);
+    X509Certificate cert = generateSelfSignedCert(wkp, tls_wkp, address_spec);
 
     ByteString pem_cert = pemCodeCert(cert);
-    ByteString pem_prv = pemCodeECPrivateKey(pair.getPrivate());
+    ByteString pem_prv = pemCodeECPrivateKey(tls_pair.getPrivate());
 
     return GrpcSslContexts.forServer(pem_cert.newInput(), pem_prv.newInput()).build();
-
   }
 
-  public static X509Certificate generateSelfSignedCert(KeyPair key_pair, AddressSpec spec)
+  public static X509Certificate generateSelfSignedCert(WalletKeyPair key_pair, WalletKeyPair tls_wkp, AddressSpec spec)
     throws Exception
   {
 
-    byte[] encoded_pub= key_pair.getPublic().getEncoded();
+
+    byte[] encoded_pub= tls_wkp.getPublicKey().toByteArray();
     SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(
       ASN1Sequence.getInstance(encoded_pub));
 
@@ -87,14 +90,16 @@ public class CertGen
 
     System.out.println(spec);
 
-    byte[] claim_data = spec.toByteString().toByteArray();
-    System.out.println("Claim size: " + claim_data.length);
+    SignedMessagePayload payload = SignedMessagePayload.newBuilder().setTlsPublicKey(tls_wkp.getPublicKey()).build();
+    SignedMessage sm = ChannelSigUtil.signMessage(spec, key_pair, payload);
 
-    cert_builder.addExtension(snow_claim_oid, true, claim_data);
+    byte[] sm_data = sm.toByteString().toByteArray();
+
+    cert_builder.addExtension(snow_claim_oid, true, sm_data);
 
     String algorithm = "SHA256withRSA";
 
-    AsymmetricKeyParameter privateKeyAsymKeyParam = PrivateKeyFactory.createKey(key_pair.getPrivate().getEncoded());
+    AsymmetricKeyParameter privateKeyAsymKeyParam = PrivateKeyFactory.createKey(tls_wkp.getPrivateKey().toByteArray());
 
     AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
     AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
@@ -140,8 +145,6 @@ public class CertGen
   {
     return pemCode(key.getEncoded(), "PRIVATE KEY");
   }
-
-  
 
 }
 

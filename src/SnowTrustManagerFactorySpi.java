@@ -16,9 +16,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import snowblossom.proto.AddressSpec;
+import snowblossom.channels.proto.SignedMessage;
+import snowblossom.channels.proto.SignedMessagePayload;
 import snowblossom.lib.*;
 import java.security.Provider;
 import java.security.PublicKey;
+import com.google.protobuf.ByteString;
 
 import org.bouncycastle.asn1.*;
 
@@ -46,9 +49,6 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
   {
     String algo = TrustManagerFactory. getDefaultAlgorithm();
     Provider prov = TrustManagerFactory.getInstance(algo).getProvider();
-
-
-
 
     return new SnowTrustManagerFactory(new SnowTrustManagerFactorySpi(expected_server_spec_hash, prov), prov, algo);
   }
@@ -100,7 +100,9 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
       {
         throw new CertificateException("Missing snowblossom claim data in oid 2.5.29.134");
       }
+      SignedMessage sm;
       AddressSpec address_spec;
+      ByteString tls_pub_key;
 
       try
       {
@@ -108,7 +110,12 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
         ASN1StreamParser parser = new ASN1StreamParser(claim_data);
         ASN1Encodable o = parser.readObject();
         DEROctetStringParser dero = (DEROctetStringParser) o;
-        address_spec = AddressSpec.parseFrom(dero.getOctetStream());
+        sm = SignedMessage.parseFrom(dero.getOctetStream());
+        ChannelSigUtil.validateSignedMessage(sm);
+        SignedMessagePayload payload = SignedMessagePayload.parseFrom(sm.getPayload());
+        //System.out.println("Payload: " + payload);
+        address_spec = payload.getClaim();
+        tls_pub_key = payload.getTlsPublicKey();
       }
       catch(Exception e)
       {
@@ -128,17 +135,25 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
           throw new CertificateException("Server did not claim the expected address");
         }
       }
-      if (address_spec.getRequiredSigners() != 1) throw new CertificateException("Multisig not supported for TLS certs");
-      if (address_spec.getSigSpecsCount() != 1) throw new CertificateException("Multisig not supported for TLS certs");
+      //if (address_spec.getRequiredSigners() != 1) throw new CertificateException("Multisig not supported for TLS certs");
+      //if (address_spec.getSigSpecsCount() != 1) throw new CertificateException("Multisig not supported for TLS certs");
       try
       {
 
-        String algo = SignatureUtil.getAlgo(address_spec.getSigSpecs(0).getSignatureType());
-        PublicKey address_key = KeyUtil.decodeKey(address_spec.getSigSpecs(0).getPublicKey(), algo);
+        //String algo = SignatureUtil.getAlgo(address_spec.getSigSpecs(0).getSignatureType());
+        String algo = "RSA";
+        PublicKey address_key = KeyUtil.decodeKey(tls_pub_key, algo);
 
         // Since we can't use verify below, just checking that the keys
         // are the same
-        if (!address_key.equals(cert.getPublicKey()))
+        ByteString address_key_bs = ByteString.copyFrom(address_key.getEncoded());
+        ByteString cert_key_bs = ByteString.copyFrom(cert.getPublicKey().getEncoded());
+
+        //System.out.println("Address key: " + HexUtil.getHexString(address_key_bs));
+        //System.out.println("Cert key: " + HexUtil.getHexString(cert_key_bs));
+
+        //if (!address_key.equals(cert.getPublicKey()))
+        if (!address_key_bs.equals(cert_key_bs))
         {
           throw new CertificateException("Public key mismatch");
         }

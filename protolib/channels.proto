@@ -36,6 +36,7 @@ message SignedMessagePayload {
   bytes snow_block_hash = 3;
   oneof z {
     ChannelPeerInfo peer_info = 4;
+    bytes tls_public_key = 5;
 
     ChannelBlock channel_block = 20;
   }
