@@ -9,8 +9,9 @@ import snowblossom.channels.proto.*;
 public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 {
   @Override
-  public void getDHTPeers(NullRequest nr, StreamObserver<PeerList> o)
+  public void getDHTPeers(GetDHTPeersRequest req, StreamObserver<PeerList> o)
   {
+    
     o.onNext( PeerList.newBuilder().build() );
     o.onCompleted();
 

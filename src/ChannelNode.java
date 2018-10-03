@@ -28,6 +28,7 @@ import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.GrpcSslContexts;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslContext;
+import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.client.WalletUtil;
 
 import java.io.File;
@@ -39,6 +40,7 @@ public class ChannelNode
 
   private WalletDatabase wallet_db;
   private NetworkParams params;
+  private ChannelsDB db;
 
   public static void main(String args[])
 		throws Exception
@@ -75,6 +77,8 @@ public class ChannelNode
       wallet_db = WalletUtil.makeNewDatabase(config, params);
       WalletUtil.saveWallet(wallet_db, wallet_path);
     }
+
+    db = new ChannelsDB(config, new JRocksDB(config) );
     
     testSelf();
 
@@ -107,7 +111,7 @@ public class ChannelNode
       .build();
 
     StargateServiceBlockingStub stub = StargateServiceGrpc.newBlockingStub(channel);
-    stub.getDHTPeers(NullRequest.newBuilder().build());
+    stub.getDHTPeers(GetDHTPeersRequest.newBuilder().build());
 
   }
 

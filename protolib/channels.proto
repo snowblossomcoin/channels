@@ -9,18 +9,25 @@ package snowblossom.channels;
 import "protolib/snowblossom.proto";
 
 service StargateService {
-  rpc GetDHTPeers(NullRequest) returns (PeerList) {}
+  rpc GetDHTPeers(GetDHTPeersRequest) returns (PeerList) {}
 }
+
+message GetDHTPeersRequest {
+  SignedMessage self_peer_info = 1;
+
+}
+
 
 message PeerList {
   repeated SignedMessage peers = 1;
 }
+
 message NullRequest {}
 
 
 message SignedMessage {
   bytes payload = 1; //A serialized SignedMessagePayload
-  repeated SignatureEntry signatures = 2;
+  bytes signature = 2;
 }
 
 message SignedMessagePayload {
@@ -29,6 +36,8 @@ message SignedMessagePayload {
   bytes snow_block_hash = 3;
   oneof z {
     ChannelPeerInfo peer_info = 4;
+
+    ChannelBlock channel_block = 20;
   }
 }
 
@@ -38,11 +47,24 @@ message ChannelPeerInfo {
   bytes address_spec_hash = 3; //Also the node ID
 }
 
+// The local information we store about a peer
+message LocalPeerInfo {
+
+  ChannelPeerInfo info = 1;
+  SignedMessage signed_peer_info = 2;
+  int64 last_connected = 3;
+  int64 last_attempted = 4;
+  double running_success_average = 5;
+}
+
 message ConnectInfo {
   string protocol = 1; //ipv4, ipv6, onion
   string host = 2;
   int32 port = 3;
 }
+
+
+// Actual channel stuff
 
 message ChannelBlock {
   bytes channel_id=1;
@@ -50,9 +72,10 @@ message ChannelBlock {
   bytes prev_hash=3;
 
   repeated ContentInfo referenced_content = 4;
-
 }
 
 message ContentInfo {
   
 }
+
+
