@@ -2,12 +2,15 @@ package snowblossom.channels;
 
 import snowblossom.lib.ValidationException;
 import snowblossom.lib.SignatureUtil;
+import snowblossom.lib.DigestUtil;
 import snowblossom.channels.proto.*;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.SigSpec;
 
 import com.google.protobuf.ByteString;
+import java.security.MessageDigest;
+
 
 public class ChannelSigUtil
 {
@@ -26,10 +29,15 @@ public class ChannelSigUtil
         throw new ValidationException("Multisig not supported");
       }
 
-
+      MessageDigest md = DigestUtil.getMD();
+      byte[] hash = md.digest( sm.getPayload().toByteArray());
       SigSpec sig_spec = claim.getSigSpecs(0);
 
-      SignatureUtil.checkSignature(sig_spec, sm.getPayload(), signature);
+      if (!SignatureUtil.checkSignature(sig_spec, ByteString.copyFrom(hash), signature))
+      {
+        throw new ValidationException("Signature match failure");
+      }
+
 
     }
     catch(com.google.protobuf.InvalidProtocolBufferException e)
@@ -63,7 +71,10 @@ public class ChannelSigUtil
 
     signed.setPayload(payload_data);
 
-    signed.setSignature( SignatureUtil.sign(wkp, payload_data) );
+    MessageDigest md = DigestUtil.getMD();
+    byte[] hash = md.digest( payload_data.toByteArray());
+
+    signed.setSignature( SignatureUtil.sign(wkp, ByteString.copyFrom(hash)) );
 
     return signed.build();
   }

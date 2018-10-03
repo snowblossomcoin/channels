@@ -66,3 +66,19 @@ java_test(
     ],
 )
 
+java_test(
+    name = "channel_sigutil_test",
+    srcs = ["test/ChannelSigUtilTest.java"],
+    test_class = "channels.ChannelSigUtilTest",
+    size="medium",
+    deps = [
+      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
