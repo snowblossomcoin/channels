@@ -39,6 +39,8 @@ import snowblossom.proto.WalletKeyPair;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.AddressSpec;
 import snowblossom.lib.KeyUtil;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 import snowblossom.client.WalletUtil;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.channels.proto.SignedMessagePayload;
@@ -59,6 +61,7 @@ public class CertGen
     KeyPair tls_pair = KeyUtil.decodeKeypair(tls_wkp);
 
     X509Certificate cert = generateSelfSignedCert(wkp, tls_wkp, address_spec);
+    System.out.println(cert);
 
     ByteString pem_cert = pemCodeCert(cert);
     ByteString pem_prv = pemCodeECPrivateKey(tls_pair.getPrivate());
@@ -66,16 +69,25 @@ public class CertGen
     return GrpcSslContexts.forServer(pem_cert.newInput(), pem_prv.newInput()).build();
   }
 
+
+  /**
+   * @param key_pair Key pair to use to sign the cert inner signed message, the node key
+   * @param tls_wkp The temporary key to use just for this cert and TLS sessions
+   * @param spec Address for 'key_pair'
+   */
   public static X509Certificate generateSelfSignedCert(WalletKeyPair key_pair, WalletKeyPair tls_wkp, AddressSpec spec)
     throws Exception
   {
+
+    AddressSpecHash address_hash = AddressUtil.getHashForSpec(spec);
+    String address = AddressUtil.getAddressString(ChannelGlobals.ADDRESS_STRING, address_hash);
 
 
     byte[] encoded_pub= tls_wkp.getPublicKey().toByteArray();
     SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(
       ASN1Sequence.getInstance(encoded_pub));
 
-    String dn="CN=Test, O=B";
+    String dn=String.format("CN=%s, O=SnowChannel", address);
     X500Name issuer = new X500Name(dn);
     BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
     Date notBefore = new Date(System.currentTimeMillis());

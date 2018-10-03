@@ -111,9 +111,10 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
         ASN1Encodable o = parser.readObject();
         DEROctetStringParser dero = (DEROctetStringParser) o;
         sm = SignedMessage.parseFrom(dero.getOctetStream());
+
+
         ChannelSigUtil.validateSignedMessage(sm);
         SignedMessagePayload payload = SignedMessagePayload.parseFrom(sm.getPayload());
-        //System.out.println("Payload: " + payload);
         address_spec = payload.getClaim();
         tls_pub_key = payload.getTlsPublicKey();
       }
@@ -135,12 +136,10 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
           throw new CertificateException("Server did not claim the expected address");
         }
       }
-      //if (address_spec.getRequiredSigners() != 1) throw new CertificateException("Multisig not supported for TLS certs");
-      //if (address_spec.getSigSpecsCount() != 1) throw new CertificateException("Multisig not supported for TLS certs");
+
       try
       {
 
-        //String algo = SignatureUtil.getAlgo(address_spec.getSigSpecs(0).getSignatureType());
         String algo = "RSA";
         PublicKey address_key = KeyUtil.decodeKey(tls_pub_key, algo);
 
@@ -152,7 +151,6 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
         //System.out.println("Address key: " + HexUtil.getHexString(address_key_bs));
         //System.out.println("Cert key: " + HexUtil.getHexString(cert_key_bs));
 
-        //if (!address_key.equals(cert.getPublicKey()))
         if (!address_key_bs.equals(cert_key_bs))
         {
           throw new CertificateException("Public key mismatch");
