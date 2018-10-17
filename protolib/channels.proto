@@ -14,16 +14,11 @@ service StargateService {
 
 message GetDHTPeersRequest {
   SignedMessage self_peer_info = 1;
-
 }
-
 
 message PeerList {
   repeated SignedMessage peers = 1;
 }
-
-message NullRequest {}
-
 
 message SignedMessage {
   bytes payload = 1; //A serialized SignedMessagePayload
@@ -43,7 +38,8 @@ message SignedMessagePayload {
 }
 
 message ChannelPeerInfo {
-  repeated ConnectInfo connect_infos = 1;
+  //repeated ConnectInfo connect_infos = 1;
+  map<string, ConnectInfo> connect_infos = 1;
   string version = 2;
   bytes address_spec_hash = 3; //Also the node ID
 }

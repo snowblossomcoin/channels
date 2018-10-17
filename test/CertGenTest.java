@@ -62,7 +62,7 @@ public class CertGenTest
     
     Server s = NettyServerBuilder
       .forPort(port)
-      .addService(new DHTServer())
+      .addService(new DHTServer(null))
       .sslContext(CertGen.getServerSSLContext(db))
       .build();
     s.start();

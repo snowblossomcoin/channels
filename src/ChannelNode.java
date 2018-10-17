@@ -4,6 +4,8 @@ import duckutil.Config;
 import duckutil.ConfigFile;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.AddressSpec;
+import snowblossom.lib.AddressSpecHash;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +43,8 @@ public class ChannelNode
   private WalletDatabase wallet_db;
   private NetworkParams params;
   private ChannelsDB db;
+  private NetworkExaminer net_ex;
+  private PeerManager peer_manager;
 
   public static void main(String args[])
 		throws Exception
@@ -79,10 +83,32 @@ public class ChannelNode
     }
 
     db = new ChannelsDB(config, new JRocksDB(config) );
-    
+    net_ex = new NetworkExaminer(this);
+    peer_manager = new PeerManager(this);
+   
+    startServer();
+
     testSelf();
 
   }
+
+  private void startServer()
+    throws Exception
+  {  
+    int port = 9118;
+
+    Server s = NettyServerBuilder
+      .forPort(port)
+      .addService(new DHTServer(this))
+      .sslContext(CertGen.getServerSSLContext(wallet_db))
+      .build();
+    s.start();
+
+  }
+
+  public NetworkExaminer getNetworkExaminer(){return net_ex;}
+  public PeerManager getPeerManager(){return peer_manager;}
+  public ChannelsDB getDB(){return db;}
 
   public void testSelf()
 		throws Exception
@@ -92,15 +118,7 @@ public class ChannelNode
     Random rnd = new Random();
     int port = rnd.nextInt(60000) + 1024;
     port = 9118;
-    
-    Server s = NettyServerBuilder
-      .forPort(port)
-      .addService(new DHTServer())
-      .sslContext(CertGen.getServerSSLContext(wallet_db))
-      .build();
-    s.start();
-
-    SslContext ssl_ctx = GrpcSslContexts.forClient()
+      SslContext ssl_ctx = GrpcSslContexts.forClient()
       .trustManager(SnowTrustManagerFactorySpi.getFactory(null))
     .build();
 
@@ -112,6 +130,19 @@ public class ChannelNode
 
     StargateServiceBlockingStub stub = StargateServiceGrpc.newBlockingStub(channel);
     stub.getDHTPeers(GetDHTPeersRequest.newBuilder().build());
+
+  }
+
+  public AddressSpecHash getNodeID()
+  {
+    AddressSpec spec = wallet_db.getAddresses(0);
+    return AddressUtil.getHashForSpec(spec); 
+  }
+
+  public SignedMessage signMessage(SignedMessagePayload starting_payload)
+    throws ValidationException
+  {
+    return ChannelSigUtil.signMessage( wallet_db.getAddresses(0), wallet_db.getKeys(0), starting_payload);
 
   }
 

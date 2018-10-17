@@ -27,6 +27,7 @@ public class PeerManager
   }
 
   public PeerLink connectNode(ChannelPeerInfo info, String reason)
+    throws Exception
   {
     AddressSpecHash node_id = new AddressSpecHash(info.getAddressSpecHash());
     synchronized(reason_map)
@@ -41,7 +42,7 @@ public class PeerManager
     }
     if (link != null) return link;
 
-    link = new PeerLink(info);
+    link = new PeerLink(info, node);
     synchronized(link_map)
     {
       link_map.put(node_id, link);
@@ -56,7 +57,6 @@ public class PeerManager
     synchronized(reason_map)
     {
       ids.addAll(reason_map.get(reason));
-
     }
 
     LinkedList<PeerLink> links = new LinkedList<>();
@@ -71,10 +71,8 @@ public class PeerManager
         }
       }
     }
-
     return links;
   
   }
-
   
 }

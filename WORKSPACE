@@ -26,7 +26,7 @@ git_repository(
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  tag = "v1.0.15",
+  tag = "v1.0.16",
 )
 
 maven_jar(
