@@ -43,6 +43,24 @@ public class NetworkExaminer
     info.setVersion(ChannelGlobals.VERSION);
     info.setAddressSpecHash(node.getNodeID().getBytes());
 
+    if (ipv6_host != null)
+    {
+      info.putConnectInfos( "ipv6", ConnectInfo.newBuilder()
+        .setProtocol("ipv6")
+        .setHost(ipv6_host)
+        .setPort( ChannelGlobals.NETWORK_PORT)
+        .build() );
+    }
+
+    if (ipv4_host != null)
+    {
+      info.putConnectInfos( "ipv4", ConnectInfo.newBuilder()
+        .setProtocol("ipv4")
+        .setHost(ipv4_host)
+        .setPort( ChannelGlobals.NETWORK_PORT)
+        .build() );
+    }
+
 
 
     return info.build();

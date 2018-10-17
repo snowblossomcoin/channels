@@ -45,6 +45,8 @@ public class ChannelNode
   private ChannelsDB db;
   private NetworkExaminer net_ex;
   private PeerManager peer_manager;
+  private DHTServer dht_server;
+  private DHTMaintainer dht_maintainer;
 
   public static void main(String args[])
 		throws Exception
@@ -85,21 +87,27 @@ public class ChannelNode
     db = new ChannelsDB(config, new JRocksDB(config) );
     net_ex = new NetworkExaminer(this);
     peer_manager = new PeerManager(this);
+    dht_server = new DHTServer(this);
+    dht_maintainer = new DHTMaintainer(this);
    
+    dht_maintainer.start();
     startServer();
 
-    testSelf();
+    String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
+    logger.info("My node address is: " + node_addr);
+
+    //testSelf();
 
   }
 
   private void startServer()
     throws Exception
   {  
-    int port = 9118;
+    int port = ChannelGlobals.NETWORK_PORT;
 
     Server s = NettyServerBuilder
       .forPort(port)
-      .addService(new DHTServer(this))
+      .addService(dht_server)
       .sslContext(CertGen.getServerSSLContext(wallet_db))
       .build();
     s.start();
@@ -109,6 +117,7 @@ public class ChannelNode
   public NetworkExaminer getNetworkExaminer(){return net_ex;}
   public PeerManager getPeerManager(){return peer_manager;}
   public ChannelsDB getDB(){return db;}
+  public DHTServer getDHTServer(){return dht_server;}
 
   public void testSelf()
 		throws Exception
@@ -117,7 +126,8 @@ public class ChannelNode
 
     Random rnd = new Random();
     int port = rnd.nextInt(60000) + 1024;
-    port = 9118;
+    port = ChannelGlobals.NETWORK_PORT;
+
       SslContext ssl_ctx = GrpcSslContexts.forClient()
       .trustManager(SnowTrustManagerFactorySpi.getFactory(null))
     .build();
@@ -129,7 +139,7 @@ public class ChannelNode
       .build();
 
     StargateServiceBlockingStub stub = StargateServiceGrpc.newBlockingStub(channel);
-    stub.getDHTPeers(GetDHTPeersRequest.newBuilder().build());
+    stub.getDHTPeers(GetDHTPeersRequest.newBuilder().setSelfPeerInfo(dht_server.getSignedPeerInfoSelf()).build());
 
   }
 

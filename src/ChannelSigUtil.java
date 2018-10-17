@@ -14,7 +14,7 @@ import java.security.MessageDigest;
 
 public class ChannelSigUtil
 {
-  public static void validateSignedMessage(SignedMessage sm)
+  public static SignedMessagePayload validateSignedMessage(SignedMessage sm)
     throws ValidationException
   {
     try
@@ -37,7 +37,12 @@ public class ChannelSigUtil
       {
         throw new ValidationException("Signature match failure");
       }
+      if (payload.getTimestamp() > ChannelGlobals.ALLOWED_CLOCK_SKEW + System.currentTimeMillis())
+      {
+        throw new ValidationException("Signed message too far into future");
+      }
 
+      return payload;
 
     }
     catch(com.google.protobuf.InvalidProtocolBufferException e)

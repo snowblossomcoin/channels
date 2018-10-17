@@ -38,7 +38,6 @@ message SignedMessagePayload {
 }
 
 message ChannelPeerInfo {
-  //repeated ConnectInfo connect_infos = 1;
   map<string, ConnectInfo> connect_infos = 1;
   string version = 2;
   bytes address_spec_hash = 3; //Also the node ID
@@ -51,7 +50,8 @@ message LocalPeerInfo {
   SignedMessage signed_peer_info = 2;
   int64 last_connected = 3;
   int64 last_attempted = 4;
-  double running_success_average = 5;
+  int64 signed_timestamp = 5;
+  double running_success_average = 6;
 }
 
 message ConnectInfo {

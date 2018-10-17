@@ -49,6 +49,15 @@ public class PeerManager
     }
     return link;
   }
+  
+  public void removeReason(AddressSpecHash node_id, String reason)
+  {
+    synchronized(reason_map)
+    {
+      reason_map.remove(reason, node_id);
+    }
+
+  }
 
 
   public List<PeerLink> getPeersWithReason(String reason)

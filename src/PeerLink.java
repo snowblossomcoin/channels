@@ -8,11 +8,23 @@ import io.netty.handler.ssl.SslContext;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NettyChannelBuilder;
 import snowblossom.lib.AddressSpecHash;
+import io.grpc.stub.StreamObserver;
 
-public class PeerLink
+import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+public class PeerLink implements StreamObserver<PeerList>
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.channels");
+
   private ChannelNode node;
   private ChannelPeerInfo info;
+
+  private StargateServiceStub stargate_stub;
+
 
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
 		throws Exception
@@ -33,6 +45,8 @@ public class PeerLink
 			.useTransportSecurity()
 			.sslContext(ssl_ctx)
       .build();
+
+    stargate_stub = StargateServiceGrpc.newStub(channel);
   }
 
   public AddressSpecHash getNodeID()
@@ -64,5 +78,25 @@ public class PeerLink
     return null;
   }
 
+  @Override
+  public void onCompleted()
+  {}
+
+  @Override
+  public void onError(Throwable t)
+  {
+    logger.log(Level.WARNING, "wobble", t);
+  }
+
+  @Override
+  public void onNext(PeerList peer_list)
+  {
+
+    for(SignedMessage sm : peer_list.getPeersList())
+    {
+      node.getDHTServer().importPeer(sm);
+    }
+
+  }
 }
 
