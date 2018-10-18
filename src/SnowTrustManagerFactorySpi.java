@@ -80,7 +80,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
     public void checkClientTrusted(X509Certificate[] chain, String authType)
       throws CertificateException
     {
-      logger.info("Evaluating client cert");    
+      logger.log(Level.FINER,"Evaluating client cert");    
 
     }
 
@@ -88,7 +88,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
     public void checkServerTrusted(X509Certificate[] chain, String authType)
       throws CertificateException
     {
-      logger.info("Evaluating server cert");
+      logger.log(Level.FINER, "Evaluating server cert");
       if (chain.length != 1)
       {
         throw new CertificateException("Unexpected cert chain length");
@@ -129,7 +129,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
       {
         if (found_claim.equals(expected_server_spec_hash))
         {
-          logger.info("Server matched expected spec hash");
+          logger.log(Level.FINER,"Server matched expected spec hash");
         }
         else
         {
@@ -163,7 +163,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
       {
         throw new CertificateException(e);
       }
-      logger.info("Certificate checks out");
+      logger.log(Level.FINER, "Certificate checks out");
 
     }
 

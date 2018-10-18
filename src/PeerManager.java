@@ -3,13 +3,23 @@ package snowblossom.channels;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.HashMap;
+import java.util.Map;
 import snowblossom.lib.AddressSpecHash;
+import duckutil.PeriodicThread;
 
 import snowblossom.channels.proto.*;
 import com.google.common.collect.TreeMultimap;
 
-public class PeerManager
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+
+public class PeerManager extends PeriodicThread
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.channels");
+
   private ChannelNode node;
 
   // protected by sync on itself
@@ -20,9 +30,39 @@ public class PeerManager
 
   public PeerManager(ChannelNode node)
   {
+    super(60000L);
+    setName("PeerManager");
+    setDaemon(true);
+
     this.node = node;
     link_map = new HashMap<>(256, 0.5f);
     reason_map = TreeMultimap.create();
+
+  }
+
+  public void runPass()
+  {
+    LinkedList<AddressSpecHash> to_remove = new LinkedList<>();
+    synchronized(link_map)
+    {
+      for(Map.Entry<AddressSpecHash, PeerLink> me : link_map.entrySet())
+      {
+        PeerLink pl = me.getValue();
+        if (!pl.isCool())
+        {
+          pl.close();
+          to_remove.add(me.getKey());
+        }
+      }
+      for(AddressSpecHash id : to_remove)
+      {
+        link_map.remove(id);
+      }
+    }
+    if (to_remove.size() > 0)
+    {
+      logger.info(String.format("Removed %d stale links", to_remove.size()));
+    }
 
   }
 
@@ -76,7 +116,10 @@ public class PeerManager
         PeerLink link = link_map.get(id);
         if (link != null)
         {
-          links.add(link);
+          if (link.isGood())
+          {
+            links.add(link);
+          }
         }
       }
     }

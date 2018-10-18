@@ -14,6 +14,7 @@ import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
 
 public class PeerLink implements StreamObserver<PeerList>
@@ -24,11 +25,15 @@ public class PeerLink implements StreamObserver<PeerList>
   private ChannelPeerInfo info;
 
   private StargateServiceStub stargate_stub;
+  private volatile boolean closed;
+  private volatile long last_recv;
+	private ManagedChannel channel;
 
 
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
 		throws Exception
   {
+    last_recv = System.currentTimeMillis();
     this.node = node;
     this.info = info;
 
@@ -39,9 +44,8 @@ public class PeerLink implements StreamObserver<PeerList>
       .trustManager(SnowTrustManagerFactorySpi.getFactory(node_id))
     .build();
 
-    ManagedChannel channel = NettyChannelBuilder
+    channel = NettyChannelBuilder
       .forAddress(conn_info.getHost(), conn_info.getPort())
-      .usePlaintext(true)
 			.useTransportSecurity()
 			.sslContext(ssl_ctx)
       .build();
@@ -52,6 +56,11 @@ public class PeerLink implements StreamObserver<PeerList>
   public AddressSpecHash getNodeID()
   {
     return new AddressSpecHash(info.getAddressSpecHash());
+  }
+
+  public void getDHTPeers(SignedMessage self_peer_info)
+  {
+    stargate_stub.getDHTPeers(GetDHTPeersRequest.newBuilder().setSelfPeerInfo(self_peer_info).build(), this);
   }
 
 
@@ -78,6 +87,34 @@ public class PeerLink implements StreamObserver<PeerList>
     return null;
   }
 
+  public boolean isCool(){return isGood(); }
+
+  public boolean isGood()
+  {
+		if (closed) return false;
+		if (last_recv + 60000L < System.currentTimeMillis())
+		{
+			return false;
+		}
+    return true;
+  }
+
+  public void close()
+  {
+    if (closed) return;
+    closed=true;
+    try
+    { 
+      if (channel != null)
+      { 
+        channel.shutdownNow();
+        channel.awaitTermination(3, TimeUnit.SECONDS);
+      }
+    }
+    catch(Throwable e){}
+  }
+
+
   @Override
   public void onCompleted()
   {}
@@ -85,18 +122,18 @@ public class PeerLink implements StreamObserver<PeerList>
   @Override
   public void onError(Throwable t)
   {
-    logger.log(Level.WARNING, "wobble", t);
+    //logger.log(Level.WARNING, "wobble", t);
+		close();
   }
 
   @Override
   public void onNext(PeerList peer_list)
   {
-
+    last_recv = System.currentTimeMillis();
     for(SignedMessage sm : peer_list.getPeersList())
     {
       node.getDHTServer().importPeer(sm);
     }
-
   }
 }
 

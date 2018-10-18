@@ -14,8 +14,8 @@ public class ChannelGlobals
   public static final String NODE_TAG = "node";
 
 
-  public static final int LONG_RANGE_POINTS=4;
-  public static final int SHORT_RANGE_POINTS=4;
-  public static final int NEAR_POINTS=5;
+  public static final int LONG_RANGE_POINTS=2;
+  public static final int SHORT_RANGE_POINTS=2;
+  public static final int NEAR_POINTS=2;
 
 }

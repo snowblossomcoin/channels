@@ -20,7 +20,7 @@ git_repository(
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-  tag = "1.4.0.1",
+  tag = "1.4.0.2",
 )
 
 git_repository(

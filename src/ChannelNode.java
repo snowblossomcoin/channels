@@ -40,6 +40,7 @@ public class ChannelNode
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
+  private Config config;
   private WalletDatabase wallet_db;
   private NetworkParams params;
   private ChannelsDB db;
@@ -69,6 +70,7 @@ public class ChannelNode
   public ChannelNode(Config config)
 		throws Exception
   {
+    this.config = config;
 
     config.require("wallet_path");
 
@@ -90,8 +92,10 @@ public class ChannelNode
     dht_server = new DHTServer(this);
     dht_maintainer = new DHTMaintainer(this);
    
-    dht_maintainer.start();
     startServer();
+
+    dht_maintainer.start();
+    peer_manager.start();
 
     String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
     logger.info("My node address is: " + node_addr);
@@ -99,11 +103,15 @@ public class ChannelNode
     //testSelf();
 
   }
+  public int getPort()
+  {
+    return config.getIntWithDefault("port", ChannelGlobals.NETWORK_PORT);
+  }
 
   private void startServer()
     throws Exception
   {  
-    int port = ChannelGlobals.NETWORK_PORT;
+    int port = getPort();
 
     Server s = NettyServerBuilder
       .forPort(port)

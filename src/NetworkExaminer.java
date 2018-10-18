@@ -48,7 +48,7 @@ public class NetworkExaminer
       info.putConnectInfos( "ipv6", ConnectInfo.newBuilder()
         .setProtocol("ipv6")
         .setHost(ipv6_host)
-        .setPort( ChannelGlobals.NETWORK_PORT)
+        .setPort( node.getPort() )
         .build() );
     }
 
@@ -57,7 +57,7 @@ public class NetworkExaminer
       info.putConnectInfos( "ipv4", ConnectInfo.newBuilder()
         .setProtocol("ipv4")
         .setHost(ipv4_host)
-        .setPort( ChannelGlobals.NETWORK_PORT)
+        .setPort( node.getPort() )
         .build() );
     }
 
