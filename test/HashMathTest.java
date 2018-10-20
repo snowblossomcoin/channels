@@ -7,6 +7,7 @@ import snowblossom.lib.HexUtil;
 import snowblossom.channels.HashMath;
 
 import com.google.protobuf.ByteString;
+import java.math.BigInteger;
 
 public class HashMathTest
 {
@@ -54,6 +55,33 @@ public class HashMathTest
     String d = HexUtil.getHexString(d1);
     Assert.assertEquals("030000", d);
   }
+
+  @Test
+  public void testDiff()
+  {
+    ByteString a = HexUtil.hexStringToBytes("03");
+    ByteString b = HexUtil.hexStringToBytes("01");
+
+    BigInteger d1 = HashMath.getDiff(a,b);
+    BigInteger d2 = HashMath.getDiff(b,a);
+
+    Assert.assertEquals(-2L, d1.longValue());
+    Assert.assertEquals(2L, d2.longValue());
+  }
+
+  @Test
+  public void testDiffAroundHorn()
+  {
+    ByteString a = HexUtil.hexStringToBytes("02");
+    ByteString b = HexUtil.hexStringToBytes("fe");
+
+    BigInteger d1 = HashMath.getDiff(a,b);
+    BigInteger d2 = HashMath.getDiff(b,a);
+
+    Assert.assertEquals(-4L, d1.longValue());
+    Assert.assertEquals(4L, d2.longValue());
+  }
+
 
   @Test
   public void shiftRingBasic()

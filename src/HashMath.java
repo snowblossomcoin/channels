@@ -32,6 +32,29 @@ public class HashMath
     return diff;
   }
 
+  public static BigInteger getDiff(ByteString a, ByteString b)
+  {
+    int len = Math.min(a.size(), b.size());
+    BigInteger a_bi = new BigInteger(1, a.substring(0, len).toByteArray());
+    BigInteger b_bi = new BigInteger(1, b.substring(0, len).toByteArray());
+
+    BigInteger diff_bi = b_bi.subtract(a_bi);
+    BigInteger ring_max = getRingMax(len);
+    BigInteger half_ring = ring_max.shiftRight(1);
+
+    if (diff_bi.compareTo(half_ring) > 0)
+    {
+      diff_bi = diff_bi.subtract(ring_max);
+    }
+    if (diff_bi.negate().compareTo(half_ring) > 0)
+    {
+      diff_bi = ring_max.add(diff_bi);
+    }
+
+    return diff_bi;
+
+  }
+
   public static ByteString shiftHashOnRing(ByteString start, double movement)
   {
     int len = start.size();

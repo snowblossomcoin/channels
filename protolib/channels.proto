@@ -10,6 +10,29 @@ import "protolib/snowblossom.proto";
 
 service StargateService {
   rpc GetDHTPeers(GetDHTPeersRequest) returns (PeerList) {}
+  rpc StoreDHTData(StoreDHTRequest) returns (DHTDataSet) {}
+  rpc GetDHTData(GetDHTRequest) returns (DHTDataSet) {}
+}
+
+message StoreDHTRequest
+{
+  bytes element_id = 1;
+  SignedMessage signed_dht_data = 2;
+}
+message GetDHTRequest
+{
+  bytes element_id = 1;
+}
+
+message DHTDataSet
+{
+  repeated SignedMessage dht_data = 1;
+}
+
+message DHTData
+{
+  bytes element_id = 1;
+  ChannelPeerInfo peer_info = 2;
 }
 
 message GetDHTPeersRequest {
@@ -32,6 +55,7 @@ message SignedMessagePayload {
   oneof z {
     ChannelPeerInfo peer_info = 4;
     bytes tls_public_key = 5;
+
 
     ChannelBlock channel_block = 20;
   }

@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import duckutil.Config;
 import snowblossom.lib.DaemonThreadFactory;
 import snowblossom.channels.proto.LocalPeerInfo;
+import snowblossom.channels.proto.SignedMessage;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
@@ -26,6 +27,7 @@ public class ChannelsDB
   protected Executor exec;
 
   protected ProtoDBMap<LocalPeerInfo> peer_map;
+  protected ProtoDBMap<SignedMessage> dht_data_map;
 
   private Config config;
   private DBProvider prov;
@@ -50,10 +52,12 @@ public class ChannelsDB
     throws Exception
   {
     peer_map = new ProtoDBMap(LocalPeerInfo.newBuilder().build().getParserForType(), prov.openMap("peer"));
+    dht_data_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("dht_data"));
 
   }
 
   public ProtoDBMap<LocalPeerInfo> getPeerMap(){return peer_map; }
+  public ProtoDBMap<SignedMessage> getDHTDataMap(){return dht_data_map; }
 
   protected void dbShutdownHandler()
   {

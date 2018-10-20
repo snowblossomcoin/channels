@@ -20,6 +20,7 @@ import snowblossom.lib.ValidationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.google.common.collect.ImmutableSet;
+import java.math.BigInteger;
 
 
 
@@ -151,8 +152,10 @@ public class DHTMaintainer extends PeriodicThread
 
   private Map<AddressSpecHash, LocalPeerInfo> getClosestValid(ByteString target, int count)
   {
+    TreeMap<ByteString, LocalPeerInfo> ordered_valid_map_down=new TreeMap<>(new ByteStringComparator());
+    TreeMap<ByteString, LocalPeerInfo> ordered_valid_map_up=new TreeMap<>(new ByteStringComparator());
     TreeMap<ByteString, LocalPeerInfo> ordered_valid_map=new TreeMap<>(new ByteStringComparator());
-    
+
     for(LocalPeerInfo info : node.getDB().getPeerMap().getClosest(target, count*25))
     {
       if (isValid(info))
@@ -161,17 +164,50 @@ public class DHTMaintainer extends PeriodicThread
         // but that is pretty unlikely and even if it did happen, it will be ok (just not hitting a node)
         // so whatever
         ByteString dist = HashMath.getAbsDiff(target, info.getInfo().getAddressSpecHash());
+        BigInteger diff = HashMath.getDiff(target, info.getInfo().getAddressSpecHash());
+
         ordered_valid_map.put(dist, info);
+
+        if (diff.compareTo(BigInteger.ZERO) < 0)
+        {
+          ordered_valid_map_down.put(dist, info);
+        }
+        else
+        {
+          ordered_valid_map_up.put(dist, info);
+        }
       }
     }
 
     Map<AddressSpecHash, LocalPeerInfo> result_map = new HashMap<>(16,0.5f);
 
-    while((ordered_valid_map.size()>0) && (result_map.size() < count))
+    if (count == 1)
     {
-      LocalPeerInfo info = ordered_valid_map.pollFirstEntry().getValue();
-      result_map.put(new AddressSpecHash(info.getInfo().getAddressSpecHash()), info);
+      // If we just want one, get it from absolute closest
+ 
+      while((ordered_valid_map.size()>0) && (result_map.size() < count))
+      {
+        LocalPeerInfo info = ordered_valid_map.pollFirstEntry().getValue();
+        result_map.put(new AddressSpecHash(info.getInfo().getAddressSpecHash()), info);
+      }
+
     }
+    else
+    {
+      // If we want more than one, get them evenly up and down
+
+      while((ordered_valid_map_down.size()>0) && (result_map.size() < count/2))
+      {
+        LocalPeerInfo info = ordered_valid_map_down.pollFirstEntry().getValue();
+        result_map.put(new AddressSpecHash(info.getInfo().getAddressSpecHash()), info);
+      }
+      while((ordered_valid_map_up.size()>0) && (result_map.size() < count))
+      {
+        LocalPeerInfo info = ordered_valid_map_up.pollFirstEntry().getValue();
+        result_map.put(new AddressSpecHash(info.getInfo().getAddressSpecHash()), info);
+      }
+    }
+    //System.out.println(String.format("Asked for %d got %d", count, result_map.size())); 
 
     return result_map;
   }
@@ -199,7 +235,7 @@ public class DHTMaintainer extends PeriodicThread
     LinkedList<ChannelPeerInfo> seed_list = new LinkedList<>();
 
     seed_list.add( ChannelPeerInfo.newBuilder()
-      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.ADDRESS_STRING, 
+      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
         "node:hwuffxyrrrmdyx70zmmc3fsl4jw6ecz0ej38tnmn").getBytes())
       .setVersion("seed")
       .putConnectInfos("ipv6", ConnectInfo.newBuilder()

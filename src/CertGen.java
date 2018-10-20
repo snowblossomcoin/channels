@@ -80,7 +80,7 @@ public class CertGen
   {
 
     AddressSpecHash address_hash = AddressUtil.getHashForSpec(spec);
-    String address = AddressUtil.getAddressString(ChannelGlobals.ADDRESS_STRING, address_hash);
+    String address = AddressUtil.getAddressString(ChannelGlobals.NODE_ADDRESS_STRING, address_hash);
 
 
     byte[] encoded_pub= tls_wkp.getPublicKey().toByteArray();
