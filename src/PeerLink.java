@@ -11,6 +11,7 @@ import snowblossom.lib.AddressSpecHash;
 import io.grpc.stub.StreamObserver;
 
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
+import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +26,7 @@ public class PeerLink implements StreamObserver<PeerList>
   private ChannelPeerInfo info;
 
   private StargateServiceStub stargate_stub;
+  private StargateServiceBlockingStub stargate_blocking_stub;
   private volatile boolean closed;
   private volatile long last_recv;
 	private ManagedChannel channel;
@@ -51,6 +53,7 @@ public class PeerLink implements StreamObserver<PeerList>
       .build();
 
     stargate_stub = StargateServiceGrpc.newStub(channel);
+    stargate_blocking_stub = StargateServiceGrpc.newBlockingStub(channel);
   }
 
   public AddressSpecHash getNodeID()
@@ -62,6 +65,8 @@ public class PeerLink implements StreamObserver<PeerList>
   {
     stargate_stub.getDHTPeers(GetDHTPeersRequest.newBuilder().setSelfPeerInfo(self_peer_info).build(), this);
   }
+
+  public StargateServiceBlockingStub getStub() {return stargate_blocking_stub; }
 
 
   public static ConnectInfo findConnectInfo(ChannelPeerInfo info, NetworkExaminer net_ex)

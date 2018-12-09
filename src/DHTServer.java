@@ -10,6 +10,8 @@ import snowblossom.lib.AddressUtil;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.math.BigInteger;
+import java.util.Map;
 
 public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 {
@@ -104,6 +106,106 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 
     return node.signMessage(p.build());
     
+  }
+
+
+  @Override
+  public void storeDHTData(StoreDHTRequest req, StreamObserver<DHTDataSet> o)
+  {
+    try
+    {
+      SignedMessagePayload payload = ChannelSigUtil.validateSignedMessage(req.getSignedDhtData());
+      DHTData data = payload.getDhtData();
+
+      ByteString target = data.getElementId();
+      PeerLink next_peer = findClosestPeer(target);
+
+      if (next_peer != null)
+      {
+        DHTDataSet ds = next_peer.getStub().storeDHTData(req);
+        o.onNext(ds);
+        o.onCompleted();
+
+      }
+      else
+      {
+        ByteString key = target.concat( AddressUtil.getHashForSpec( payload.getClaim()) .getBytes() );
+        node.getDB().getDHTDataMap().put(key, req.getSignedDhtData());
+
+        o.onNext(getDHTLocal(target,  req.getDesiredResultCount()));
+
+      }
+    }
+    catch(ValidationException e)
+    {
+      o.onError(e);
+    }
+    o.onCompleted();
+  }
+
+  @Override
+  public void getDHTData(GetDHTRequest req, StreamObserver<DHTDataSet> o)
+  {
+    ByteString target = req.getElementId();
+
+    PeerLink next_peer = findClosestPeer(target);
+
+    if (next_peer != null)
+    {
+      DHTDataSet ds = next_peer.getStub().getDHTData(req);
+      o.onNext(ds);
+
+    }
+    else
+    {
+      o.onNext(getDHTLocal(target, req.getDesiredResultCount()));
+
+    }
+    o.onCompleted();
+  }
+
+  // TODO - make return random results rather than first n
+  public DHTDataSet getDHTLocal(ByteString target, int desired)
+  {
+    DHTDataSet.Builder set = DHTDataSet.newBuilder();
+    if (desired > 0)
+    {
+      Map<ByteString, SignedMessage> m = node.getDB().getDHTDataMap().getByPrefix(target, desired);
+      set.addAllDhtData(m.values());
+
+
+
+    }
+
+    return set.build();
+  }
+
+  /**
+   * Returns cloests peer, or null if none are closer that me
+   */
+  public PeerLink findClosestPeer(ByteString target)
+  {
+    ByteString self_hash = node.getNodeID().getBytes();
+    BigInteger min_diff = HashMath.getAsInt( HashMath.getAbsDiff(target, self_hash) );
+
+    PeerLink close = null;
+
+    for(PeerLink link : node.getPeerManager().getPeersWithReason("DHT"))
+    {
+      if (link.isGood())
+      {
+        AddressSpecHash node_id = link.getNodeID();
+        BigInteger diff = HashMath.getAsInt( HashMath.getAbsDiff(target, node_id.getBytes()));
+        if (diff.compareTo(min_diff) < 0)
+        {
+          close = link;
+          min_diff = diff;
+        }
+      }
+
+    }
+
+    return close;
   }
 
 }

@@ -16,12 +16,13 @@ service StargateService {
 
 message StoreDHTRequest
 {
-  bytes element_id = 1;
-  SignedMessage signed_dht_data = 2;
+  SignedMessage signed_dht_data = 1;
+  int32 desired_result_count = 2;
 }
 message GetDHTRequest
 {
   bytes element_id = 1;
+  int32 desired_result_count = 2;
 }
 
 message DHTDataSet
@@ -55,6 +56,7 @@ message SignedMessagePayload {
   oneof z {
     ChannelPeerInfo peer_info = 4;
     bytes tls_public_key = 5;
+    DHTData dht_data = 6;
 
 
     ChannelBlock channel_block = 20;

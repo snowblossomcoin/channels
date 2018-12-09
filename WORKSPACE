@@ -20,13 +20,13 @@ git_repository(
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-  tag = "1.4.0.2",
+  tag = "1.4.2.1",
 )
 
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  tag = "v1.0.16",
+  tag = "v1.0.17",
 )
 
 maven_jar(
