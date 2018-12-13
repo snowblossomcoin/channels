@@ -7,6 +7,7 @@ import snowblossom.channels.proto.*;
 import snowblossom.lib.ValidationException;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.HexUtil;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -114,7 +115,28 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
   {
     try
     {
+      DHTDataSet ds = storeDHTData(req);
+      o.onNext(ds);
+    }
+    catch(Throwable t)
+    {
+      o.onError(t);
+    }
+    o.onCompleted();
+  }
+
+  public DHTDataSet storeDHTData(StoreDHTRequest req)
+    throws ValidationException
+  {
       SignedMessagePayload payload = ChannelSigUtil.validateSignedMessage(req.getSignedDhtData());
+      if (payload.getTimestamp() + ChannelGlobals.MAX_DHT_DATA_AGE < System.currentTimeMillis())
+      {
+        throw new ValidationException("Request too old");
+      }
+      if (payload.getTimestamp() > System.currentTimeMillis() + ChannelGlobals.ALLOWED_CLOCK_SKEW)
+      {
+        throw new ValidationException("Request in future");
+      }
       DHTData data = payload.getDhtData();
 
       ByteString target = data.getElementId();
@@ -123,28 +145,36 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
       if (next_peer != null)
       {
         DHTDataSet ds = next_peer.getStub().storeDHTData(req);
-        o.onNext(ds);
-        o.onCompleted();
-
+        return ds;
       }
       else
       {
+        
         ByteString key = target.concat( AddressUtil.getHashForSpec( payload.getClaim()) .getBytes() );
+        //logger.info(String.format("Saving DHT data for %s", HexUtil.getHexString(key)));
         node.getDB().getDHTDataMap().put(key, req.getSignedDhtData());
 
-        o.onNext(getDHTLocal(target,  req.getDesiredResultCount()));
-
+        return getDHTLocal(target,  req.getDesiredResultCount());
       }
-    }
-    catch(ValidationException e)
-    {
-      o.onError(e);
-    }
-    o.onCompleted();
   }
 
   @Override
   public void getDHTData(GetDHTRequest req, StreamObserver<DHTDataSet> o)
+  {
+    try
+    {
+      DHTDataSet ds = getDHTData(req);
+      o.onNext(ds);
+    }
+    catch(Throwable t)
+    {
+      o.onError(t);
+    }
+    o.onCompleted();
+  }
+
+
+  public DHTDataSet getDHTData(GetDHTRequest req)
   {
     ByteString target = req.getElementId();
 
@@ -153,15 +183,12 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
     if (next_peer != null)
     {
       DHTDataSet ds = next_peer.getStub().getDHTData(req);
-      o.onNext(ds);
-
+      return ds;
     }
     else
     {
-      o.onNext(getDHTLocal(target, req.getDesiredResultCount()));
-
+      return getDHTLocal(target, req.getDesiredResultCount());
     }
-    o.onCompleted();
   }
 
   // TODO - make return random results rather than first n
@@ -172,9 +199,6 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
     {
       Map<ByteString, SignedMessage> m = node.getDB().getDHTDataMap().getByPrefix(target, desired);
       set.addAllDhtData(m.values());
-
-
-
     }
 
     return set.build();

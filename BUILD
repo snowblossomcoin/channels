@@ -82,3 +82,19 @@ java_test(
     ],
 )
 
+java_test(
+    name = "dht_test",
+    srcs = ["test/DHTTest.java"],
+    test_class = "channels.DHTTest",
+    size="medium",
+    deps = [
+      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+

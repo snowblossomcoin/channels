@@ -20,4 +20,7 @@ public class ChannelGlobals
 
   public static final int DHT_ELEMENT_SIZE = snowblossom.lib.Globals.BLOCKCHAIN_HASH_LEN;
 
+  public static final long MAX_DHT_DATA_AGE=120000L;
+
+
 }

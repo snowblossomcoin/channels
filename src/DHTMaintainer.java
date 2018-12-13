@@ -236,7 +236,7 @@ public class DHTMaintainer extends PeriodicThread
 
     seed_list.add( ChannelPeerInfo.newBuilder()
       .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
-        "node:hwuffxyrrrmdyx70zmmc3fsl4jw6ecz0ej38tnmn").getBytes())
+        "node:f6w25aj23fw0yz0ww06rqx53vgde4nz9u60uf07x").getBytes())
       .setVersion("seed")
       .putConnectInfos("ipv6", ConnectInfo.newBuilder()
         .setProtocol("ipv6")

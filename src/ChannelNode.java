@@ -67,6 +67,7 @@ public class ChannelNode
 
   }
 
+
   public ChannelNode(Config config)
 		throws Exception
   {
