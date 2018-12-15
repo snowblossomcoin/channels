@@ -45,7 +45,7 @@ public class DHTTest
     Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 0);
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 0);
 
-    Thread.sleep(35000);
+    Thread.sleep(45000);
 
     //Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 2);
     //Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 2);
@@ -92,14 +92,8 @@ public class DHTTest
     }
     System.out.println("B match: " + b_match);
     Assert.assertTrue(b_match > 700);
-
-
-
   
   }
-
-
-
 
 	private ChannelNode startNode()
     throws Exception

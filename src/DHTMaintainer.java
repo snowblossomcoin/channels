@@ -130,6 +130,7 @@ public class DHTMaintainer extends PeriodicThread
 
     double long_wedge = 1.0 / ChannelGlobals.LONG_RANGE_POINTS;
 
+    // long range regional peers
     // Point 0 is me, so don't bother with that
     for(int i=1; i<ChannelGlobals.LONG_RANGE_POINTS; i++)
     {
@@ -137,6 +138,7 @@ public class DHTMaintainer extends PeriodicThread
       target_map.putAll( getClosestValid( target, 1));
     }
     
+    // short range peers
     double short_wedge = long_wedge / ChannelGlobals.SHORT_RANGE_POINTS;
     int short_points = ChannelGlobals.SHORT_RANGE_POINTS;
     // So we take the closest long wedge, and put points along that.
@@ -146,6 +148,11 @@ public class DHTMaintainer extends PeriodicThread
       ByteString target = HashMath.shiftHashOnRing( node.getNodeID().getBytes(), -long_wedge/2.0 + short_wedge * i);
       target_map.putAll( getClosestValid( target, 1));
     }
+
+    // TODO - if we have a really full ring then the short range peers might not be very close to the target
+    // and that peer won't have any way to get closer without just doing close neighbors to close neighbor hops
+    // So blend from long range all the way to neighbor range with some sort of math with higher density links the
+    // closer to this node we get.  Probably something clever involving log2
 
     return target_map; 
   }
