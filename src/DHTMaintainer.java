@@ -252,6 +252,23 @@ public class DHTMaintainer extends PeriodicThread
         .build())
       .build());
 
+    seed_list.add( ChannelPeerInfo.newBuilder()
+      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
+        "node:dqh252gynxjsw5a8pzz306xvra8r2v3wz9x8xc6m").getBytes())
+      .setVersion("seed")
+      .putConnectInfos("ipv4", ConnectInfo.newBuilder()
+        .setProtocol("ipv4")
+        .setHost("snow-usw1.snowblossom.org")
+        .setPort(ChannelGlobals.NETWORK_PORT)
+        .build())
+      .putConnectInfos("ipv6", ConnectInfo.newBuilder()
+        .setProtocol("ipv6")
+        .setHost("snow-usw1.snowblossom.org")
+        .setPort(ChannelGlobals.NETWORK_PORT)
+        .build())
+      .build());
+
+
     return seed_list;
 
   }
