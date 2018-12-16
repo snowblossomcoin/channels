@@ -103,7 +103,14 @@ public class DHTMaintainer extends PeriodicThread
 
     for(ChannelPeerInfo info : connect_map.values())
     {
+      try
+      {
       node.getPeerManager().connectNode(info, "DHT");
+      }
+      catch(Exception e)
+      {
+        logger.info("Connect failed: " + e);
+      }
     }
     synchronized(connection_attempt_times)
     {

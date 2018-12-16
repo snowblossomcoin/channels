@@ -40,6 +40,10 @@ public class PeerLink implements StreamObserver<PeerList>
     this.info = info;
 
     ConnectInfo conn_info = findConnectInfo(info, node.getNetworkExaminer());
+    if (conn_info == null)
+    {
+      throw new Exception("Unable to connect - no protocols in common");
+    }
 		AddressSpecHash node_id = new AddressSpecHash(info.getAddressSpecHash());
 
     SslContext ssl_ctx = GrpcSslContexts.forClient()
