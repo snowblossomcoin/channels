@@ -16,6 +16,11 @@ git_repository(
   tag = "guava-26-android",
 )
 
+maven_jar(
+  name = "weupnp",
+  artifact = "org.bitlet:weupnp:0.1.4",
+  sha1 = "b99cd791ede89b7c17426e6c51a0f171dc925def",
+)
 
 git_repository(
   name = "snowblossom",

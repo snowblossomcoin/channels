@@ -15,6 +15,7 @@ java_library(
     "@snowblossom//protolib",
     "@bcprov//jar",
     "@bcpkix//jar",
+    "@weupnp//jar",
     ":protolib",
     "@netty_tcnative//jar",
   ],
