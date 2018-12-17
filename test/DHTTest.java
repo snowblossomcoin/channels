@@ -47,15 +47,15 @@ public class DHTTest
 
     Thread.sleep(45000);
 
-    //Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 2);
-    //Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 2);
+    Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 2);
+    Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 2);
 
     Random rnd = new Random();
     byte[] id_bytes = new byte[16];
 
    
     int b_match = 0;
-    for(int i=0; i<1000; i++)
+    for(int i=0; i<100; i++)
     {
       ChannelPeerInfo my_info = node_a.getNetworkExaminer().createPeerInfo();
 
@@ -91,7 +91,7 @@ public class DHTTest
 
     }
     System.out.println("B match: " + b_match);
-    Assert.assertTrue(b_match > 700);
+    Assert.assertTrue(b_match > 70);
   
   }
 

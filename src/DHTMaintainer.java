@@ -39,7 +39,6 @@ public class DHTMaintainer extends PeriodicThread
     setDaemon(false);
 
     this.node = node;
-
   }
 
   @Override
@@ -229,8 +228,11 @@ public class DHTMaintainer extends PeriodicThread
   private boolean isValid(LocalPeerInfo info)
   {
 
+    // only heard from in last hour
     if (info.getSignedTimestamp() + 3600000L < System.currentTimeMillis()) return false;
     AddressSpecHash id = new AddressSpecHash(info.getInfo().getAddressSpecHash());
+
+    // is not this node
     if (id.equals(node.getNodeID())) return false;
 
     synchronized(connection_attempt_times)
