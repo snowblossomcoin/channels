@@ -100,7 +100,7 @@ public class DHTMaintainer extends PeriodicThread
     }
     logger.info("Connected peers: " + connected_peers);
     logger.info("New connections: " + connect_map.keySet());
-    int desired_peers = ChannelGlobals.NEAR_POINTS + ChannelGlobals.LONG_RANGE_POINTS + ChannelGlobals.SHORT_RANGE_POINTS;
+    int desired_peers = ChannelGlobals.NEAR_POINTS + ChannelGlobals.RING_DIVISONS * 2;
     int to_close_count = connected_peers.size() - desired_peers;
     while ((to_close_count > 0) && (extra_peers.size() > 0))
     {
@@ -144,7 +144,21 @@ public class DHTMaintainer extends PeriodicThread
     // Close neighbors
     target_map.putAll( getClosestValid( node.getNodeID().getBytes(), ChannelGlobals.NEAR_POINTS));
 
-    double long_wedge = 1.0 / ChannelGlobals.LONG_RANGE_POINTS;
+
+    double ring_dist= 0.5;
+    for(int i=0; i<ChannelGlobals.RING_DIVISONS; i++)
+    {
+      
+      ByteString t_high = HashMath.shiftHashOnRing( node.getNodeID().getBytes(), ring_dist);
+      ByteString t_low =  HashMath.shiftHashOnRing( node.getNodeID().getBytes(), -ring_dist);
+
+      target_map.putAll( getClosestValid( t_high, 1));
+      target_map.putAll( getClosestValid( t_low, 1));
+
+      ring_dist = ring_dist / 2.0;
+    }
+
+    /*double long_wedge = 1.0 / ChannelGlobals.LONG_RANGE_POINTS;
 
     // long range regional peers
     // Point 0 is me, so don't bother with that
@@ -163,7 +177,7 @@ public class DHTMaintainer extends PeriodicThread
     {
       ByteString target = HashMath.shiftHashOnRing( node.getNodeID().getBytes(), -long_wedge/2.0 + short_wedge * i);
       target_map.putAll( getClosestValid( target, 1));
-    }
+    }*/
 
     // TODO - if we have a really full ring then the short range peers might not be very close to the target
     // and that peer won't have any way to get closer without just doing close neighbors to close neighbor hops
@@ -310,7 +324,7 @@ public class DHTMaintainer extends PeriodicThread
 
     public void runPass()
     {
-      if (node.getPeerManager().getPeersWithReason("DHT").size() > ChannelGlobals.NEAR_POINTS)
+      if (node.getPeerManager().getPeersWithReason("DHT").size() > ChannelGlobals.NEAR_POINTS + ChannelGlobals.RING_DIVISONS)
       {
         byte[] b = new byte[1];
 

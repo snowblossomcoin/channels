@@ -14,15 +14,18 @@ public class ChannelGlobals
   public static final String NODE_TAG = "node";
 
 
-  public static final int LONG_RANGE_POINTS=2;
-  public static final int SHORT_RANGE_POINTS=2;
+  //public static final int LONG_RANGE_POINTS=2;
+  //public static final int SHORT_RANGE_POINTS=2;
   public static final int NEAR_POINTS=4;
+  public static final int RING_DIVISONS=6;
+
 
   public static final int DHT_ELEMENT_SIZE = snowblossom.lib.Globals.BLOCKCHAIN_HASH_LEN;
 
   public static final long MAX_DHT_DATA_AGE=120000L;
 
   public static final long MAX_DATA_PEER_AGE=2L * 86400L * 1000L;
+
 
 
 }
