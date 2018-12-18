@@ -10,6 +10,7 @@ import java.util.HashMap;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.HexUtil;
 
 import duckutil.PeriodicThread;
 
@@ -22,7 +23,8 @@ import java.util.logging.Logger;
 import com.google.common.collect.ImmutableSet;
 import java.math.BigInteger;
 
-
+import java.util.Random;
+import java.util.HashSet;
 
 public class DHTMaintainer extends PeriodicThread
 {
@@ -39,6 +41,14 @@ public class DHTMaintainer extends PeriodicThread
     setDaemon(false);
 
     this.node = node;
+
+  }
+
+  @Override
+  public void start()
+  {
+    super.start();
+    new PruneThread().start();
   }
 
   @Override
@@ -279,6 +289,54 @@ public class DHTMaintainer extends PeriodicThread
 
 
     return seed_list;
+
+  }
+
+  public class PruneThread extends PeriodicThread
+  {
+
+    private Random rnd;
+
+    public PruneThread()
+    {
+
+      super(86400L * 1000L / 256L);
+      setName("DHTMaintainer/PruneThread");
+      setDaemon(true);
+
+      rnd = new Random();
+
+    }
+
+    public void runPass()
+    {
+      if (node.getPeerManager().getPeersWithReason("DHT").size() > ChannelGlobals.NEAR_POINTS)
+      {
+        byte[] b = new byte[1];
+
+        rnd.nextBytes(b);
+
+        HashSet<ByteString> to_purge = new HashSet<>();
+
+        for(Map.Entry<ByteString, LocalPeerInfo> me : node.getDB().getPeerMap().getByPrefix(ByteString.copyFrom(b), 10000).entrySet())
+        {
+          ByteString key = me.getKey();
+          LocalPeerInfo pi = me.getValue();
+          if (pi.getSignedTimestamp() + ChannelGlobals.MAX_DATA_PEER_AGE < System.currentTimeMillis())
+          {
+            to_purge.add(key);
+          }
+        }
+
+        for(ByteString key : to_purge)
+        {
+          logger.info("Purging peer: " + HexUtil.getHexString(key));
+          node.getDB().getPeerMap().remove(key);
+        }
+  
+      }
+
+    }
 
   }
 }
