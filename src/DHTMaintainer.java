@@ -169,7 +169,7 @@ public class DHTMaintainer extends PeriodicThread
     TreeMap<ByteString, LocalPeerInfo> ordered_valid_map_up=new TreeMap<>(new ByteStringComparator());
     TreeMap<ByteString, LocalPeerInfo> ordered_valid_map=new TreeMap<>(new ByteStringComparator());
 
-    for(LocalPeerInfo info : node.getDB().getPeerMap().getClosest(target, count*25))
+    for(LocalPeerInfo info : node.getDB().getPeerMap().getClosest(target, count*64))
     {
       if (isValid(info))
       {
@@ -300,7 +300,7 @@ public class DHTMaintainer extends PeriodicThread
 
     public void runPass()
     {
-      if (node.getPeerManager().getPeersWithReason("DHT").size() > ChannelGlobals.NEAR_POINTS + ChannelGlobals.RING_DIVISONS)
+      if (node.getPeerManager().getPeersWithReason("DHT").size() > 3)
       {
         byte[] b = new byte[1];
 

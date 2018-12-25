@@ -24,7 +24,7 @@ public class ChannelGlobals
 
   public static final long MAX_DHT_DATA_AGE=120000L;
 
-  public static final long MAX_DATA_PEER_AGE=2L * 86400L * 1000L;
+  public static final long MAX_DATA_PEER_AGE=7200L * 1000L;
 
 
 
