@@ -1,3 +1,9 @@
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+
+
+
 maven_jar(
   name = "bcpkix",
   artifact = "org.bouncycastle:bcpkix-jdk15on:1.60",
@@ -10,12 +16,6 @@ maven_jar(
   sha1 = "8310b263ddbe3ffa021cdb7963bfdba3f9c50f8d",
 )
 
-git_repository(
-  name = "org_pubref_rules_protobuf",
-  remote = "https://github.com/fireduck64/rules_protobuf",
-  tag = "guava-26-android",
-)
-
 maven_jar(
   name = "weupnp",
   artifact = "org.bitlet:weupnp:0.1.4",
@@ -25,7 +25,7 @@ maven_jar(
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-  tag = "1.4.2.2",
+  tag = "1.4.2.4",
 )
 
 git_repository(
@@ -40,20 +40,32 @@ maven_jar(
   sha1 = "8c3492f7662fa1cbf8ca76a0f5eb1146f7725acd",
 )
 
+http_archive(
+    name = "build_stack_rules_proto",
+    urls = ["https://github.com/stackb/rules_proto/archive/45c86586f0e381edeb04200c038610aaa84d220e.tar.gz"],
+    sha256 = "6ea9804cbf31f610a180a608118d6c5355d9d1835bcf2e7c29822d349625919e",
+    strip_prefix = "rules_proto-45c86586f0e381edeb04200c038610aaa84d220e",
+)
 
-load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_repositories")
-java_proto_repositories()
+load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
+
+io_grpc_grpc_java()
+
+load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
+
+grpc_java_repositories(omit_com_google_protobuf = True)
+
+load("@build_stack_rules_proto//java:deps.bzl", "java_grpc_library")
+
+java_grpc_library()
+
+
+
 
 maven_jar(
   name = "org_rocksdb_rocksdbjni",
   artifact = "org.rocksdb:rocksdbjni:5.14.2",
   sha1 = "a6087318fab540ba0b4c6ff68475ffbedc0b3d10",
-)
-
-maven_jar(
-  name = "junit_junit",
-  artifact = "junit:junit:4.12",
-  sha1 = "2973d150c0dc1fefe998f834810d68f278ea58ec",
 )
 
 maven_jar(

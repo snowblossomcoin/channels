@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_library")
-
 java_library(
   name = "channelslib",
   srcs = glob(["src/**/*.java", "src/*.java"]),
@@ -10,14 +8,16 @@ java_library(
     "@snowblossom//lib:lib",
     "@duckutil//:duckutil_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
-    "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
     "@junit_junit//jar",
-    "@snowblossom//protolib",
     "@bcprov//jar",
     "@bcpkix//jar",
     "@weupnp//jar",
     ":protolib",
     "@netty_tcnative//jar",
+    "@build_stack_rules_proto//java:grpc_netty",
+    "@io_netty_netty_handler//jar",
+    "@io_grpc_grpc_java//netty",
+    "@com_google_protobuf//:protobuf_java",
   ],
 )
 
@@ -29,13 +29,22 @@ java_binary(
   ],
 )
 
-java_proto_library(
-  name = "protolib",
-  protos = glob(["protolib/*.proto", "protolib/**/*.proto"]),
-  with_grpc = True,
-  deps = [
+proto_library(
+  name = "protosrc",
+  srcs = glob(["protolib/*.proto", "protolib/**/*.proto"]),
+  visibility = [
+    "//visibility:public",
   ],
-  verbose = 1,
+  deps = ["@snowblossom//protolib:protosrc"]
+)
+
+
+load("@build_stack_rules_proto//java:java_grpc_library.bzl", "java_grpc_library")
+
+
+java_grpc_library(
+  name = "protolib",
+  deps = [":protosrc"],
 )
 
 java_test(
@@ -44,10 +53,10 @@ java_test(
     test_class = "channels.HashMathTest",
     size="small",
     deps = [
-      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@junit_junit//jar",
       "@snowblossom//lib:lib",
       ":channelslib",
+      "@com_google_protobuf//:protobuf_java",
     ],
 )
 
@@ -57,11 +66,12 @@ java_test(
     test_class = "channels.CertGenTest",
     size="medium",
     deps = [
-      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@io_netty_netty_handler//jar",
+      "@io_grpc_grpc_java//netty",
       ":channelslib",
       ":protolib",
     ],
@@ -73,7 +83,6 @@ java_test(
     test_class = "channels.ChannelSigUtilTest",
     size="medium",
     deps = [
-      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
@@ -89,7 +98,6 @@ java_test(
     test_class = "channels.DHTTest",
     size="medium",
     deps = [
-      "@org_pubref_rules_protobuf//java:grpc_compiletime_deps",
       "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
