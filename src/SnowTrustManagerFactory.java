@@ -20,8 +20,5 @@ public class SnowTrustManagerFactory extends TrustManagerFactory
   public SnowTrustManagerFactory(TrustManagerFactorySpi spi, Provider provider, String algo)
   {
     super(spi, provider, algo);
-    
   }
-
-
 }

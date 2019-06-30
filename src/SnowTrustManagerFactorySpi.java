@@ -9,6 +9,7 @@ import javax.net.ssl.ManagerFactoryParameters;
 
 import java.security.cert.X509Certificate;
 import java.net.Socket;
+import javax.net.ssl.SSLEngine;
 import java.security.KeyStore;
 
 import java.security.cert.CertificateException;
@@ -36,8 +37,6 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
   {
     this.expected_server_spec_hash = expected_server_spec_hash;
     this.provider = provider;
-
-    
   }
 
   /**
@@ -71,7 +70,13 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
     throw new RuntimeException("Don't need instructions to know how to rock");
   }
 
-  public class SnowTrustManager implements X509TrustManager
+  /**
+   * If we don't override the extended trust manager
+   * then even if we define everything in X509TrustManager
+   * we still get cert failures on hostname validation with recent
+   * grpc/netty.  shrug.
+   */ 
+  public class SnowTrustManager extends X509ExtendedTrustManager
   {
     @Override
     public X509Certificate[] getAcceptedIssuers(){ return new X509Certificate[0]; }
@@ -166,10 +171,30 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
       logger.log(Level.FINER, "Certificate checks out");
 
     }
-
-
-
-
+    @Override
+    public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)
+      throws CertificateException
+    {
+      checkClientTrusted(chain, authType);
+    }
+    @Override
+    public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
+      throws CertificateException
+    {
+      checkClientTrusted(chain, authType);
+    }
+    @Override
+    public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)
+      throws CertificateException
+    {
+      checkServerTrusted(chain, authType);
+    }
+    @Override
+    public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
+      throws CertificateException
+    {
+      checkServerTrusted(chain, authType);
+    }
   }
 
 }

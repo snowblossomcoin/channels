@@ -2,8 +2,6 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 
-
-
 maven_jar(
   name = "bcpkix",
   artifact = "org.bouncycastle:bcpkix-jdk15on:1.60",
@@ -12,8 +10,8 @@ maven_jar(
 
 maven_jar(
   name = "netty_tcnative",
-  artifact = "io.netty:netty-tcnative-boringssl-static:2.0.15.Final",
-  sha1 = "8310b263ddbe3ffa021cdb7963bfdba3f9c50f8d",
+  artifact = "io.netty:netty-tcnative-boringssl-static:2.0.25.Final",
+  sha1 = "185980556f9f083b5339825f19c9641c6c879417",
 )
 
 maven_jar(
@@ -25,7 +23,7 @@ maven_jar(
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-  tag = "1.4.2.4",
+  tag = "1.5.0",
 )
 
 git_repository(
@@ -40,11 +38,12 @@ maven_jar(
   sha1 = "8c3492f7662fa1cbf8ca76a0f5eb1146f7725acd",
 )
 
+
 http_archive(
     name = "build_stack_rules_proto",
-    urls = ["https://github.com/stackb/rules_proto/archive/45c86586f0e381edeb04200c038610aaa84d220e.tar.gz"],
-    sha256 = "6ea9804cbf31f610a180a608118d6c5355d9d1835bcf2e7c29822d349625919e",
-    strip_prefix = "rules_proto-45c86586f0e381edeb04200c038610aaa84d220e",
+    urls = ["https://github.com/stackb/rules_proto/archive/78d64b7317a332ee884ad7fcd0506d78f2a402cb.tar.gz"],
+    sha256 = "7f7fc55f1cfe8b28f95f1feb8ea42f21310cbbf3c1ee5015dfc15c604f6593f1",
+    strip_prefix = "rules_proto-78d64b7317a332ee884ad7fcd0506d78f2a402cb",
 )
 
 load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
@@ -130,5 +129,21 @@ maven_jar(
   name = "asm",
   artifact = "org.ow2.asm:asm:6.2",
   sha1 = "1b6c4ff09ce03f3052429139c2a68e295cae6604",
+)
+
+maven_jar(
+  name = "bitcoinj",
+  artifact = "org.bitcoinj:bitcoinj-core:0.14.7",
+  sha1 = "5e58d6921e1d8dfce81525b22c0de97f34be1f5c",
+)
+maven_jar(
+  name = "slf4j_nop",
+  artifact = "org.slf4j:slf4j-nop:1.7.25",
+  sha1 = "8c7708c79afec923de8957b7d4f90177628b9fcd",
+)
+maven_jar(
+  name = "slf4j_api",
+  artifact = "org.slf4j:slf4j-api:1.7.25",
+  sha1 = "da76ca59f6a57ee3102f8f9bd9cee742973efa8a",
 )
 

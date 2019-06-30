@@ -61,7 +61,6 @@ public class CertGen
     KeyPair tls_pair = KeyUtil.decodeKeypair(tls_wkp);
 
     X509Certificate cert = generateSelfSignedCert(wkp, tls_wkp, address_spec);
-    //System.out.println(cert);
 
     ByteString pem_cert = pemCodeCert(cert);
     ByteString pem_prv = pemCodeECPrivateKey(tls_pair.getPrivate());

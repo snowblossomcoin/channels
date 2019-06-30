@@ -81,7 +81,25 @@ public class CertGenTest
         .build();
 
       StargateServiceBlockingStub stub = StargateServiceGrpc.newBlockingStub(channel);
+      try
+      {
       stub.getDHTPeers(GetDHTPeersRequest.newBuilder().build());
+      }
+      catch(Throwable t)
+      {
+        Throwable a = t;
+        while(a != null)
+        {
+          System.out.println("------------------------");
+          for(StackTraceElement e : a.getStackTrace())
+          {
+            System.out.println(e);
+          }
+          a = a.getCause();
+          System.out.println("------------------------");
+        }
+        throw t;
+      }
     }
 
     { // Without expected hash

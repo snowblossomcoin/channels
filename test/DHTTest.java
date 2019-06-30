@@ -42,13 +42,15 @@ public class DHTTest
 
     Thread.sleep(500);
 
+    // Note: if this is failing, we are probably unable to get in touch with a seed node
+    // to join the network
     Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 0);
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 0);
 
     Thread.sleep(45000);
 
-    Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 2);
-    Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 2);
+    Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() >= 2);
+    Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() >= 2);
 
     Random rnd = new Random();
     byte[] id_bytes = new byte[16];
