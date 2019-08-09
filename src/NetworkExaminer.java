@@ -47,7 +47,7 @@ public class NetworkExaminer
     }
     catch(Exception e)
     {
-      logger.info("UPNP failuer: " + e);
+      logger.info("UPNP failure: " + e);
     }
   }
 
@@ -77,7 +77,6 @@ public class NetworkExaminer
           logger.warning(String.format("While I am on %s:%d", local, port));
           
         }
-        
       }
       else
       {
@@ -86,7 +85,6 @@ public class NetworkExaminer
           logger.info("Port mapped with upnp gateway");
 
         }
-
       }
     }
 
