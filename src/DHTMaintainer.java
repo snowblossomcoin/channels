@@ -254,6 +254,11 @@ public class DHTMaintainer extends PeriodicThread
       .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
         "node:f6w25aj23fw0yz0ww06rqx53vgde4nz9u60uf07x").getBytes())
       .setVersion("seed")
+      .putConnectInfos("ipv4", ConnectInfo.newBuilder()
+        .setProtocol("ipv4")
+        .setHost("h.1209k.com")
+        .setPort(ChannelGlobals.NETWORK_PORT)
+        .build())
       .putConnectInfos("ipv6", ConnectInfo.newBuilder()
         .setProtocol("ipv6")
         .setHost("snowblossom.1209k.com")
