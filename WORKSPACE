@@ -23,13 +23,13 @@ maven_jar(
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-  tag = "1.5.0",
+  tag = "1.5.2",
 )
 
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  tag = "v1.0.17",
+  tag = "v1.1.2",
 )
 
 maven_jar(
@@ -146,4 +146,24 @@ maven_jar(
   artifact = "org.slf4j:slf4j-api:1.7.25",
   sha1 = "da76ca59f6a57ee3102f8f9bd9cee742973efa8a",
 )
+
+
+maven_jar(
+  name = "scrypt",
+  artifact = "com.lambdaworks:scrypt:1.4.0",
+  sha1 = "906506b74f30c8c20bccd9ed4a11112d8941fe87",
+)
+
+maven_jar(
+  name = "zxing_core",
+  artifact = "com.google.zxing:core:3.4.0",
+  sha1 = "5264296c46634347890ec9250bc65f14b7362bf8",
+)
+
+maven_jar(
+  name = "zxing_javase",
+  artifact = "com.google.zxing:javase:3.4.0",
+  sha1 = "8be20100f28515037a31cc0bbe557501c0538147",
+)
+
 
