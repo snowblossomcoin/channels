@@ -33,10 +33,10 @@ public class ChannelSigUtil
       byte[] hash = md.digest( sm.getPayload().toByteArray());
       SigSpec sig_spec = claim.getSigSpecs(0);
 
-      if (!sm.getPayloadHash().equals(ByteString.copyFrom(hash)))
+      /*if (!sm.getPayloadHash().equals(ByteString.copyFrom(hash)))
       {
         throw new ValidationException("Included payload hash does not match");
-      }
+      }*/
 
 
       if (!SignatureUtil.checkSignature(sig_spec, ByteString.copyFrom(hash), signature))
