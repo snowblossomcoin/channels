@@ -33,10 +33,18 @@ public class ChannelSigUtil
       byte[] hash = md.digest( sm.getPayload().toByteArray());
       SigSpec sig_spec = claim.getSigSpecs(0);
 
-      /*if (!sm.getPayloadHash().equals(ByteString.copyFrom(hash)))
+      // TODO - remove this isEmpty test, it shouldn't be empty
+      if (!sm.getMessageId().isEmpty())
       {
-        throw new ValidationException("Included payload hash does not match");
-      }*/
+        md.update(hash);
+        md.update(sm.getSignature().toByteArray());
+        ByteString message_id = ByteString.copyFrom(md.digest());
+
+        if (!sm.getMessageId().equals(message_id))
+        {
+          throw new ValidationException("Included message_id does not match");
+        }
+      }
 
 
       if (!SignatureUtil.checkSignature(sig_spec, ByteString.copyFrom(hash), signature))
@@ -86,7 +94,12 @@ public class ChannelSigUtil
     byte[] hash = md.digest( payload_data.toByteArray());
 
     signed.setSignature( SignatureUtil.sign(wkp, ByteString.copyFrom(hash)) );
-    signed.setPayloadHash( ByteString.copyFrom(hash) );
+
+    md.update(hash);
+    md.update( signed.getSignature().toByteArray() );
+
+
+    signed.setMessageId( ByteString.copyFrom( md.digest() ) );
 
     return signed.build();
   }
