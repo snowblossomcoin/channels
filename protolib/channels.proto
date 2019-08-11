@@ -8,6 +8,7 @@ package snowblossom.channels;
 
 import "protolib/snowblossom.proto";
 
+// The Stargate Service is the DHT network
 service StargateService {
   rpc GetDHTPeers(GetDHTPeersRequest) returns (PeerList) {}
   rpc StoreDHTData(StoreDHTRequest) returns (DHTDataSet) {}
@@ -34,6 +35,7 @@ message DHTData
 {
   bytes element_id = 1;
   ChannelPeerInfo peer_info = 2;
+  bytes content_hash = 3;
 }
 
 message GetDHTPeersRequest {
@@ -47,6 +49,7 @@ message PeerList {
 message SignedMessage {
   bytes payload = 1; //A serialized SignedMessagePayload
   bytes signature = 2;
+  bytes payload_hash = 3;
 }
 
 message SignedMessagePayload {
@@ -58,8 +61,8 @@ message SignedMessagePayload {
     bytes tls_public_key = 5;
     DHTData dht_data = 6;
 
-
     ChannelBlock channel_block = 20;
+    ContentInfo content_info = 21;
   }
 }
 
@@ -93,12 +96,47 @@ message ChannelBlock {
   bytes channel_id=1;
   bytes block_hash=2;
   bytes prev_hash=3;
+  int64 block_index=4;
+  ChannelSettings settings=5; // If not set, use the most recent that is set
 
-  repeated ContentInfo referenced_content = 4;
+  repeated ContentInfo content = 10;
+
 }
 
+message ContentReference {
+  bytes channel_id = 1;
+  bytes content_id = 2;
+  int32 importance = 3;
+}
+
+/* we will need a canonical content id that can be referenced
+ * that way the messages can't be changed without breaking the reference chain.
+ */
 message ContentInfo {
-  
+  bytes content_hash = 1;
+  string mime_type = 2;
+  int64 content_length = 3;
+
+  /* What this content is in reference to, if anything */
+  ContentReference parent_ref = 4;
+
+  repeated ContentReference refs = 5;
 }
 
+message ChannelSettings
+{
+  string display_name = 1;
+  repeated bytes signer_address_spec_hash = 2;
+  repeated DHTStrategy dht_strategies = 3;
+  bool allow_outside_messages = 4;
+  int64 required_outsider_snow_days = 5; // flakes * days required for staking
+}
 
+message DHTStrategy
+{
+  enum DHTMode {
+    BASIC = 0;
+  }
+  DHTMode dht_mode = 1;
+  int32 count = 2;
+}

@@ -266,7 +266,7 @@ public class DHTMaintainer extends PeriodicThread
         .build())
       .build());
 
-    seed_list.add( ChannelPeerInfo.newBuilder()
+    /*seed_list.add( ChannelPeerInfo.newBuilder()
       .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
         "node:dqh252gynxjsw5a8pzz306xvra8r2v3wz9x8xc6m").getBytes())
       .setVersion("seed")
@@ -280,7 +280,7 @@ public class DHTMaintainer extends PeriodicThread
         .setHost("snow-tx1.snowblossom.org")
         .setPort(ChannelGlobals.NETWORK_PORT)
         .build())
-      .build());
+      .build());*/
 
 
     return seed_list;

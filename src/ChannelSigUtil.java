@@ -26,12 +26,18 @@ public class ChannelSigUtil
 
       if ((claim.getRequiredSigners() != 1) || (claim.getSigSpecsCount() != 1))
       {
-        throw new ValidationException("Multisig not supported");
+        throw new ValidationException("Multisig not supported (yet)");
       }
 
       MessageDigest md = DigestUtil.getMD();
       byte[] hash = md.digest( sm.getPayload().toByteArray());
       SigSpec sig_spec = claim.getSigSpecs(0);
+
+      if (!sm.getPayloadHash().equals(ByteString.copyFrom(hash)))
+      {
+        throw new ValidationException("Included payload hash does not match");
+      }
+
 
       if (!SignatureUtil.checkSignature(sig_spec, ByteString.copyFrom(hash), signature))
       {
@@ -80,6 +86,7 @@ public class ChannelSigUtil
     byte[] hash = md.digest( payload_data.toByteArray());
 
     signed.setSignature( SignatureUtil.sign(wkp, ByteString.copyFrom(hash)) );
+    signed.setPayloadHash( ByteString.copyFrom(hash) );
 
     return signed.build();
   }
