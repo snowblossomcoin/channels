@@ -63,6 +63,7 @@ message SignedMessagePayload {
 
     ChannelBlock channel_block = 20;
     ContentInfo content_info = 21;
+    ChannelSettings channel_settings = 22;
   }
 }
 
@@ -93,11 +94,12 @@ message ConnectInfo {
 // Actual channel stuff
 
 message ChannelBlock {
-  bytes channel_id=1;
-  bytes block_hash=2;
-  bytes prev_hash=3;
-  int64 block_index=4;
-  ChannelSettings settings=5; // If not set, use the most recent that is set
+  bytes channel_id = 1;
+  bytes block_hash = 2;
+  bytes prev_hash = 3;
+  int64 block_index = 4;
+
+  SignedMessage settings = 5; // If not set, use the most recent that is set
 
   repeated SignedMessage content = 10;
 
@@ -106,22 +108,39 @@ message ChannelBlock {
 message ContentReference {
   bytes channel_id = 1;
   bytes message_id = 2;
-  int32 importance = 3;
+
+
+  // These modes give nodes a clue about if the data referenced should be included
+  // when mirroring the channel
+  enum ReferenceMode {
+    INTEGRAL = 0; // Content in question is integral to this content and must be mirrored.  Parent content makes no sense without this.
+    DIRECT = 1; // content in question is important and should be mirrored
+    CITED = 5; // Content in question is meerly referenced by this content, not to be nessesarily mirrored
+    TANGENT = 10; // Content in question is tangential and probably should not be mirrored
+  }
+  ReferenceMode ref_mode = 3;
+
 }
 
 /* we will need a canonical content id that can be referenced
- * that way the messages can't be changed without breaking the reference chain.
+ * that way the messages cant be changed without breaking the reference chain.
+ * that id will be the message_id in the signed message
  */
 message ContentInfo {
   bytes content_hash = 1;
   string mime_type = 2;
   int64 content_length = 3;
 
+  bytes content = 4;
+
   /* What this content is in reference to, if anything */
-  ContentReference parent_ref = 4;
-  repeated ContentReference refs = 5;
+  ContentReference parent_ref = 10;
+  repeated ContentReference refs = 11;
+  repeated ContentInfo direct_content = 12;
 }
 
+
+// A signed ChannelSettings is how a channel is founded
 message ChannelSettings
 {
   string display_name = 1;
