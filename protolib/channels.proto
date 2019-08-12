@@ -125,10 +125,16 @@ message ContentInfo {
 message ChannelSettings
 {
   string display_name = 1;
-  repeated bytes signer_address_spec_hash = 2;
-  repeated DHTStrategy dht_strategies = 3;
-  bool allow_outside_messages = 4;
-  int64 required_outsider_snow_days = 5; // flakes * days required for staking
+
+  // These are folks who can create new blocks and do general mod functions like that
+  repeated bytes block_signer_spec_hashes = 2;
+
+  // These are folks who can update channel settings, (and thus add or remove signers).
+  // Essentialy owners.  Anyone here can take over the channel.
+  repeated bytes admin_signer_spec_hashes = 3;
+  repeated DHTStrategy dht_strategies = 4;
+  bool allow_outside_messages = 5;
+  int64 required_outsider_snow_days = 6; // flakes * days required for staking
 }
 
 message DHTStrategy
