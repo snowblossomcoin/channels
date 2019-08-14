@@ -15,6 +15,18 @@ service StargateService {
   rpc GetDHTData(GetDHTRequest) returns (DHTDataSet) {}
 }
 
+service ChannelService {
+  rpc SubscribePeering ( stream ChannelPeerMessage ) returns ( stream ChannelPeerMessage ) ;
+}
+
+message ChannelPeerMessage
+{
+  oneof z {
+    SignedMessage signed_update = 1;
+    
+  }
+}
+
 message StoreDHTRequest
 {
   SignedMessage signed_dht_data = 1;
@@ -61,7 +73,7 @@ message SignedMessagePayload {
     bytes tls_public_key = 5;
     DHTData dht_data = 6;
 
-    ChannelBlock channel_block = 20;
+    ChannelBlockHeader channel_block_header = 20;
     ContentInfo content_info = 21;
     ChannelSettings channel_settings = 22;
   }
@@ -93,14 +105,20 @@ message ConnectInfo {
 
 // Actual channel stuff
 
+message ChannelBlockHeader
+{
+  int32 version = 1;
+  bytes channel_id = 2;
+  bytes prev_hash = 4; //aka, prev signed header message_id
+  int64 block_index = 5;
+  bytes content_merkle = 6;  //merkle root of message_id of the signed content messages
+  int64 timestamp = 7;
+  SignedMessage settings = 8; // If not set, use the most recent that is set
+}
+
 message ChannelBlock {
-  bytes channel_id = 1;
-  bytes block_hash = 2;
-  bytes prev_hash = 3;
-  int64 block_index = 4;
 
-  SignedMessage settings = 5; // If not set, use the most recent that is set
-
+  SignedMessage signed_header = 1;
   repeated SignedMessage content = 10;
 
 }
@@ -131,12 +149,12 @@ message ContentInfo {
   string mime_type = 2;
   int64 content_length = 3;
 
-  bytes content = 4;
+  bytes content = 4; // might be blank if content is large
 
   /* What this content is in reference to, if anything */
   ContentReference parent_ref = 10;
   repeated ContentReference refs = 11;
-  repeated ContentInfo direct_content = 12;
+  repeated ContentInfo included_content = 12;
 }
 
 
