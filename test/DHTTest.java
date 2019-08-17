@@ -1,23 +1,18 @@
 package channels;
 
+import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
-
-import snowblossom.lib.*;
-import snowblossom.channels.*;
-import snowblossom.channels.proto.*;
+import java.io.File;
+import java.util.Random;
 import java.util.TreeMap;
-
-
-import org.junit.BeforeClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.util.Random;
-import com.google.protobuf.ByteString;
-
+import snowblossom.channels.*;
+import snowblossom.channels.proto.*;
+import snowblossom.lib.*;
 
 public class DHTTest
 {

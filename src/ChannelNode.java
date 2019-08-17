@@ -1,43 +1,29 @@
 package snowblossom.channels;
 
 import duckutil.Config;
-import duckutil.ConfigFile;
 import duckutil.ConfigCat;
+import duckutil.ConfigFile;
 import duckutil.ConfigMem;
-import snowblossom.lib.*;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.AddressSpec;
-import snowblossom.lib.AddressSpecHash;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import java.security.KeyPair;
-import snowblossom.channels.*;
-
+import io.grpc.ManagedChannel;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.NettyServerBuilder;
-
-import com.google.protobuf.ByteString;
-
-import java.security.cert.X509Certificate;
+import io.netty.handler.ssl.SslContext;
+import java.io.File;
 import java.util.Random;
 import java.util.TreeMap;
-
-import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.GrpcSslContexts;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslContext;
-import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.client.WalletUtil;
-
-import java.io.File;
-
+import snowblossom.lib.*;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.WalletDatabase;
 
 public class ChannelNode
 {

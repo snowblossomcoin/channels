@@ -1,15 +1,12 @@
 package snowblossom.channels;
 
 import duckutil.NetUtil;
-import snowblossom.channels.proto.*;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.bitlet.weupnp.GatewayDiscover;
-import org.bitlet.weupnp.GatewayDevice;
-import org.bitlet.weupnp.PortMappingEntry;
 import java.net.InetAddress;
+import java.util.logging.Logger;
+import org.bitlet.weupnp.GatewayDevice;
+import org.bitlet.weupnp.GatewayDiscover;
+import org.bitlet.weupnp.PortMappingEntry;
+import snowblossom.channels.proto.*;
 
 public class NetworkExaminer
 {

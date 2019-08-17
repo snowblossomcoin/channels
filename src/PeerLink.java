@@ -1,22 +1,17 @@
 package snowblossom.channels;
 
-import snowblossom.channels.proto.*;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import snowblossom.lib.AddressSpecHash;
-import io.netty.handler.ssl.SslContext;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NettyChannelBuilder;
-import snowblossom.lib.AddressSpecHash;
 import io.grpc.stub.StreamObserver;
-
-import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
-import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
-
+import io.netty.handler.ssl.SslContext;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.concurrent.TimeUnit;
-
+import snowblossom.channels.proto.*;
+import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
+import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
+import snowblossom.lib.AddressSpecHash;
 
 public class PeerLink implements StreamObserver<PeerList>
 {

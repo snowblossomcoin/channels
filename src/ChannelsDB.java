@@ -2,25 +2,19 @@ package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
 import duckutil.Config;
-import snowblossom.lib.DaemonThreadFactory;
-import snowblossom.channels.proto.LocalPeerInfo;
-import snowblossom.channels.proto.SignedMessage;
-
-import java.nio.ByteBuffer;
+import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import snowblossom.lib.db.ProtoDBMap;
+import snowblossom.channels.proto.LocalPeerInfo;
+import snowblossom.channels.proto.SignedMessage;
+import snowblossom.lib.DaemonThreadFactory;
 import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBProvider;
-import snowblossom.lib.db.DBMapMutationSet;
-
-import java.util.TreeMap;
-import java.util.Random;
-
+import snowblossom.lib.db.ProtoDBMap;
 
 public class ChannelsDB
 {

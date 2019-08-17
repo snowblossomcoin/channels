@@ -1,30 +1,25 @@
 package snowblossom.channels;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Map;
-import java.util.TreeMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.ByteString;
+import duckutil.PeriodicThread;
+import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.HexUtil;
-
-import duckutil.PeriodicThread;
-
-import com.google.protobuf.ByteString;
-import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.ValidationException;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import com.google.common.collect.ImmutableSet;
-import java.math.BigInteger;
-
-import java.util.Random;
-import java.util.HashSet;
+import snowblossom.lib.trie.ByteStringComparator;
 
 public class DHTMaintainer extends PeriodicThread
 {

@@ -1,13 +1,11 @@
 package channels;
 
-import org.junit.Test;
-import org.junit.Assert;
-
-import snowblossom.lib.HexUtil;
-import snowblossom.channels.HashMath;
-
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
+import org.junit.Assert;
+import org.junit.Test;
+import snowblossom.channels.HashMath;
+import snowblossom.lib.HexUtil;
 
 public class HashMathTest
 {

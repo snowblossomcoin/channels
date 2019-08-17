@@ -1,30 +1,26 @@
 package snowblossom.channels;
 
+import com.google.protobuf.ByteString;
+import java.net.Socket;
+import java.security.KeyStore;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.net.ssl.ManagerFactoryParameters;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.TrustManagerFactorySpi;
-import javax.net.ssl.X509TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
-import javax.net.ssl.ManagerFactoryParameters;
-
-import java.security.cert.X509Certificate;
-import java.net.Socket;
-import javax.net.ssl.SSLEngine;
-import java.security.KeyStore;
-
-import java.security.cert.CertificateException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import snowblossom.proto.AddressSpec;
+import javax.net.ssl.X509TrustManager;
+import org.bouncycastle.asn1.*;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.channels.proto.SignedMessagePayload;
 import snowblossom.lib.*;
-import java.security.Provider;
-import java.security.PublicKey;
-import com.google.protobuf.ByteString;
-
-import org.bouncycastle.asn1.*;
+import snowblossom.proto.AddressSpec;
 
 public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
 {

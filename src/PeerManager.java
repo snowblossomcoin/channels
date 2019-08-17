@@ -1,20 +1,14 @@
 package snowblossom.channels;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.Map;
-import snowblossom.lib.AddressSpecHash;
-import duckutil.PeriodicThread;
-
-import snowblossom.channels.proto.*;
 import com.google.common.collect.TreeMultimap;
-
-
-import java.util.logging.Level;
+import duckutil.PeriodicThread;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
-
-
+import snowblossom.channels.proto.*;
+import snowblossom.lib.AddressSpecHash;
 
 public class PeerManager extends PeriodicThread
 {

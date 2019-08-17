@@ -1,8 +1,7 @@
 package snowblossom.channels;
 import com.google.protobuf.ByteString;
-
-import java.math.BigInteger;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 public class HashMath
 {

@@ -1,16 +1,14 @@
 package snowblossom.channels;
 
-import snowblossom.lib.ValidationException;
-import snowblossom.lib.SignatureUtil;
-import snowblossom.lib.DigestUtil;
-import snowblossom.channels.proto.*;
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.proto.AddressSpec;
-import snowblossom.proto.SigSpec;
-
 import com.google.protobuf.ByteString;
 import java.security.MessageDigest;
-
+import snowblossom.channels.proto.*;
+import snowblossom.lib.DigestUtil;
+import snowblossom.lib.SignatureUtil;
+import snowblossom.lib.ValidationException;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.SigSpec;
+import snowblossom.proto.WalletKeyPair;
 
 public class ChannelSigUtil
 {

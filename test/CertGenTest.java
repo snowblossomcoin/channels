@@ -1,42 +1,23 @@
 package channels;
 
-import snowblossom.lib.KeyUtil;
-
-import org.junit.Test;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-
-import java.security.KeyPair;
-import snowblossom.lib.Globals;
-import snowblossom.channels.*;
-
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.netty.NettyServerBuilder;
-
-import com.google.protobuf.ByteString;
-
-import java.security.cert.X509Certificate;
-import java.util.Random;
-
-import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
-import snowblossom.channels.proto.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.GrpcSslContexts;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslContext;
-
-import java.util.TreeMap;
-
-import snowblossom.proto.WalletDatabase;
-
 import duckutil.ConfigMem;
-
-import snowblossom.lib.*;
+import io.grpc.ManagedChannel;
+import io.grpc.Server;
+import io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.NettyServerBuilder;
+import io.netty.handler.ssl.SslContext;
+import java.util.Random;
+import java.util.TreeMap;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import snowblossom.channels.*;
+import snowblossom.channels.proto.*;
+import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.client.WalletUtil;
+import snowblossom.lib.*;
+import snowblossom.lib.Globals;
+import snowblossom.proto.WalletDatabase;
 
 public class CertGenTest
 {

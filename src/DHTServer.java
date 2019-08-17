@@ -2,17 +2,15 @@ package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
+import java.math.BigInteger;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
-
-import snowblossom.lib.ValidationException;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.HexUtil;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.math.BigInteger;
-import java.util.Map;
+import snowblossom.lib.ValidationException;
 
 public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 {

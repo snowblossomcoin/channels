@@ -1,31 +1,17 @@
 package channels;
 
-import snowblossom.lib.KeyUtil;
-
-import org.junit.Test;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-
-import java.security.KeyPair;
-import snowblossom.lib.Globals;
-import snowblossom.channels.*;
-
-
 import com.google.protobuf.ByteString;
-
-import java.util.Random;
-
-import snowblossom.channels.proto.*;
-
-import java.util.TreeMap;
-
-import snowblossom.proto.WalletDatabase;
-
 import duckutil.ConfigMem;
-
-import snowblossom.lib.*;
+import java.util.Random;
+import java.util.TreeMap;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import snowblossom.channels.*;
+import snowblossom.channels.proto.*;
 import snowblossom.client.WalletUtil;
+import snowblossom.lib.*;
+import snowblossom.lib.Globals;
+import snowblossom.proto.WalletDatabase;
 
 public class ChannelSigUtilTest
 {
