@@ -18,6 +18,9 @@ import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.DBMapMutationSet;
 
+import java.util.TreeMap;
+import java.util.Random;
+
 
 public class ChannelsDB
 {
@@ -36,6 +39,7 @@ public class ChannelsDB
     throws Exception
   {
     Runtime.getRuntime().addShutdownHook(new DBShutdownThread());
+
     this.config = config;
     this.prov = prov;
 
@@ -53,6 +57,16 @@ public class ChannelsDB
   {
     peer_map = new ProtoDBMap(LocalPeerInfo.newBuilder().build().getParserForType(), prov.openMap("peer"));
     dht_data_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("dht_data"));
+
+    /*Random rnd = new Random();
+    byte[] b=new byte[64];
+    for(int i=0; i<1000; i++)
+    {
+      rnd.nextBytes(b);
+      DBMap d = prov.openMap("load_test_" + i);
+      
+      d.put("s" + rnd.nextInt(), ByteString.copyFrom(b));
+    }*/
 
   }
 

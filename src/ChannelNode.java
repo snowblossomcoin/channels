@@ -2,6 +2,8 @@ package snowblossom.channels;
 
 import duckutil.Config;
 import duckutil.ConfigFile;
+import duckutil.ConfigCat;
+import duckutil.ConfigMem;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.AddressSpec;
@@ -21,6 +23,7 @@ import com.google.protobuf.ByteString;
 
 import java.security.cert.X509Certificate;
 import java.util.Random;
+import java.util.TreeMap;
 
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.channels.proto.*;
@@ -60,7 +63,11 @@ public class ChannelNode
       System.exit(-1);
     }
 
-    ConfigFile config = new ConfigFile(args[0]);
+    ConfigFile f_config = new ConfigFile(args[0]);
+
+    TreeMap<String,String> mem_config = new TreeMap<>();
+    mem_config.put("db_separate","true");
+    Config config = new ConfigCat(new ConfigMem(mem_config), f_config);
 
     LogSetup.setup(config);
 		new ChannelNode(config);
@@ -86,6 +93,7 @@ public class ChannelNode
       wallet_db = WalletUtil.makeNewDatabase(config, params);
       WalletUtil.saveWallet(wallet_db, wallet_path);
     }
+
 
     db = new ChannelsDB(config, new JRocksDB(config) );
     net_ex = new NetworkExaminer(this);
