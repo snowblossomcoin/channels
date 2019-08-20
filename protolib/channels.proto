@@ -124,6 +124,13 @@ message ChannelBlockHeader
   // weight will win.
 }
 
+message ChannelBlockSummary
+{
+  string work_sum = 1;
+  ChannelBlockHeader header = 2;
+
+}
+
 message ChannelBlock {
 
   SignedMessage signed_header = 1;
