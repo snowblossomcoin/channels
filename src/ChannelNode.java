@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.HashMap;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
@@ -24,6 +25,7 @@ import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
+import com.google.protobuf.ByteString;
 
 public class ChannelNode
 {
@@ -37,6 +39,8 @@ public class ChannelNode
   private PeerManager peer_manager;
   private DHTServer dht_server;
   private DHTMaintainer dht_maintainer;
+
+  private HashMap<ChannelID, SingleChannelDB> db_map;
 
   public static void main(String args[])
 		throws Exception
@@ -86,6 +90,8 @@ public class ChannelNode
     peer_manager = new PeerManager(this);
     dht_server = new DHTServer(this);
     dht_maintainer = new DHTMaintainer(this);
+
+    db_map = new HashMap<>(16,0.5f);
    
     startServer();
 
@@ -101,6 +107,29 @@ public class ChannelNode
   public int getPort()
   {
     return config.getIntWithDefault("port", ChannelGlobals.NETWORK_PORT);
+  }
+
+  public SingleChannelDB getChannelDB(ChannelID cid)
+  {
+    synchronized(db_map)
+    {
+      SingleChannelDB cdb = db_map.get(cid);
+      if (cdb != null) return cdb;
+
+      try
+      {
+        cdb = new SingleChannelDB(config, cid);
+
+        db_map.put(cid, cdb);
+
+        return cdb;
+      }
+      catch(Exception e)
+      {
+        throw new RuntimeException(e);
+      }
+
+    }
   }
 
   private void startServer()

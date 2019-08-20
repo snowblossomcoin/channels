@@ -43,7 +43,6 @@ public class ChannelSigUtilTest
 
     ChannelSigUtil.validateSignedMessage(sm);
 
-
   }
 
 }
