@@ -114,6 +114,14 @@ message ChannelBlockHeader
   bytes content_merkle = 6;  //merkle root of message_id of the signed content messages
   int64 timestamp = 7;
   SignedMessage settings = 8; // If not set, use the most recent that is set
+  int64 weight = 9;
+  // Best chain is the chain with the highest sum(weight).
+  // 1) next tie breaker is longest chain
+  // 2) next tie breaker is head with earlier timestamp
+  // 3) next tie breaker is head with lower message_id
+  // So a block creator can leave the weights as zero and everything is fine.  If 
+  // they need to revert some blocks with a fork, making a new block with a higher
+  // weight will win.
 }
 
 message ChannelBlock {

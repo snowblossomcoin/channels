@@ -57,7 +57,7 @@ public class ChannelsDB
     for(int i=0; i<1000; i++)
     {
       rnd.nextBytes(b);
-      DBMap d = prov.openMap("load_test_" + i);
+      DBMap d = prov.openMap("load_test/" + i);
       
       d.put("s" + rnd.nextInt(), ByteString.copyFrom(b));
     }*/
