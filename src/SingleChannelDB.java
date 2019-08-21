@@ -14,6 +14,10 @@ import snowblossom.channels.proto.SignedMessage;
 import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.ProtoDBMap;
 import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.lib.db.DBMap;
+import com.google.protobuf.ByteString;
+import snowblossom.lib.ChainHash;
+import java.nio.ByteBuffer;
 
 public class SingleChannelDB
 {
@@ -28,6 +32,7 @@ public class SingleChannelDB
   protected ProtoDBMap<LocalPeerInfo> peer_map;
   protected ProtoDBMap<SignedMessage> content_map;
   protected ProtoDBMap<ChannelBlockSummary> summary_map;
+  protected DBMap block_height_map;
 
 
   public SingleChannelDB(Config base_config, ChannelID cid)
@@ -61,6 +66,7 @@ public class SingleChannelDB
     peer_map = new ProtoDBMap(LocalPeerInfo.newBuilder().build().getParserForType(), prov.openMap("peer"));
     content_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("c"));
     summary_map = new ProtoDBMap(ChannelBlockSummary.newBuilder().build().getParserForType(), prov.openMap("block_sum"));
+		block_height_map = prov.openMap("height");
 
   }
 
@@ -68,6 +74,25 @@ public class SingleChannelDB
   public ProtoDBMap<LocalPeerInfo> getPeerMap(){return peer_map; }
   public ProtoDBMap<SignedMessage> getContentMap(){return content_map; }
   public ProtoDBMap<ChannelBlockSummary> getBlockSummaryMap(){return summary_map; }
+
+  public ChainHash getBlockHashAtHeight(long height)
+  {
+    ByteBuffer bb = ByteBuffer.allocate(8);
+    bb.putLong(height);
+    ByteString hash = block_height_map.get(ByteString.copyFrom(bb.array()));
+    if (hash == null) return null;
+
+    return new ChainHash(hash);
+  }
+
+  public void setBlockHashAtHeight(long height, ChainHash hash)
+  { 
+    ByteBuffer bb = ByteBuffer.allocate(8);
+    bb.putLong(height);
+
+    block_height_map.put(ByteString.copyFrom(bb.array()), hash.getBytes());
+  }
+
 
   protected void dbShutdownHandler()
   {

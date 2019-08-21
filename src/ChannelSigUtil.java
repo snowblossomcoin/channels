@@ -15,6 +15,10 @@ public class ChannelSigUtil
   public static SignedMessagePayload validateSignedMessage(SignedMessage sm)
     throws ValidationException
   {
+    if (sm == null)
+    {
+      throw new ValidationException("Message is null");
+    }
     try
     {
       SignedMessagePayload payload = SignedMessagePayload.parseFrom(sm.getPayload());
@@ -100,6 +104,23 @@ public class ChannelSigUtil
     signed.setMessageId( ByteString.copyFrom( md.digest() ) );
 
     return signed.build();
+  }
+
+  /**
+   * Quickly extract payload without validation
+   * should only be used on messages that are already validated
+   */
+  public static SignedMessagePayload quickPayload(SignedMessage sm)
+  {
+    try
+    {
+      SignedMessagePayload payload = SignedMessagePayload.parseFrom(sm.getPayload());
+      return payload;
+    } 
+    catch(com.google.protobuf.InvalidProtocolBufferException e)
+    {
+      throw new RuntimeException(e);
+    }
   }
 
 

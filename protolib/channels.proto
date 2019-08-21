@@ -108,8 +108,9 @@ message ConnectInfo {
 message ChannelBlockHeader
 {
   int32 version = 1;
-  bytes channel_id = 2;
-  bytes prev_hash = 4; //aka, prev signed header message_id
+  int64 block_height = 2;
+  bytes channel_id = 3;
+  bytes prev_block_hash = 4; //aka, prev signed header message_id
   int64 block_index = 5;
   bytes content_merkle = 6;  //merkle root of message_id of the signed content messages
   int64 timestamp = 7;
@@ -127,7 +128,8 @@ message ChannelBlockHeader
 message ChannelBlockSummary
 {
   string work_sum = 1;
-  ChannelBlockHeader header = 2;
+  bytes block_id = 2; //aka the message id of the signed header
+  ChannelBlockHeader header = 3;
 
 }
 
