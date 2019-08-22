@@ -111,10 +111,10 @@ message ChannelBlockHeader
   int64 block_height = 2;
   bytes channel_id = 3;
   bytes prev_block_hash = 4; //aka, prev signed header message_id
-  int64 block_index = 5;
+  int64 block_index = 5; // WTF is this?
   bytes content_merkle = 6;  //merkle root of message_id of the signed content messages
   int64 timestamp = 7;
-  SignedMessage settings = 8; // If not set, use the most recent that is set
+  ChannelSettings settings = 8;
   int64 weight = 9;
   // Best chain is the chain with the highest sum(weight).
   // 1) next tie breaker is longest chain
@@ -123,6 +123,12 @@ message ChannelBlockHeader
   // So a block creator can leave the weights as zero and everything is fine.  If 
   // they need to revert some blocks with a fork, making a new block with a higher
   // weight will win.
+  
+
+  // Only set on first block (block zero).  The message ID from this
+  // becomes the channel ID.
+  SignedMessage initial_settings = 10;
+
 }
 
 message ChannelBlockSummary
@@ -130,11 +136,12 @@ message ChannelBlockSummary
   string work_sum = 1;
   bytes block_id = 2; //aka the message id of the signed header
   ChannelBlockHeader header = 3;
+  ChannelSettings effective_settings = 4;
+
 
 }
 
 message ChannelBlock {
-
   SignedMessage signed_header = 1;
   repeated SignedMessage content = 10;
 
