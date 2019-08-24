@@ -1,35 +1,59 @@
 package snowblossom.channels;
 
+import com.google.protobuf.ByteString;
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.util.LinkedList;
 import snowblossom.channels.proto.ChannelBlock;
-import snowblossom.channels.proto.ChannelSettings;
 import snowblossom.channels.proto.ChannelBlockHeader;
 import snowblossom.channels.proto.ChannelBlockSummary;
+import snowblossom.channels.proto.ChannelSettings;
+import snowblossom.channels.proto.ContentInfo;
+import snowblossom.channels.proto.ContentReference;
+import snowblossom.channels.proto.SignedMessage;
+import snowblossom.channels.proto.SignedMessagePayload;
+import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.BlockchainUtil;
-import snowblossom.lib.ValidationException;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.DigestUtil;
+import snowblossom.lib.AddressUtil;
+import snowblossom.lib.Globals;
 import snowblossom.lib.Validation;
+import snowblossom.lib.ValidationException;
+import java.util.HashSet;
 
 public class ChannelValidation
 {
-  public static void checkBlockBasics(ChannelBlock blk, boolean require_content)
+  public static void checkBlockBasics(ChannelBlock blk, boolean check_content)
     throws ValidationException
   {
     ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader()).getChannelBlockHeader();
-    if (header == null) throw new ValidationException("No headerd in signed header");
+    if (header == null) throw new ValidationException("No header in signed header");
     if (header.getBlockHeight() == 0)
     {
       ChannelSettings settings = ChannelSigUtil.validateSignedMessage(header.getInitialSettings()).getChannelSettings();
       if (settings == null) throw new ValidationException("Missing initial settings on block zero");
 
-      if (header.getSettings() != null)
+      AddressSpecHash channel_id = ChannelSigUtil.getChannelId( new ChainHash(header.getInitialSettings().getMessageId() ));
+
+      if (!channel_id.equals(header.getChannelId()))
+      {
+        throw new ValidationException("Message id from initial settings must be channel id");
+      }
+
+      if (header.getSettings().getActive())
       {
         throw new ValidationException("Must not have initial_settings and settings on block zero");
       }
-     
+      if (!ChainHash.ZERO_HASH.equals( header.getPrevBlockHash()))
+      {
+        throw new ValidationException("Block zero must have zero prev_block_hash");
+
+      }
     }
     else
     {
-      if (header.getInitialSettings() != null)
+      if (header.getInitialSettings().getPayload().size() > 0)
       {
         throw new ValidationException("Must not have initial_settings on non-zero block");
       }
@@ -42,19 +66,170 @@ public class ChannelValidation
       throw new ValidationException("Unexpected block header version: " + header.getVersion());
     }
 
+    if (header.getChannelId().size() != Globals.ADDRESS_SPEC_HASH_LEN)
+    {
+      throw new ValidationException("Invalid channel id");
+    }
+    if(header.getPrevBlockHash().size() != Globals.BLOCKCHAIN_HASH_LEN)
+    {
+      throw new ValidationException("Invalid prev block hash");
+    }
+    if(header.getContentMerkle().size() != Globals.BLOCKCHAIN_HASH_LEN)
+    {
+      throw new ValidationException("Invalid content merkle hash");
+    }
+
+    if (check_content)
+    {
+      MessageDigest md = DigestUtil.getMD();
+
+      LinkedList<ChainHash> content_hash_list = new LinkedList<>();
+      for(SignedMessage content : blk.getContentList())
+      {
+        validateContent(content, md);
+       content_hash_list.add(new ChainHash(content.getMessageId()));
+      }
+
+      ChainHash expected_merkle = null;
+      if (content_hash_list.size() ==0)
+      {
+        expected_merkle = ChainHash.ZERO_HASH;
+      }
+      else
+      {
+        expected_merkle = DigestUtil.getMerkleRootForTxList(content_hash_list);
+      }
+      if (!expected_merkle.equals(header.getContentMerkle()))
+      {
+        throw new ValidationException("Merkle root mismatch");
+      }
+
+    }
+
     //TODO
 
   }
 
-  public static ChannelBlockSummary deepBlockValidation(SingleChannelDB db, ChannelBlock blk, ChannelBlockSummary prev_summary)
+  public static void validateContent(SignedMessage sm, MessageDigest md)
+    throws ValidationException
+  {
+    ContentInfo ci = ChannelSigUtil.validateSignedMessage(sm).getContentInfo();
+    validateContent(ci, md);
+  }
+
+  public static void validateContent(ContentInfo ci, MessageDigest md)
+    throws ValidationException
+  {
+    if (ci.getContentHash().size() != Globals.BLOCKCHAIN_HASH_LEN)
+    {
+      throw new ValidationException("Missing content info");
+    }
+
+    Validation.validateNonNegValue( ci.getContentLength(), "content length");
+
+    if (ci.getContent().size() > 0)
+    {
+      if (ci.getContent().size() != ci.getContentLength())
+      {
+        throw new ValidationException("content length mismatch");
+      }
+
+      ByteString found_hash = ByteString.copyFrom(md.digest(ci.getContent().toByteArray()));
+      if(!ci.getContentHash().equals(found_hash))
+      {
+        throw new ValidationException("content hash mismatch");
+      }
+    }
+
+    if (ci.getParentRef().getChannelId().size() > 0)
+    {
+      validateRef(ci.getParentRef());
+    }
+    for(ContentReference ref : ci.getRefsList())
+    {
+      validateRef(ref);
+    }
+    for(ContentInfo sub_ci : ci.getIncludedContentList())
+    {
+      validateContent(sub_ci, md);
+    }
+
+ 
+  }
+
+  public static void validateRef(ContentReference ref)
+    throws ValidationException
+  {
+    if (ref.getChannelId().size() != Globals.ADDRESS_SPEC_HASH_LEN)
+    {
+      throw new ValidationException("Invalid channel id in reference");
+    }
+    if (ref.getMessageId().size() != Globals.BLOCKCHAIN_HASH_LEN)
+    {
+      throw new ValidationException("Invalid message id in reference");
+    }
+
+  }
+
+
+  public static ChannelBlockSummary deepBlockValidation(ChannelBlock blk, ChannelBlockSummary prev_summary)
     throws ValidationException
   {
     checkBlockBasics(blk, true);
+
+    SignedMessagePayload header_payload = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader());
+
+    ChannelBlockHeader header = header_payload.getChannelBlockHeader();
     
     //TODO
 
+    // Validate signer of block vs effective settings
+    // if changing settings, validate that it is admin
 
-    ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader()).getChannelBlockHeader();
+    ChannelSettings effective_settings = null;
+    HashSet<ByteString> allowed_signers = new HashSet<>();
+    HashSet<ByteString> admin_signers = new HashSet<>();
+    if (prev_summary == null)
+    {
+      if (header.getBlockHeight() != 0)
+      {
+        throw new ValidationException("Must have prev block on non-zero block");
+      }
+      if (header.getSettings().getActive())
+      {
+        throw new ValidationException("Block zero must not have settings");
+      }
+      effective_settings = ChannelSigUtil.quickPayload(header.getInitialSettings()).getChannelSettings();
+
+    }
+    else
+    {
+      if (header.getBlockHeight() != prev_summary.getHeader().getBlockHeight() + 1L)
+      {
+        throw new ValidationException("Block heights must increase by one");
+      }
+
+      effective_settings = prev_summary.getEffectiveSettings();
+    }
+
+    allowed_signers.addAll(effective_settings.getBlockSignerSpecHashesList());
+    allowed_signers.addAll(effective_settings.getAdminSignerSpecHashesList());
+    admin_signers.addAll(effective_settings.getAdminSignerSpecHashesList());
+
+    AddressSpecHash signer = AddressUtil.getHashForSpec(header_payload.getClaim());
+
+    if (!allowed_signers.contains(signer.getBytes()))
+    {
+      throw new ValidationException("Block signer not on signer list");
+    }
+
+    if (header.getSettings().getActive())
+    {
+      if (!admin_signers.contains(signer.getBytes()))
+      {
+        throw new ValidationException("Block signer not on admin list");
+      }
+    }
 
     ChannelBlockSummary.Builder sum = ChannelBlockSummary.newBuilder();
 
@@ -72,7 +247,7 @@ public class ChannelValidation
 
     BigInteger work_sum = prev_work_sum.add( BigInteger.valueOf( header.getWeight() + 1L ) );
 
-    if (header.getSettings() != null)
+    if (header.getSettings().getActive())
     {
       settings = header.getSettings();
     }

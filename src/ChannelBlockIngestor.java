@@ -89,7 +89,7 @@ public class ChannelBlockIngestor
         }
       }
 
-      ChannelBlockSummary summary = ChannelValidation.deepBlockValidation(db, blk, prev_summary);
+      ChannelBlockSummary summary = ChannelValidation.deepBlockValidation(blk, prev_summary);
 
       try(TimeRecordAuto tra_tx = TimeRecord.openAuto("ChannelBlockIngestor.blockSave"))
       {

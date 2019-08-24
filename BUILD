@@ -122,3 +122,18 @@ java_test(
     ],
 )
 
+java_test(
+    name = "channel_validation_test",
+    srcs = ["test/ChannelValidationTest.java"],
+    test_class = "channels.ChannelValidationTest",
+    size="medium",
+    deps = [
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+

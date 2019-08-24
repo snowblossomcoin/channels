@@ -111,15 +111,13 @@ message ChannelBlockHeader
   int64 block_height = 2;
   bytes channel_id = 3;
   bytes prev_block_hash = 4; //aka, prev signed header message_id
-  int64 block_index = 5; // WTF is this?
   bytes content_merkle = 6;  //merkle root of message_id of the signed content messages
   int64 timestamp = 7;
   ChannelSettings settings = 8;
   int64 weight = 9;
-  // Best chain is the chain with the highest sum(weight).
-  // 1) next tie breaker is longest chain
-  // 2) next tie breaker is head with earlier timestamp
-  // 3) next tie breaker is head with lower message_id
+  // Best chain is the chain with the highest sum(weight) + block_height.
+  // 1) next tie breaker is head with earlier timestamp
+  // 2) next tie breaker is head with lower message_id
   // So a block creator can leave the weights as zero and everything is fine.  If 
   // they need to revert some blocks with a fork, making a new block with a higher
   // weight will win.
@@ -127,6 +125,8 @@ message ChannelBlockHeader
 
   // Only set on first block (block zero).  The message ID from this
   // becomes the channel ID.
+  // Note: the initial settings signer doesn't need to be any particular key. 
+  // it doesn't need to be one of the admin keys.
   SignedMessage initial_settings = 10;
 
 }
@@ -185,17 +185,18 @@ message ContentInfo {
 // A signed ChannelSettings is how a channel is founded
 message ChannelSettings
 {
-  string display_name = 1;
+  bool active = 1;
+  string display_name = 2;
 
   // These are folks who can create new blocks and do general mod functions like that
-  repeated bytes block_signer_spec_hashes = 2;
+  repeated bytes block_signer_spec_hashes = 3;
 
   // These are folks who can update channel settings, (and thus add or remove signers).
   // Essentialy owners.  Anyone here can take over the channel.
-  repeated bytes admin_signer_spec_hashes = 3;
-  repeated DHTStrategy dht_strategies = 4;
-  bool allow_outside_messages = 5;
-  int64 required_outsider_snow_days = 6; // flakes * days required for staking
+  repeated bytes admin_signer_spec_hashes = 4;
+  repeated DHTStrategy dht_strategies = 5;
+  bool allow_outside_messages = 6;
+  int64 required_outsider_snow_days = 7; // flakes * days required for staking
 }
 
 message DHTStrategy

@@ -3,6 +3,8 @@ package snowblossom.channels;
 import com.google.protobuf.ByteString;
 import java.security.MessageDigest;
 import snowblossom.channels.proto.*;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.SignatureUtil;
 import snowblossom.lib.ValidationException;
@@ -121,6 +123,13 @@ public class ChannelSigUtil
     {
       throw new RuntimeException(e);
     }
+  }
+
+  public static AddressSpecHash getChannelId(ChainHash message_id)
+  {
+    MessageDigest md = DigestUtil.getMDAddressSpec();
+
+    return new AddressSpecHash( md.digest(message_id.toByteArray() ));
   }
 
 
