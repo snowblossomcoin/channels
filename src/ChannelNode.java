@@ -57,6 +57,7 @@ public class ChannelNode
 
     TreeMap<String,String> mem_config = new TreeMap<>();
     mem_config.put("db_separate","true");
+    mem_config.put("key_count", "1");
     Config config = new ConfigCat(new ConfigMem(mem_config), f_config);
 
     LogSetup.setup(config);
