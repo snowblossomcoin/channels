@@ -59,7 +59,7 @@ public class ChannelBlockIngestor
     ChainHash blockhash;
     try(TimeRecordAuto tra_blk = TimeRecord.openAuto("ChannelBlockIngestor.ingestBlock"))
     {
-      ChannelValidation.checkBlockBasics(blk, true);
+      ChannelValidation.checkBlockBasics(cid, blk, true);
 
       ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader()).getChannelBlockHeader();
       if (header == null) throw new ValidationException("Header is null");
@@ -89,7 +89,7 @@ public class ChannelBlockIngestor
         }
       }
 
-      ChannelBlockSummary summary = ChannelValidation.deepBlockValidation(blk, prev_summary);
+      ChannelBlockSummary summary = ChannelValidation.deepBlockValidation(cid, blk, prev_summary);
 
       try(TimeRecordAuto tra_tx = TimeRecord.openAuto("ChannelBlockIngestor.blockSave"))
       {

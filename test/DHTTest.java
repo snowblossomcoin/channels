@@ -44,8 +44,8 @@ public class DHTTest
 
     Thread.sleep(45000);
 
-    Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() >= 2);
-    Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() >= 2);
+    Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() >= 3);
+    Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3);
 
     Random rnd = new Random();
     byte[] id_bytes = new byte[16];
@@ -87,7 +87,7 @@ public class DHTTest
 
     }
     System.out.println("B match: " + b_match);
-    Assert.assertTrue(b_match > 70);
+    Assert.assertTrue(b_match > 75);
   
   }
 

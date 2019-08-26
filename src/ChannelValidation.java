@@ -24,18 +24,23 @@ import java.util.HashSet;
 
 public class ChannelValidation
 {
-  public static void checkBlockBasics(ChannelBlock blk, boolean check_content)
+  public static void checkBlockBasics(ChannelID chan_id, ChannelBlock blk, boolean check_content)
     throws ValidationException
   {
     ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader()).getChannelBlockHeader();
     if (header == null) throw new ValidationException("No header in signed header");
+
+    if (!chan_id.equals(header.getChannelId()))
+    {
+      throw new ValidationException("Block on wrong channel");
+    }
+
     if (header.getBlockHeight() == 0)
     {
       ChannelSettings settings = ChannelSigUtil.validateSignedMessage(header.getInitialSettings()).getChannelSettings();
       if (settings == null) throw new ValidationException("Missing initial settings on block zero");
 
       AddressSpecHash channel_id = ChannelSigUtil.getChannelId( new ChainHash(header.getInitialSettings().getMessageId() ));
-
       if (!channel_id.equals(header.getChannelId()))
       {
         throw new ValidationException("Message id from initial settings must be channel id");
@@ -172,10 +177,10 @@ public class ChannelValidation
   }
 
 
-  public static ChannelBlockSummary deepBlockValidation(ChannelBlock blk, ChannelBlockSummary prev_summary)
+  public static ChannelBlockSummary deepBlockValidation(ChannelID chan_id, ChannelBlock blk, ChannelBlockSummary prev_summary)
     throws ValidationException
   {
-    checkBlockBasics(blk, true);
+    checkBlockBasics(chan_id, blk, true);
 
     SignedMessagePayload header_payload = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader());
 

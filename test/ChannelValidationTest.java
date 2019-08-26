@@ -46,6 +46,7 @@ public class ChannelValidationTest
     // Generate initial block
 
     ChannelBlockSummary sum = null;
+    ChannelID chan_id = null;
 
     // Inital block
     {
@@ -57,12 +58,15 @@ public class ChannelValidationTest
       SignedMessage signed_init_settings = ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0), 
         SignedMessagePayload.newBuilder().setChannelSettings(init_settings.build()).build());
 
+      chan_id = ChannelSigUtil.getChannelId(new ChainHash(signed_init_settings.getMessageId()));
+
+
       ChannelBlockHeader.Builder header = ChannelBlockHeader.newBuilder();
       header.setInitialSettings(signed_init_settings);
       header.setBlockHeight(0);
 
       header.setVersion(1);
-      header.setChannelId( ChannelSigUtil.getChannelId(new ChainHash(signed_init_settings.getMessageId())).getBytes());
+      header.setChannelId( chan_id.getBytes());
       header.setPrevBlockHash( ChainHash.ZERO_HASH.getBytes());
       header.setContentMerkle( ChainHash.ZERO_HASH.getBytes());
 
@@ -72,7 +76,7 @@ public class ChannelValidationTest
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
 
-      sum = ChannelValidation.deepBlockValidation(blk.build(), null);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), null);
 
     }
 
@@ -117,7 +121,7 @@ public class ChannelValidationTest
       }
 
 
-      sum = ChannelValidation.deepBlockValidation(blk.build(), sum);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum);
     }
     
     // Set new settings
@@ -143,7 +147,7 @@ public class ChannelValidationTest
       blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-      sum = ChannelValidation.deepBlockValidation(blk.build(), sum);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum);
 
     }
     // try new settings
@@ -161,13 +165,11 @@ public class ChannelValidationTest
       blk.setSignedHeader( ChannelSigUtil.signMessage(block_db2.getAddresses(0), block_db2.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-      sum = ChannelValidation.deepBlockValidation(blk.build(), sum);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum);
 
     }
 
     System.out.println(sum);
-
-
 
   }
 

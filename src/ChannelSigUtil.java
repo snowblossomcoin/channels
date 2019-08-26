@@ -125,11 +125,11 @@ public class ChannelSigUtil
     }
   }
 
-  public static AddressSpecHash getChannelId(ChainHash message_id)
+  public static ChannelID getChannelId(ChainHash message_id)
   {
     MessageDigest md = DigestUtil.getMDAddressSpec();
 
-    return new AddressSpecHash( md.digest(message_id.toByteArray() ));
+    return new ChannelID( md.digest(message_id.toByteArray() ));
   }
 
 

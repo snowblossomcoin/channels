@@ -13,6 +13,11 @@ public class ChannelID extends AddressSpecHash
   {
     super(bs);
   }
+  public ChannelID(byte[] bs)
+  {
+    super(bs);
+  }
+
 
   public String asString()
   {
