@@ -42,7 +42,7 @@ public class PeerManager extends PeriodicThread
       for(Map.Entry<AddressSpecHash, PeerLink> me : link_map.entrySet())
       {
         PeerLink pl = me.getValue();
-        if (!pl.isCool())
+        if (!pl.isGood())
         {
           pl.close();
           to_remove.add(me.getKey());

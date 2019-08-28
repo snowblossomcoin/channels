@@ -299,6 +299,7 @@ public class DHTMaintainer extends PeriodicThread
 
   }
 
+  /** Removes old DB entries for old nodes */
   public class PruneThread extends PeriodicThread
   {
 

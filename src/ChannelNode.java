@@ -120,16 +120,13 @@ public class ChannelNode
       try
       {
         cdb = new SingleChannelDB(config, cid);
-
         db_map.put(cid, cdb);
-
         return cdb;
       }
       catch(Exception e)
       {
         throw new RuntimeException(e);
       }
-
     }
   }
 

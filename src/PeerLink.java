@@ -67,7 +67,6 @@ public class PeerLink implements StreamObserver<PeerList>
 
   public StargateServiceBlockingStub getStub() {return stargate_blocking_stub; }
 
-
   public static ConnectInfo findConnectInfo(ChannelPeerInfo info, NetworkExaminer net_ex)
   {
     if (net_ex.hasIpv6())
@@ -90,8 +89,6 @@ public class PeerLink implements StreamObserver<PeerList>
 
     return null;
   }
-
-  public boolean isCool(){return isGood(); }
 
   public boolean isGood()
   {
