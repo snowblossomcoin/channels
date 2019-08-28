@@ -15,20 +15,29 @@ import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStu
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
 import snowblossom.lib.AddressSpecHash;
 
+
+/**
+ * Mostly for DHT peering.  However, this peer link is also used for outbound
+ * links to peers for ChannelLinks.  In which case, the channel links will call
+ * pokeRecv() to keep this link alive.
+ *
+ */
 public class PeerLink implements StreamObserver<PeerList>
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
-  private ChannelNode node;
-  private ChannelPeerInfo info;
+  private final ChannelNode node;
+  private final ChannelPeerInfo info;
 
-  private StargateServiceStub stargate_stub;
-  private StargateServiceBlockingStub stargate_blocking_stub;
-  private ChannelServiceStub channel_stub;
-  private ChannelServiceBlockingStub channel_blocking_stub;
+  private final StargateServiceStub stargate_stub;
+  private final StargateServiceBlockingStub stargate_blocking_stub;
+  private final ChannelServiceStub channel_stub;
+  private final ChannelServiceBlockingStub channel_blocking_stub;
+	private final ManagedChannel channel;
+  private final AddressSpecHash remote_node_id;
+  
   private volatile boolean closed;
   private volatile long last_recv;
-	private ManagedChannel channel;
 
   // We are the client
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
@@ -43,10 +52,10 @@ public class PeerLink implements StreamObserver<PeerList>
     {
       throw new Exception("Unable to connect - no protocols in common");
     }
-		AddressSpecHash node_id = new AddressSpecHash(info.getAddressSpecHash());
+		remote_node_id = new AddressSpecHash(info.getAddressSpecHash());
 
     SslContext ssl_ctx = GrpcSslContexts.forClient()
-      .trustManager(SnowTrustManagerFactorySpi.getFactory(node_id))
+      .trustManager(SnowTrustManagerFactorySpi.getFactory(remote_node_id))
     .build();
 
     channel = NettyChannelBuilder
@@ -64,7 +73,7 @@ public class PeerLink implements StreamObserver<PeerList>
 
   public AddressSpecHash getNodeID()
   {
-    return new AddressSpecHash(info.getAddressSpecHash());
+    return remote_node_id;
   }
 
   public void getDHTPeers(SignedMessage self_peer_info)

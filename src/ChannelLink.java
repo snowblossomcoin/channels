@@ -3,23 +3,33 @@ package snowblossom.channels;
 import io.grpc.stub.StreamObserver;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import snowblossom.lib.AddressSpecHash;
 import snowblossom.channels.proto.*;
 
+/**
+ * A streaming link for peer messages.  Works for both client and server.
+ * We get incoming messages via StreamObserver interface overrides.
+ * Outgoing messages go via 'sink'
+ */
 public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 {   
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
 	private final boolean server_side;
   private final boolean client_side;
-	private StreamObserver<ChannelPeerMessage> sink;
+	private final StreamObserver<ChannelPeerMessage> sink;
   private PeerLink peer_link; // only if we are client
+  private ChannelNode node; // only if we are server
+
+  private ChannelContext ctx;
   private ChannelID cid;
   private volatile long last_recv;
   private volatile boolean closed;
 
 	// As server
-	public ChannelLink(StreamObserver<ChannelPeerMessage> sink)
+	public ChannelLink(ChannelNode node, StreamObserver<ChannelPeerMessage> sink)
 	{
+    this.node = node;
     last_recv = System.currentTimeMillis();
 		this.sink = sink;
     server_side = true;
@@ -28,7 +38,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 	}
 
   // As client
-  public ChannelLink(PeerLink peer_link, ChannelID cid)
+  public ChannelLink(PeerLink peer_link, ChannelID cid, ChannelContext ctx)
   {
     last_recv = System.currentTimeMillis();
     server_side = false;
@@ -38,6 +48,13 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
     sink = peer_link.getChannelAsyncStub().subscribePeering(this);
 
+  }
+
+  /** returns remote node id if know, null if we are server */
+  public AddressSpecHash getRemoteNodeID()
+  {
+    if (peer_link == null) return null;
+    return peer_link.getNodeID();
   }
 
   public boolean isGood()
@@ -86,6 +103,21 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
 		last_recv = System.currentTimeMillis();
     if (peer_link != null) peer_link.pokeRecv();
+
+    if ((server_side) && (cid == null))
+    {
+      cid = new ChannelID(pm.getChannelId());
+      ctx = node.getChannelSubscriber().getContext(cid);
+      if (ctx == null)
+      {
+        logger.log(Level.WARNING, "Client subscribed to channel we don't care about: " + cid);
+        close();
+      }
+      else
+      {
+        ctx.addLink(this);
+      }
+    }
 
 	}
 }

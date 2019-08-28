@@ -3,14 +3,20 @@ package snowblossom.channels;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import duckutil.PeriodicThread;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Collections;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ValidationException;
 
+/**
+ * For each channel we are subscribed to, maintains links, updated dht data
+ */
 public class ChannelPeerMaintainer extends PeriodicThread
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
@@ -20,6 +26,7 @@ public class ChannelPeerMaintainer extends PeriodicThread
   //private ImmutableSet<AddressSpecHash> current_links;
 
   private static final int DESIRED_CHANNEL_PEERS = 5;
+  private static final int CONNECT_CHANNEL_PEERS_PER_PASS = 2;
 
   public ChannelPeerMaintainer(ChannelNode node)
   {
@@ -28,7 +35,6 @@ public class ChannelPeerMaintainer extends PeriodicThread
     setDaemon(false);
 
     this.node = node;
-
   }
 
   // Things to do for each channel:
@@ -44,20 +50,54 @@ public class ChannelPeerMaintainer extends PeriodicThread
     {
       String chan_str = cid.asString();
 
-      // Note, this is only the outbound connections
-      List<PeerLink> connected_peers = node.getPeerManager().getPeersWithReason(chan_str);
+      ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+      if (ctx == null) continue; // must not be really open (maybe just not yet)
+
+      ctx.prune();
+      List<ChannelLink> links = ctx.getLinks();
 
       // TODO - actually get head settings
       ChannelSettings settings = null;
-
       List<ByteString> dht_element_lst = node.getDHTStratUtil().getDHTLocations(cid, settings);
-
       saveDHT(cid, dht_element_lst, my_info);
 
-      List<ChannelPeerInfo> possible_peers = getAllDHTPeers(cid, dht_element_lst);
-      
+      if (links.size() < DESIRED_CHANNEL_PEERS)
+      {
+        Set<AddressSpecHash> connected_set = getConnectedNodeSet(links);
+        connected_set.add(node.getNodeID());
+
+        LinkedList<ChannelPeerInfo> possible_peers = getAllDHTPeers(cid, dht_element_lst, connected_set);
+        Collections.shuffle(possible_peers);
+
+        // TODO - be better about not hammering down/bad nodes with connects
+        for(int i=0; i<CONNECT_CHANNEL_PEERS_PER_PASS; i++)
+        {
+          ChannelPeerInfo ci = possible_peers.poll();
+          if (ci != null)
+          {
+            PeerLink pl = node.getPeerManager().connectNode(ci, chan_str);
+            ChannelLink cl = new ChannelLink(pl, cid, ctx);
+            ctx.addLink(cl);
+          }
+        }
+      }
 
     }
+
+  }
+
+  private Set<AddressSpecHash> getConnectedNodeSet(List<ChannelLink> links)
+  {
+    HashSet<AddressSpecHash> set = new HashSet<>();
+    for(ChannelLink link : links)
+    {
+      AddressSpecHash h = link.getRemoteNodeID();
+      if (h != null)
+      {
+        set.add(h);
+      }
+    }
+    return set;
 
   }
 
@@ -84,7 +124,7 @@ public class ChannelPeerMaintainer extends PeriodicThread
 
   }
 
-  private List<ChannelPeerInfo> getAllDHTPeers(ChannelID cid, List<ByteString> dht_element_lst)
+  private LinkedList<ChannelPeerInfo> getAllDHTPeers(ChannelID cid, List<ByteString> dht_element_lst, Set<AddressSpecHash> connected_set)
   {
     HashMap<ByteString, SignedMessagePayload> peer_map = new HashMap<>();
 
@@ -99,6 +139,8 @@ public class ChannelPeerMaintainer extends PeriodicThread
           long tm = payload.getTimestamp();
 
           ByteString node_id = payload.getDhtData().getPeerInfo().getAddressSpecHash();
+
+          if (!connected_set.contains(new AddressSpecHash(node_id)))
           if ((!peer_map.containsKey(node_id)) || (peer_map.get(node_id).getTimestamp() < tm))
           {
             peer_map.put(node_id, payload);
@@ -114,9 +156,9 @@ public class ChannelPeerMaintainer extends PeriodicThread
     }
 
     return lst;
-
-
   }
+
+
 }
 
 

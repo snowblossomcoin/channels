@@ -16,6 +16,10 @@ import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.ProtoDBMap;
 
+
+/**
+ * Node wide DB, not for any specific channel
+ */
 public class ChannelsDB
 {
   private static final Logger logger = Logger.getLogger("snowblossom.db");

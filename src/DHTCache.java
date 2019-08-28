@@ -9,6 +9,9 @@ import snowblossom.lib.ValidationException;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 
+/**
+ * Cache DHT entries, keep track of which things we have written.
+ */
 public class DHTCache
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
@@ -41,6 +44,10 @@ public class DHTCache
     }
   }
 
+  /**
+   * The underlying calls are async, so the first call this for any element_id
+   * will almost always return empty.  Call it again in a few seconds to get the real data.
+   */
   public DHTDataSet getData(ByteString element_id)
   {
     DHTDataSet e = null;

@@ -12,6 +12,9 @@ import snowblossom.lib.AddressUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
 
+/**
+ * GRPC DHT server.  Some methods can also be called directly.  Whatever.
+ */
 public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");

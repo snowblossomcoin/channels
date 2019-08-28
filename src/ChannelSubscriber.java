@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Managed channels we are tracking */
+/** Manage channels we are tracking */
 public class ChannelSubscriber
 {
   private ChannelNode node;

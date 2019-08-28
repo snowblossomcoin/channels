@@ -19,6 +19,9 @@ import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.ProtoDBMap;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 
+/**
+ * Database releated to a single channel
+ */
 public class SingleChannelDB
 {
   private static final Logger logger = Logger.getLogger("channelnode.db");

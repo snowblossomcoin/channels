@@ -21,6 +21,10 @@ import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.lib.trie.ByteStringComparator;
 
+/**
+ * Maintain links for the DHT peering topology.
+ * insert_disaster_spider_diagram
+ */
 public class DHTMaintainer extends PeriodicThread
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");

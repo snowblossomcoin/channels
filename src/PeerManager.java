@@ -10,6 +10,9 @@ import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 
+/**
+ * Outbound peer links, which can be for DHT or channels or both for the same link
+ */
 public class PeerManager extends PeriodicThread
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");

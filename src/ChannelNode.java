@@ -26,6 +26,9 @@ import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
 
+/**
+ * Top level project class.  Starts everything and wires it up.
+ */
 public class ChannelNode
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
@@ -40,6 +43,7 @@ public class ChannelNode
   private DHTMaintainer dht_maintainer;
   private ChannelSubscriber channel_subscriber;
   private ChannelPeerMaintainer channel_peer_maintainer;
+  private ChannelPeerServer channel_peer_server;
   private DHTCache dht_cache;
   private DHTStratUtil dht_strat_util;
 
@@ -96,6 +100,7 @@ public class ChannelNode
     dht_maintainer = new DHTMaintainer(this);
     channel_subscriber = new ChannelSubscriber(this);
     channel_peer_maintainer = new ChannelPeerMaintainer(this);
+    channel_peer_server = new ChannelPeerServer(this);
     dht_cache = new DHTCache(this);
     dht_strat_util = new DHTStratUtil();
 
@@ -146,6 +151,7 @@ public class ChannelNode
     Server s = NettyServerBuilder
       .forPort(port)
       .addService(dht_server)
+      .addService(channel_peer_server)
       .sslContext(CertGen.getServerSSLContext(wallet_db))
       .build();
     s.start();
