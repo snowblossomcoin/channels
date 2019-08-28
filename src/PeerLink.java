@@ -15,7 +15,6 @@ import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStu
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
 import snowblossom.lib.AddressSpecHash;
 
-
 /**
  * Mostly for DHT peering.  However, this peer link is also used for outbound
  * links to peers for ChannelLinks.  In which case, the channel links will call

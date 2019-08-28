@@ -1,9 +1,9 @@
 package snowblossom.channels;
 
-import snowblossom.channels.proto.ChannelServiceGrpc;
-import snowblossom.channels.proto.ChannelPeerMessage;
 import io.grpc.stub.StreamObserver;
 import java.util.logging.Logger;
+import snowblossom.channels.proto.ChannelPeerMessage;
+import snowblossom.channels.proto.ChannelServiceGrpc;
 
 /**
  * GRPC service for ChannelService.  Mostly just creates ChannelLinks and gets them going.

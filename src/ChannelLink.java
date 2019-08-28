@@ -3,8 +3,8 @@ package snowblossom.channels;
 import io.grpc.stub.StreamObserver;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import snowblossom.lib.AddressSpecHash;
 import snowblossom.channels.proto.*;
+import snowblossom.lib.AddressSpecHash;
 
 /**
  * A streaming link for peer messages.  Works for both client and server.
