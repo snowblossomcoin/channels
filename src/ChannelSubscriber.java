@@ -68,6 +68,8 @@ public class ChannelSubscriber
       ChannelContext ctx = new ChannelContext();
       ctx.db = node.getChannelDB(cid);
 
+      // TODO - tickle channel peer manager
+
       return ctx;
   }
 

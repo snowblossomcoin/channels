@@ -47,7 +47,6 @@ message DHTData
 {
   bytes element_id = 1;
   ChannelPeerInfo peer_info = 2;
-  bytes content_hash = 3;
 }
 
 message GetDHTPeersRequest {
