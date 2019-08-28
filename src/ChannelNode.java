@@ -11,11 +11,11 @@ import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import io.netty.handler.ssl.SslContext;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.HashMap;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
@@ -25,7 +25,6 @@ import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
-import com.google.protobuf.ByteString;
 
 public class ChannelNode
 {
@@ -39,6 +38,10 @@ public class ChannelNode
   private PeerManager peer_manager;
   private DHTServer dht_server;
   private DHTMaintainer dht_maintainer;
+  private ChannelSubscriber channel_subscriber;
+  private ChannelPeerMaintainer channel_peer_maintainer;
+  private DHTCache dht_cache;
+  private DHTStratUtil dht_strat_util;
 
   private HashMap<ChannelID, SingleChannelDB> db_map;
 
@@ -91,6 +94,10 @@ public class ChannelNode
     peer_manager = new PeerManager(this);
     dht_server = new DHTServer(this);
     dht_maintainer = new DHTMaintainer(this);
+    channel_subscriber = new ChannelSubscriber(this);
+    channel_peer_maintainer = new ChannelPeerMaintainer(this);
+    dht_cache = new DHTCache(this);
+    dht_strat_util = new DHTStratUtil();
 
     db_map = new HashMap<>(16,0.5f);
    
@@ -98,6 +105,7 @@ public class ChannelNode
 
     dht_maintainer.start();
     peer_manager.start();
+    channel_peer_maintainer.start();
 
     String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
     logger.info("My node address is: " + node_addr);
@@ -148,6 +156,10 @@ public class ChannelNode
   public PeerManager getPeerManager(){return peer_manager;}
   public ChannelsDB getDB(){return db;}
   public DHTServer getDHTServer(){return dht_server;}
+  public ChannelSubscriber getChannelSubscriber(){return channel_subscriber;}
+  public ChannelPeerMaintainer getChannelPeerMaintainer(){return channel_peer_maintainer;}
+  public DHTCache getDHTCache(){return dht_cache;}
+  public DHTStratUtil getDHTStratUtil(){return dht_strat_util;}
 
   public void testSelf()
 		throws Exception

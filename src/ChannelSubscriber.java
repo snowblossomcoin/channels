@@ -1,8 +1,9 @@
 package snowblossom.channels;
 
-import java.util.HashMap;
 import duckutil.SimpleFuture;
-
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Managed channels we are tracking */
 public class ChannelSubscriber
@@ -68,7 +69,7 @@ public class ChannelSubscriber
       ChannelContext ctx = new ChannelContext();
       ctx.db = node.getChannelDB(cid);
 
-      // TODO - tickle channel peer manager
+      node.getChannelPeerMaintainer().wake();
 
       return ctx;
   }
@@ -76,6 +77,16 @@ public class ChannelSubscriber
   public void dropChannel(ChannelID cid)
   { //TODO - something
 
+  }
+
+  public Set<ChannelID> getChannelSet()
+  {
+    HashSet<ChannelID> s = new HashSet<>(16,0.5f);
+    synchronized(chan_map)
+    {
+      s.addAll(chan_map.keySet());
+    }
+    return s;
   }
 
 }

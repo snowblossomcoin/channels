@@ -3,6 +3,7 @@ package snowblossom.channels;
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.HashSet;
 import java.util.LinkedList;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockHeader;
@@ -13,14 +14,13 @@ import snowblossom.channels.proto.ContentReference;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.channels.proto.SignedMessagePayload;
 import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.BlockchainUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
-import snowblossom.lib.AddressUtil;
 import snowblossom.lib.Globals;
 import snowblossom.lib.Validation;
 import snowblossom.lib.ValidationException;
-import java.util.HashSet;
 
 public class ChannelValidation
 {

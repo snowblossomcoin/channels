@@ -118,7 +118,6 @@ public class PeerManager extends PeriodicThread
       }
     }
     return links;
-  
   }
   
 }

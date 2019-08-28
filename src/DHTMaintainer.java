@@ -31,7 +31,7 @@ public class DHTMaintainer extends PeriodicThread
 
   public DHTMaintainer(ChannelNode node)
   {
-    super(20000L);
+    super(5000L);
     setName("DHTMaintainer");
     setDaemon(false);
 

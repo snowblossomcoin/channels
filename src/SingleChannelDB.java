@@ -1,23 +1,23 @@
 package snowblossom.channels;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.ConfigCat;
 import duckutil.ConfigMem;
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockSummary;
 import snowblossom.channels.proto.LocalPeerInfo;
 import snowblossom.channels.proto.SignedMessage;
+import snowblossom.lib.ChainHash;
+import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.ProtoDBMap;
 import snowblossom.lib.db.rocksdb.JRocksDB;
-import snowblossom.lib.db.DBMap;
-import com.google.protobuf.ByteString;
-import snowblossom.lib.ChainHash;
-import java.nio.ByteBuffer;
 
 public class SingleChannelDB
 {

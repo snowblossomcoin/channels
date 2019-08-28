@@ -123,6 +123,26 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
     o.onCompleted();
   }
 
+  
+  public void storeDHTDataAsyncTrusted(StoreDHTRequest req)
+  {
+      SignedMessagePayload payload = ChannelSigUtil.quickPayload(req.getSignedDhtData());
+      DHTData data = payload.getDhtData();
+      ByteString target = data.getElementId();
+      PeerLink next_peer = findClosestPeer(target);
+
+      if (next_peer != null)
+      {
+        next_peer.getStargateAsyncStub().storeDHTData(req, null);
+      }
+      else
+      {
+        ByteString key = target.concat( AddressUtil.getHashForSpec( payload.getClaim()) .getBytes() );
+        node.getDB().getDHTDataMap().put(key, req.getSignedDhtData());
+      }
+  }
+
+
   public DHTDataSet storeDHTData(StoreDHTRequest req)
     throws ValidationException
   {
@@ -142,7 +162,7 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 
       if (next_peer != null)
       {
-        DHTDataSet ds = next_peer.getStub().storeDHTData(req);
+        DHTDataSet ds = next_peer.getStargateBlockingStub().storeDHTData(req);
         return ds;
       }
       else
@@ -180,13 +200,31 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 
     if (next_peer != null)
     {
-      DHTDataSet ds = next_peer.getStub().getDHTData(req);
+      DHTDataSet ds = next_peer.getStargateBlockingStub().getDHTData(req);
       return ds;
     }
     else
     {
       return getDHTLocal(target, req.getDesiredResultCount());
     }
+  }
+
+  public void getDHTDataAsync(GetDHTRequest req, StreamObserver<DHTDataSet> so)
+  {
+    ByteString target = req.getElementId();
+
+    PeerLink next_peer = findClosestPeer(target);
+
+    if (next_peer != null)
+    {
+      next_peer.getStargateAsyncStub().getDHTData(req, so);
+    }
+    else
+    {
+      DHTDataSet set = getDHTLocal(target, req.getDesiredResultCount());
+      so.onNext(set);
+    }
+
   }
 
   // TODO - make return random results rather than first n

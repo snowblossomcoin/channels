@@ -3,7 +3,6 @@ package snowblossom.channels;
 import com.google.protobuf.ByteString;
 import java.security.MessageDigest;
 import snowblossom.channels.proto.*;
-import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.SignatureUtil;

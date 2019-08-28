@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
+import snowblossom.channels.proto.ChannelServiceGrpc.ChannelServiceBlockingStub;
+import snowblossom.channels.proto.ChannelServiceGrpc.ChannelServiceStub;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
 import snowblossom.lib.AddressSpecHash;
@@ -22,11 +24,13 @@ public class PeerLink implements StreamObserver<PeerList>
 
   private StargateServiceStub stargate_stub;
   private StargateServiceBlockingStub stargate_blocking_stub;
+  private ChannelServiceStub channel_stub;
+  private ChannelServiceBlockingStub channel_blocking_stub;
   private volatile boolean closed;
   private volatile long last_recv;
 	private ManagedChannel channel;
 
-
+  // We are the client
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
 		throws Exception
   {
@@ -53,6 +57,9 @@ public class PeerLink implements StreamObserver<PeerList>
 
     stargate_stub = StargateServiceGrpc.newStub(channel);
     stargate_blocking_stub = StargateServiceGrpc.newBlockingStub(channel);
+
+    channel_stub = ChannelServiceGrpc.newStub(channel);
+    channel_blocking_stub = ChannelServiceGrpc.newBlockingStub(channel);
   }
 
   public AddressSpecHash getNodeID()
@@ -65,7 +72,12 @@ public class PeerLink implements StreamObserver<PeerList>
     stargate_stub.getDHTPeers(GetDHTPeersRequest.newBuilder().setSelfPeerInfo(self_peer_info).build(), this);
   }
 
-  public StargateServiceBlockingStub getStub() {return stargate_blocking_stub; }
+  public StargateServiceBlockingStub getStargateBlockingStub() {return stargate_blocking_stub; }
+  public StargateServiceStub getStargateAsyncStub() {return stargate_stub; }
+
+  public ChannelServiceBlockingStub getChannelBlockingStub() {return channel_blocking_stub; }
+  public ChannelServiceStub getChannelAsyncStub() {return channel_stub; }
+  
 
   public static ConnectInfo findConnectInfo(ChannelPeerInfo info, NetworkExaminer net_ex)
   {
@@ -93,7 +105,7 @@ public class PeerLink implements StreamObserver<PeerList>
   public boolean isGood()
   {
 		if (closed) return false;
-		if (last_recv + 60000L < System.currentTimeMillis())
+		if (last_recv + ChannelGlobals.PEER_LINK_TIMEOUT < System.currentTimeMillis())
 		{
 			return false;
 		}
@@ -115,10 +127,16 @@ public class PeerLink implements StreamObserver<PeerList>
     catch(Throwable e){}
   }
 
+  public void pokeRecv()
+  {
+    last_recv = System.currentTimeMillis();
+  }
+
 
   @Override
   public void onCompleted()
-  {}
+  {
+  }
 
   @Override
   public void onError(Throwable t)
@@ -136,5 +154,6 @@ public class PeerLink implements StreamObserver<PeerList>
       node.getDHTServer().importPeer(sm);
     }
   }
+
 }
 

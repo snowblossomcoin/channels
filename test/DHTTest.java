@@ -42,10 +42,19 @@ public class DHTTest
     Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 0);
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 0);
 
-    Thread.sleep(45000);
+    for(int i=0; i<45; i++)
+    {
+      Thread.sleep(1000);
+      if (node_a.getPeerManager().getPeersWithReason("DHT").size() >= 3)
+      if (node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3)
+      {
+        break;
+      }
+    }
 
     Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() >= 3);
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3);
+    
 
     Random rnd = new Random();
     byte[] id_bytes = new byte[16];

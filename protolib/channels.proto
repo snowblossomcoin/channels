@@ -16,15 +16,15 @@ service StargateService {
 }
 
 service ChannelService {
-  rpc SubscribePeering ( stream ChannelPeerMessage ) returns ( stream ChannelPeerMessage ) ;
+  rpc SubscribePeering (  stream ChannelPeerMessage ) returns ( stream ChannelPeerMessage ) ;
 }
 
 message ChannelPeerMessage
 {
   oneof z {
     SignedMessage signed_update = 1;
-    
   }
+  bytes channel_id = 2;
 }
 
 message StoreDHTRequest
@@ -112,21 +112,24 @@ message ChannelBlockHeader
   bytes prev_block_hash = 4; //aka, prev signed header message_id
   bytes content_merkle = 6;  //merkle root of message_id of the signed content messages
   int64 timestamp = 7;
-  ChannelSettings settings = 8;
-  int64 weight = 9;
-  // Best chain is the chain with the highest sum(weight) + block_height.
-  // 1) next tie breaker is head with earlier timestamp
-  // 2) next tie breaker is head with lower message_id
-  // So a block creator can leave the weights as zero and everything is fine.  If 
-  // they need to revert some blocks with a fork, making a new block with a higher
-  // weight will win.
-  
+  int64 weight = 8;
 
-  // Only set on first block (block zero).  The message ID from this
-  // becomes the channel ID.
-  // Note: the initial settings signer doesn't need to be any particular key. 
-  // it doesn't need to be one of the admin keys.
-  SignedMessage initial_settings = 10;
+  oneof z {
+    ChannelSettings settings = 20;
+    // Best chain is the chain with the highest sum(weight) + block_height.
+    // 1) next tie breaker is head with earlier timestamp
+    // 2) next tie breaker is head with lower message_id
+    // So a block creator can leave the weights as zero and everything is fine.  If 
+    // they need to revert some blocks with a fork, making a new block with a higher
+    // weight will win.
+    
+
+    // Only set on first block (block zero).  The message ID from this
+    // becomes the channel ID.
+    // Note: the initial settings signer doesn't need to be any particular key. 
+    // it doesn't need to be one of the admin keys.
+    SignedMessage initial_settings = 21;
+  }
 
 }
 

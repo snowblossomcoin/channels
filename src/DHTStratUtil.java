@@ -1,12 +1,10 @@
 package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
-import snowblossom.channels.proto.ChannelSettings;
-
-import java.util.LinkedList;
-import snowblossom.lib.DigestUtil;
 import java.security.MessageDigest;
-
+import java.util.LinkedList;
+import snowblossom.channels.proto.ChannelSettings;
+import snowblossom.lib.DigestUtil;
 
 // Not making these static methods because they will
 // have to read snowblossom network state for some strats
@@ -18,7 +16,7 @@ public class DHTStratUtil
    * @return An ordered list of dht addresses to try
    * @param settings - if we have it.  null otherwise
    */
-  public LinkedList<ByteString> getDHTLocations(ChannelID cid, ChannelSettings settings)
+  public  LinkedList<ByteString> getDHTLocations(ChannelID cid, ChannelSettings settings)
   {
     // TODO - actually check the strategies
     return getDHTLocationsBasic(cid, 10); 

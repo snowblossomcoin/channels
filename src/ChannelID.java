@@ -1,11 +1,10 @@
 package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
+import snowblossom.channels.proto.SignedMessage;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.DigestUtil;
-import snowblossom.channels.proto.SignedMessage;
-
 
 public class ChannelID extends AddressSpecHash
 {

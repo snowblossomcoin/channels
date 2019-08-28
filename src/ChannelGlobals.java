@@ -29,8 +29,18 @@ public class ChannelGlobals
   // saved.
   public static final long MAX_DHT_DATA_AGE=120000L;
 
-  public static final long MAX_DATA_PEER_AGE=7200L * 1000L;
+  public static final long MAX_DATA_PEER_AGE=21L * 86400L * 1000L;
+
+
+  public static final long PEER_LINK_TIMEOUT=60000L;
+  public static final long CHANNEL_LINK_TIMEOUT=60000L;
+
+  // 2500 channels, 100 elements each
+  public static final int DHT_CACHE_ELEMENTS = 2500 * 100;
+  public static final long DHT_CACHE_EXPIRE = 120000L;
 
 
 }
+
+
 
