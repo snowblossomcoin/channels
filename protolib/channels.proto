@@ -21,10 +21,38 @@ service ChannelService {
 
 message ChannelPeerMessage
 {
+  bytes channel_id = 1;
   oneof z {
-    SignedMessage signed_update = 1;
+    ChannelTip tip = 2;
+    RequestBlock req_block = 3;
+    ChannelBlock block = 4;
+
+    RequestBlock req_header = 5;
+    SignedMessage header = 6;
+
+    RequestContent req_content = 7;
+    ContentInfo content = 8;
   }
-  bytes channel_id = 2;
+}
+
+message ChannelTip
+{
+  SignedMessage block_header = 1;
+  // This allows us to gossip channel peers without depending on DHT
+  repeated ChannelPeerInfo peers = 2; 
+}
+
+message RequestBlock 
+{
+  oneof z {
+    bytes block_hash = 2;
+    int32 block_height = 3;
+  }
+}
+
+message RequestContent
+{
+	bytes message_id = 1;
 }
 
 message StoreDHTRequest
@@ -194,7 +222,6 @@ message ContentInfo {
 // A signed ChannelSettings is how a channel is founded
 message ChannelSettings
 {
-  bool active = 1;
   string display_name = 2;
 
   // These are folks who can create new blocks and do general mod functions like that

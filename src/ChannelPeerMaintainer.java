@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.ChainHash;
 import snowblossom.lib.ValidationException;
 
 /**
@@ -27,6 +28,8 @@ public class ChannelPeerMaintainer extends PeriodicThread
 
   private static final int DESIRED_CHANNEL_PEERS = 5;
   private static final int CONNECT_CHANNEL_PEERS_PER_PASS = 2;
+
+  private boolean first_pass_done;
 
   public ChannelPeerMaintainer(ChannelNode node)
   {
@@ -44,6 +47,11 @@ public class ChannelPeerMaintainer extends PeriodicThread
   @Override
   public void runPass() throws Exception
   {
+    if (!first_pass_done)
+    {
+      Thread.sleep(7500);
+      first_pass_done=true;
+    }
     ChannelPeerInfo my_info = node.getNetworkExaminer().createPeerInfo();
 
     for(ChannelID cid : node.getChannelSubscriber().getChannelSet())
@@ -59,6 +67,8 @@ public class ChannelPeerMaintainer extends PeriodicThread
       // TODO - actually get head settings
       ChannelSettings settings = null;
       List<ByteString> dht_element_lst = node.getDHTStratUtil().getDHTLocations(cid, settings);
+
+      // TODO - only bother doing the save once the DHT peering is up and running reasonably
       saveDHT(cid, dht_element_lst, my_info);
 
       if (links.size() < DESIRED_CHANNEL_PEERS)
@@ -66,6 +76,8 @@ public class ChannelPeerMaintainer extends PeriodicThread
         Set<AddressSpecHash> connected_set = getConnectedNodeSet(links);
         connected_set.add(node.getNodeID());
 
+
+        // TODO - save good peers in DB in case the DHT is trashed in some way
         LinkedList<ChannelPeerInfo> possible_peers = getAllDHTPeers(cid, dht_element_lst, connected_set);
         Collections.shuffle(possible_peers);
 
@@ -117,6 +129,7 @@ public class ChannelPeerMaintainer extends PeriodicThread
           	.setDesiredResultCount(0)
           	.setSignedDhtData(sm)
         	.build()); 
+        logger.info(String.format("DHT Saved %s for %s", new ChainHash(element_id), cid.asString()));
       
         node.getDHTCache().markWrite(element_id);
       }

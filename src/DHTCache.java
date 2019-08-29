@@ -24,7 +24,7 @@ public class DHTCache
   {
     this.node = node;
     get_cache = new ExpiringLRUCache<>(ChannelGlobals.DHT_CACHE_ELEMENTS, ChannelGlobals.DHT_CACHE_EXPIRE);
-    save_cache = new ExpiringLRUCache<>(ChannelGlobals.DHT_CACHE_ELEMENTS, ChannelGlobals.DHT_CACHE_EXPIRE);
+    save_cache = new ExpiringLRUCache<>(ChannelGlobals.DHT_CACHE_ELEMENTS, ChannelGlobals.DHT_SAVE_CACHE_EXPIRE);
   }
 
   public boolean haveWritten(ByteString element_id)
@@ -92,22 +92,7 @@ public class DHTCache
     {
       try
       {
-        for(SignedMessage sm : ds.getDhtDataList())
-        {
-          SignedMessagePayload payload = ChannelSigUtil.validateSignedMessage(sm);
-
-          if (!element_id.equals(payload.getDhtData().getElementId()))
-          {
-            throw new ValidationException("Not requested element_id");
-          }
-          AddressSpecHash signed_hash = AddressUtil.getHashForSpec(payload.getClaim());
-
-          if (!signed_hash.equals(payload.getDhtData().getPeerInfo().getAddressSpecHash()))
-          {
-            throw new ValidationException("Signer of DHT data does not match peer info");
-          }
-
-        }
+        ChannelValidation.validateDHTDataSet(ds, element_id);
       }
       catch(ValidationException e)
       {

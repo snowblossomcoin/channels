@@ -12,6 +12,7 @@ import snowblossom.channels.proto.ChannelSettings;
 import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.ContentReference;
 import snowblossom.channels.proto.SignedMessage;
+import snowblossom.channels.proto.DHTDataSet;
 import snowblossom.channels.proto.SignedMessagePayload;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
@@ -46,7 +47,7 @@ public class ChannelValidation
         throw new ValidationException("Message id from initial settings must be channel id");
       }
 
-      if (header.getSettings().getActive())
+      if (header.hasSettings())
       {
         throw new ValidationException("Must not have initial_settings and settings on block zero");
       }
@@ -200,7 +201,7 @@ public class ChannelValidation
       {
         throw new ValidationException("Must have prev block on non-zero block");
       }
-      if (header.getSettings().getActive())
+      if (header.hasSettings())
       {
         throw new ValidationException("Block zero must not have settings");
       }
@@ -228,7 +229,7 @@ public class ChannelValidation
       throw new ValidationException("Block signer not on signer list");
     }
 
-    if (header.getSettings().getActive())
+    if (header.hasSettings())
     {
       if (!admin_signers.contains(signer.getBytes()))
       {
@@ -252,7 +253,7 @@ public class ChannelValidation
 
     BigInteger work_sum = prev_work_sum.add( BigInteger.valueOf( header.getWeight() + 1L ) );
 
-    if (header.getSettings().getActive())
+    if (header.hasSettings())
     {
       settings = header.getSettings();
     }
@@ -265,5 +266,44 @@ public class ChannelValidation
     return sum.build();
 
   }
+
+
+  public static SignedMessagePayload validateDHTData(SignedMessage dht_data)
+    throws ValidationException
+  {
+    SignedMessagePayload payload = ChannelSigUtil.validateSignedMessage(dht_data);
+
+    if (!payload.hasDhtData())
+    {
+      throw new ValidationException("Payload is not dht_data");
+    }
+
+		AddressSpecHash signed_hash = AddressUtil.getHashForSpec(payload.getClaim());
+
+		if (!signed_hash.equals(payload.getDhtData().getPeerInfo().getAddressSpecHash()))
+		{
+			throw new ValidationException("Signer of DHT data does not match peer info");
+		}
+    if (payload.getDhtData().getElementId().size() != ChannelGlobals.DHT_ELEMENT_SIZE)
+    { 
+      throw new ValidationException("Element id wrong length");
+    }
+
+    return payload;
+
+  }
+
+	public static void validateDHTDataSet(DHTDataSet ds, ByteString element_id)
+    throws ValidationException
+	{
+		for(SignedMessage sm : ds.getDhtDataList())
+		{
+			SignedMessagePayload payload = validateDHTData(sm);
+			if (!element_id.equals(payload.getDhtData().getElementId()))
+			{ 
+				throw new ValidationException("Not requested element_id");
+			}	
+		}
+	}
 }
 

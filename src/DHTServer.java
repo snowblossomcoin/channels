@@ -149,17 +149,14 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
   public DHTDataSet storeDHTData(StoreDHTRequest req)
     throws ValidationException
   {
-      SignedMessagePayload payload = ChannelSigUtil.validateSignedMessage(req.getSignedDhtData());
+      SignedMessagePayload payload = ChannelValidation.validateDHTData(req.getSignedDhtData());
+
       if (payload.getTimestamp() + ChannelGlobals.MAX_DHT_DATA_AGE < System.currentTimeMillis())
       {
         throw new ValidationException("Request too old");
       }
-      if (payload.getTimestamp() > System.currentTimeMillis() + ChannelGlobals.ALLOWED_CLOCK_SKEW)
-      {
-        throw new ValidationException("Request in future");
-      }
-      DHTData data = payload.getDhtData();
 
+      DHTData data = payload.getDhtData();
       ByteString target = data.getElementId();
       PeerLink next_peer = findClosestPeer(target);
 

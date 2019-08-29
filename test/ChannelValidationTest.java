@@ -131,7 +131,6 @@ public class ChannelValidationTest
       settings.addBlockSignerSpecHashes( getAddr(block_db).getBytes() );
       settings.addBlockSignerSpecHashes( getAddr(block_db2).getBytes() );
       settings.addAdminSignerSpecHashes( getAddr(admin_db).getBytes() );
-      settings.setActive(true);
       
       ChannelBlockHeader.Builder header = ChannelBlockHeader.newBuilder();
       header.setBlockHeight(sum.getHeader().getBlockHeight() + 1L);

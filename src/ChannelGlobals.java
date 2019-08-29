@@ -38,6 +38,9 @@ public class ChannelGlobals
   // 2500 channels, 100 elements each
   public static final int DHT_CACHE_ELEMENTS = 2500 * 100;
   public static final long DHT_CACHE_EXPIRE = 120000L;
+  
+  // TODO - move this way up once we have saving wait for DHT peering to be ready
+  public static final long DHT_SAVE_CACHE_EXPIRE = 120000L; 
 
 
 }

@@ -40,6 +40,7 @@ public class ChannelSubscriber
     if (doOpen)
     {
       cc.setResult(openChannelInternal(cid));
+      node.getChannelPeerMaintainer().wake();
     }
 
     return cc.get();

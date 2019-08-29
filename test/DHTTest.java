@@ -57,7 +57,7 @@ public class DHTTest
     
 
     Random rnd = new Random();
-    byte[] id_bytes = new byte[16];
+    byte[] id_bytes = new byte[32];
    
     int b_match = 0;
     for(int i=0; i<100; i++)
