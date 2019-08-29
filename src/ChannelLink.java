@@ -5,6 +5,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.ChainHash;
+import java.util.TreeMap;
+
+import snowblossom.lib.ValidationException;
 
 /**
  * A streaming link for peer messages.  Works for both client and server.
@@ -25,6 +29,8 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   private ChannelID cid;
   private volatile long last_recv;
   private volatile boolean closed;
+
+  private TreeMap<Long, ChainHash> peer_block_map = new TreeMap<Long, ChainHash>();
 
 	// As server
 	public ChannelLink(ChannelNode node, StreamObserver<ChannelPeerMessage> sink)
@@ -71,6 +77,10 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     return true;
   }
 
+  /**
+   * this close does not actually close the PeerLink (if we have one)
+   * that will just go away with no traffic if nothing is using it
+   */
   public void close()
   {
     if (closed) return;
@@ -96,22 +106,26 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 		close();
 	}
 	
+  /** Concepts copied from Snowblossom PeerLink.  Basic contract is that each side sends
+   * a ChannelTip ever little while (or on new blocks) and it is up to the other side to 
+   * request what they want. */
 	@Override
-	public void onNext(ChannelPeerMessage pm)
+	public void onNext(ChannelPeerMessage msg)
 	{ 
-    // If cid == null, then record cid and register with someone
 
 		last_recv = System.currentTimeMillis();
     if (peer_link != null) peer_link.pokeRecv();
 
+    // Set ChannelID
     if ((server_side) && (cid == null))
     {
-      cid = new ChannelID(pm.getChannelId());
+      cid = new ChannelID(msg.getChannelId());
       ctx = node.getChannelSubscriber().getContext(cid);
       if (ctx == null)
       {
-        logger.log(Level.WARNING, "Client subscribed to channel we don't care about: " + cid);
+        logger.log(Level.WARNING, "Client subscribed to channel we don't care about: " + cid.asString());
         close();
+        return;
       }
       else
       {
@@ -119,5 +133,144 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       }
     }
 
+    // Check ChannelID
+    if (!cid.equals(msg.getChannelId()))
+    {
+      logger.log(Level.WARNING, "Peer sent message about wrong channel");
+      close();
+      return;
+    }
+
+
+    try
+    {
+      if (msg.hasTip())
+      {
+        ChannelTip tip = msg.getTip();
+
+        //TODO - Record that peer is actually sending a tip in peer db
+        //TODO - import peers from tip
+
+        ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, tip.getBlockHeader());
+        considerChannelHeader(new ChainHash(tip.getBlockHeader().getMessageId()), header);
+      }
+      else if (msg.hasHeader())
+      {
+        ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, msg.getHeader());
+        considerChannelHeader(new ChainHash(msg.getHeader().getMessageId()), header);
+      }
+			else if (msg.hasBlock())
+      {
+        // Getting a block, we probably asked for it.  See if we can eat it.
+        ChannelBlock blk = msg.getBlock();
+        try
+        { 
+          if (ctx.block_ingestor.ingestBlock(blk))
+          { // we could eat it, think about getting more blocks
+            long next = ChannelSigUtil.quickPayload(blk.getSignedHeader()).getChannelBlockHeader().getBlockHeight()+1L;
+            synchronized(peer_block_map)
+            { 
+              if (peer_block_map.containsKey(next))
+              { 
+                ChainHash target = peer_block_map.get(next);
+
+                if (ctx.block_ingestor.reserveBlock(target))
+                { 
+                  writeMessage( ChannelPeerMessage.newBuilder()
+                    .setReqBlock(
+                      RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
+                    .build());
+                }
+              }
+            }
+          }
+        }
+        catch(ValidationException ve)
+        { 
+          logger.info("Got a block %s that didn't validate - closing link");
+          close();
+          throw(ve);
+        }
+      }
+
+    }
+    catch(Throwable t)
+    {
+      logger.log(Level.INFO, "Some bs from remote channel peer", t);
+      close();
+    }
+
+
 	}
+
+  /**
+   * The basic plan is, keep asking about previous blocks
+   * until we get to one we have heard of.  Then we start requesting the blocks.
+   */
+  private void considerChannelHeader(ChainHash block_hash, ChannelBlockHeader header)
+  {
+    synchronized(peer_block_map)
+    {
+      peer_block_map.put(header.getBlockHeight(), block_hash);
+    }
+    // if we don't have this block
+    if (ctx.db.getBlockSummaryMap().get(block_hash.getBytes())==null)
+    { 
+      long height = header.getBlockHeight();
+      if ((height == 0) || (ctx.db.getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
+      { // but we have the prev block - get this block 
+        if (ctx.block_ingestor.reserveBlock(block_hash))
+        { 
+          writeMessage( ChannelPeerMessage.newBuilder()
+            .setReqBlock(
+              RequestBlock.newBuilder().setBlockHash(block_hash.getBytes()).build())
+            .build());
+        }
+      }
+      else
+      { //get more headers, still in the woods
+        long next = header.getBlockHeight();
+        if (ctx.block_ingestor.getHeight() + ChannelGlobals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
+        { 
+          next = ctx.block_ingestor.getHeight() + ChannelGlobals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
+        }
+        while(peer_block_map.containsKey(next))
+        { 
+          next--;
+        }
+        
+        if (next >= 0)
+        { 
+          ChainHash prev = new ChainHash(header.getPrevBlockHash());
+          synchronized(peer_block_map)
+          { 
+            if (peer_block_map.containsKey(next))
+            { 
+              if (peer_block_map.get(next).equals(prev)) return;
+            }
+          }
+          
+          writeMessage( ChannelPeerMessage.newBuilder()
+            .setReqHeader(
+              RequestBlock.newBuilder().setBlockHeight(next).build())
+            .build());
+        }
+      }
+    
+    }
+
+  }
+
+  public void writeMessage(ChannelPeerMessage msg)
+  { 
+    if (!closed)
+    { 
+      synchronized(sink)
+      {
+        sink.onNext(msg);
+      }
+    }
+  }
+
+
 }

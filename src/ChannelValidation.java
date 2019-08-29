@@ -25,12 +25,11 @@ import snowblossom.lib.ValidationException;
 
 public class ChannelValidation
 {
-  public static void checkBlockBasics(ChannelID chan_id, ChannelBlock blk, boolean check_content)
+  public static ChannelBlockHeader checkBlockHeaderBasics(ChannelID chan_id, SignedMessage signed_header)
     throws ValidationException
   {
-    ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader()).getChannelBlockHeader();
+    ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(signed_header).getChannelBlockHeader();
     if (header == null) throw new ValidationException("No header in signed header");
-
     if (!chan_id.equals(header.getChannelId()))
     {
       throw new ValidationException("Block on wrong channel");
@@ -85,6 +84,17 @@ public class ChannelValidation
       throw new ValidationException("Invalid content merkle hash");
     }
 
+    return header;
+
+
+  }
+
+
+  public static void checkBlockBasics(ChannelID chan_id, ChannelBlock blk, boolean check_content)
+    throws ValidationException
+  {
+    ChannelBlockHeader header = checkBlockHeaderBasics(chan_id, blk.getSignedHeader());
+
     if (check_content)
     {
       MessageDigest md = DigestUtil.getMD();
@@ -93,7 +103,7 @@ public class ChannelValidation
       for(SignedMessage content : blk.getContentList())
       {
         validateContent(content, md);
-       content_hash_list.add(new ChainHash(content.getMessageId()));
+        content_hash_list.add(new ChainHash(content.getMessageId()));
       }
 
       ChainHash expected_merkle = null;
@@ -260,6 +270,7 @@ public class ChannelValidation
 
     sum.setWorkSum(work_sum.toString());
     sum.setHeader(header);
+    sum.setSignedHeader(blk.getSignedHeader());
     sum.setBlockId(blk.getSignedHeader().getMessageId());
     sum.setEffectiveSettings(settings);
 

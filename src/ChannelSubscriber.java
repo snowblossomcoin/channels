@@ -69,6 +69,7 @@ public class ChannelSubscriber
   {
       ChannelContext ctx = new ChannelContext();
       ctx.db = node.getChannelDB(cid);
+      ctx.block_ingestor = new ChannelBlockIngestor(node, cid);
 
       node.getChannelPeerMaintainer().wake();
 

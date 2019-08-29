@@ -10,6 +10,7 @@ import java.util.LinkedList;
 public class ChannelContext
 {
   public SingleChannelDB db;
+  public ChannelBlockIngestor block_ingestor;
 
   private ImmutableList<ChannelLink> links=ImmutableList.of();
 

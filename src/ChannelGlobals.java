@@ -42,7 +42,9 @@ public class ChannelGlobals
   // TODO - move this way up once we have saving wait for DHT peering to be ready
   public static final long DHT_SAVE_CACHE_EXPIRE = 120000L; 
 
+  public static final long BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE=100L;
 
+  public static final long CHANNEL_TIP_SEND_MS = 30000L;
 }
 
 

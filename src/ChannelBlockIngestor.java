@@ -32,7 +32,6 @@ public class ChannelBlockIngestor
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
 
   public ChannelBlockIngestor(ChannelNode node, ChannelID cid)
-    throws Exception
   {
     this.node = node;
     this.db = node.getChannelDB(cid);

@@ -46,7 +46,7 @@ message RequestBlock
 {
   oneof z {
     bytes block_hash = 2;
-    int32 block_height = 3;
+    int64 block_height = 3;
   }
 }
 
@@ -167,6 +167,7 @@ message ChannelBlockSummary
   bytes block_id = 2; //aka the message id of the signed header
   ChannelBlockHeader header = 3;
   ChannelSettings effective_settings = 4;
+  SignedMessage signed_header = 5;
 
 
 }
