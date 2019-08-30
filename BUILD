@@ -108,6 +108,22 @@ java_test(
 )
 
 java_test(
+    name = "channel_peer_test",
+    srcs = ["test/ChannelPeerTest.java", "test/TestUtil.java"],
+    test_class = "channels.ChannelPeerTest",
+    size="medium",
+    deps = [
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
+
+java_test(
     name = "channel_test",
     srcs = ["test/ChannelTest.java"],
     test_class = "channels.ChannelTest",
@@ -124,7 +140,7 @@ java_test(
 
 java_test(
     name = "channel_validation_test",
-    srcs = ["test/ChannelValidationTest.java"],
+    srcs = ["test/ChannelValidationTest.java", "test/TestUtil.java"],
     test_class = "channels.ChannelValidationTest",
     size="medium",
     deps = [

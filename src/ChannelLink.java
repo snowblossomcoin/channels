@@ -51,6 +51,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     client_side = true;
     this.peer_link = peer_link;
     this.cid = cid;
+    this.ctx = ctx;
 
     sink = peer_link.getChannelAsyncStub().subscribePeering(this);
 
@@ -129,6 +130,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       }
       else
       {
+        logger.log(Level.INFO, String.format("Client asked to scribe to channel %s", cid.asString()));
         ctx.addLink(this);
       }
     }
@@ -151,13 +153,60 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         //TODO - Record that peer is actually sending a tip in peer db
         //TODO - import peers from tip
 
-        ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, tip.getBlockHeader());
-        considerChannelHeader(new ChainHash(tip.getBlockHeader().getMessageId()), header);
+        if (tip.getBlockHeader().getMessageId().size() > 0)
+        {
+          
+          ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, tip.getBlockHeader());
+          ChainHash hash = new ChainHash(tip.getBlockHeader().getMessageId());
+          logger.info(String.format("Channel %s got tip from remote %d %s ", cid.asString(), header.getBlockHeight(), hash.toString()));
+          considerChannelHeader(hash, header);
+        }
       }
       else if (msg.hasHeader())
       {
         ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, msg.getHeader());
         considerChannelHeader(new ChainHash(msg.getHeader().getMessageId()), header);
+      }
+      else if (msg.hasReqBlock())
+      {
+        ChainHash desired_hash = null;
+        RequestBlock req = msg.getReqBlock();
+        if (req.getBlockHash().size() == 0)
+        {
+          desired_hash = ctx.db.getBlockHashAtHeight(req.getBlockHeight());
+        }
+        else
+        {
+          desired_hash = new ChainHash(req.getBlockHash());
+        }
+        ChannelBlock blk = ctx.db.getBlockMap().get(desired_hash.getBytes());
+
+        writeMessage( ChannelPeerMessage.newBuilder()
+          .setChannelId( cid.getBytes()) 
+          .setBlock(blk)
+          .build());
+
+      }
+	
+      else if (msg.hasReqHeader())
+      {
+        ChainHash desired_hash = null;
+        RequestBlock req = msg.getReqHeader();
+        if (req.getBlockHash().size() == 0)
+        {
+          desired_hash = ctx.db.getBlockHashAtHeight(req.getBlockHeight());
+        }
+        else
+        {
+          desired_hash = new ChainHash(req.getBlockHash());
+        }
+        ChannelBlockSummary summary = ctx.db.getBlockSummaryMap().get(desired_hash.getBytes());
+
+                  writeMessage( ChannelPeerMessage.newBuilder()
+                    .setChannelId( cid.getBytes()) 
+                    .setHeader(summary.getSignedHeader())
+                    .build());
+
       }
 			else if (msg.hasBlock())
       {
@@ -177,6 +226,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
                 if (ctx.block_ingestor.reserveBlock(target))
                 { 
                   writeMessage( ChannelPeerMessage.newBuilder()
+                    .setChannelId( cid.getBytes()) 
                     .setReqBlock(
                       RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
                     .build());
@@ -191,6 +241,10 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
           close();
           throw(ve);
         }
+      }
+      else
+      {
+        logger.info("Unhandled message: " + msg);
       }
 
     }
@@ -214,6 +268,10 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       peer_block_map.put(header.getBlockHeight(), block_hash);
     }
     // if we don't have this block
+    if (ctx == null) throw new RuntimeException("ctx");
+    if (ctx.db == null) throw new RuntimeException("db");
+    if (ctx.db.getBlockSummaryMap() == null) throw new RuntimeException("map");
+    if (block_hash == null) throw new RuntimeException("block_hash");
     if (ctx.db.getBlockSummaryMap().get(block_hash.getBytes())==null)
     { 
       long height = header.getBlockHeight();
@@ -222,6 +280,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         if (ctx.block_ingestor.reserveBlock(block_hash))
         { 
           writeMessage( ChannelPeerMessage.newBuilder()
+            .setChannelId( cid.getBytes()) 
             .setReqBlock(
               RequestBlock.newBuilder().setBlockHash(block_hash.getBytes()).build())
             .build());
@@ -251,6 +310,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
           }
           
           writeMessage( ChannelPeerMessage.newBuilder()
+            .setChannelId( cid.getBytes()) 
             .setReqHeader(
               RequestBlock.newBuilder().setBlockHeight(next).build())
             .build());

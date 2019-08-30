@@ -18,6 +18,8 @@ public class ChannelTipSender extends PeriodicThread
   public ChannelTipSender(ChannelNode node)
   {
     super(500L);
+    this.setName("ChannelTipSender");
+    this.setDaemon(true);
     this.node = node;
 
   }
@@ -61,26 +63,31 @@ public class ChannelTipSender extends PeriodicThread
     }
     for(ChannelID cid : send_set)
     {
+
       ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
       if (ctx != null)
       {
         ChannelBlockSummary head_sum = ctx.block_ingestor.getHead();
+        SignedMessage signed_header = null;
+        ChannelTip.Builder tip = ChannelTip.newBuilder();
+
+
         if (head_sum != null)
         {
-          List<ChannelLink> links = ctx.getLinks();
-          ChannelPeerMessage msg = ChannelPeerMessage.newBuilder()
-            .setChannelId( cid.getBytes())
-            .setTip(ChannelTip.newBuilder()
-              .setBlockHeader( head_sum.getSignedHeader() )
-              .build())
-            .build();
-
-          for(ChannelLink link : links)
-          {
-            link.writeMessage(msg);
-          }
+          signed_header = head_sum.getSignedHeader();
+          tip.setBlockHeader( signed_header );
         }
 
+        List<ChannelLink> links = ctx.getLinks();
+        ChannelPeerMessage msg = ChannelPeerMessage.newBuilder()
+          .setChannelId( cid.getBytes())
+          .setTip(tip.build())
+          .build();
+
+        for(ChannelLink link : links)
+        {
+          link.writeMessage(msg);
+        }
       }
       synchronized(send_time_map)
       {

@@ -96,7 +96,7 @@ public class DHTTest
 
     }
     System.out.println("B match: " + b_match);
-    Assert.assertTrue(b_match > 75);
+    Assert.assertTrue(b_match > 60);
   
   }
 
@@ -106,6 +106,7 @@ public class DHTTest
     File base_dir = test_folder.newFolder();
     TreeMap<String,String> map = new TreeMap<>();
     map.put("key_count", "1");
+    map.put("db_separate", "true");
     map.put("db_path", new File(base_dir, "db").getPath());
     map.put("wallet_path", new File(base_dir, "wallet").getPath());
 

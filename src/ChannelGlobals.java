@@ -44,7 +44,7 @@ public class ChannelGlobals
 
   public static final long BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE=100L;
 
-  public static final long CHANNEL_TIP_SEND_MS = 30000L;
+  public static final long CHANNEL_TIP_SEND_MS = 3000L;
 }
 
 

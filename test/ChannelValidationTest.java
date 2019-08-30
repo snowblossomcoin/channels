@@ -36,12 +36,12 @@ public class ChannelValidationTest
   public void testChannelValidateGood()
     throws Exception
   {
-    WalletDatabase admin_db = genWallet();
-    WalletDatabase block_db = genWallet();
-    WalletDatabase block_db2 = genWallet();
+    WalletDatabase admin_db = TestUtil.genWallet();
+    WalletDatabase block_db = TestUtil.genWallet();
+    WalletDatabase block_db2 = TestUtil.genWallet();
 
     ArrayList<WalletDatabase> user_list = new ArrayList<>();
-    for(int i=0; i<10; i++) user_list.add(genWallet());
+    for(int i=0; i<10; i++) user_list.add(TestUtil.genWallet());
 
     // Generate initial block
 
@@ -172,14 +172,6 @@ public class ChannelValidationTest
 
   }
 
-
-  protected WalletDatabase genWallet()
-  {
-    TreeMap<String,String> config_map = new TreeMap<>();
-    config_map.put("key_count", "1");
-    WalletDatabase db = WalletUtil.makeNewDatabase(new ConfigMem(config_map), new NetworkParamsProd());
-    return db;
-  }
 
   protected AddressSpecHash getAddr(WalletDatabase db)
   {

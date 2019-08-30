@@ -79,6 +79,7 @@ public class ChannelPeerMaintainer extends PeriodicThread
 
         // TODO - save good peers in DB in case the DHT is trashed in some way
         LinkedList<ChannelPeerInfo> possible_peers = getAllDHTPeers(cid, dht_element_lst, connected_set);
+        logger.info(String.format("Channel %s: connected %d possible %d", cid.asString(), links.size(), possible_peers.size()));
         Collections.shuffle(possible_peers);
 
         // TODO - be better about not hammering down/bad nodes with connects

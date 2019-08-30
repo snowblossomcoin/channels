@@ -46,6 +46,7 @@ public class ChannelNode
   private ChannelPeerServer channel_peer_server;
   private DHTCache dht_cache;
   private DHTStratUtil dht_strat_util;
+  private ChannelTipSender channel_tip_sender;
 
   private HashMap<ChannelID, SingleChannelDB> db_map;
 
@@ -92,8 +93,9 @@ public class ChannelNode
       WalletUtil.saveWallet(wallet_db, wallet_path);
     }
 
-
     db = new ChannelsDB(config, new JRocksDB(config) );
+    db_map = new HashMap<>(16,0.5f);
+
     net_ex = new NetworkExaminer(this);
     peer_manager = new PeerManager(this);
     dht_server = new DHTServer(this);
@@ -103,14 +105,14 @@ public class ChannelNode
     channel_peer_server = new ChannelPeerServer(this);
     dht_cache = new DHTCache(this);
     dht_strat_util = new DHTStratUtil();
-
-    db_map = new HashMap<>(16,0.5f);
+    channel_tip_sender = new ChannelTipSender(this);
    
     startServer();
 
     dht_maintainer.start();
     peer_manager.start();
     channel_peer_maintainer.start();
+    channel_tip_sender.start();
 
     String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
     logger.info("My node address is: " + node_addr);
