@@ -130,7 +130,7 @@ public class ChannelPeerTest
     }
 		Assert.assertEquals(1, ctx_a.getLinks().size());
 		Assert.assertEquals(1, ctx_b.getLinks().size());
-    Thread.sleep(5000);
+    Thread.sleep(500);
 		Assert.assertEquals(20, ctx_b.block_ingestor.getHead().getHeader().getBlockHeight());
     
   }

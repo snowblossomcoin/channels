@@ -44,8 +44,9 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 	}
 
   // As client
-  public ChannelLink(PeerLink peer_link, ChannelID cid, ChannelContext ctx)
+  public ChannelLink(ChannelNode node, PeerLink peer_link, ChannelID cid, ChannelContext ctx)
   {
+    this.node = node;
     last_recv = System.currentTimeMillis();
     server_side = false;
     client_side = true;
@@ -132,6 +133,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       {
         logger.log(Level.INFO, String.format("Client asked to scribe to channel %s", cid.asString()));
         ctx.addLink(this);
+        node.getChannelTipSender().sendTip(cid, this);
       }
     }
 

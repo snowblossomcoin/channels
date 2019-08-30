@@ -9,6 +9,7 @@ import java.util.LinkedList;
  */
 public class ChannelContext
 {
+  public ChannelID cid;
   public SingleChannelDB db;
   public ChannelBlockIngestor block_ingestor;
 

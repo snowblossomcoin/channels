@@ -67,23 +67,8 @@ public class ChannelTipSender extends PeriodicThread
       ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
       if (ctx != null)
       {
-        ChannelBlockSummary head_sum = ctx.block_ingestor.getHead();
-        SignedMessage signed_header = null;
-        ChannelTip.Builder tip = ChannelTip.newBuilder();
-
-
-        if (head_sum != null)
-        {
-          signed_header = head_sum.getSignedHeader();
-          tip.setBlockHeader( signed_header );
-        }
-
-        List<ChannelLink> links = ctx.getLinks();
-        ChannelPeerMessage msg = ChannelPeerMessage.newBuilder()
-          .setChannelId( cid.getBytes())
-          .setTip(tip.build())
-          .build();
-
+				ChannelPeerMessage msg = getTip(ctx);
+				List<ChannelLink> links = ctx.getLinks();
         for(ChannelLink link : links)
         {
           link.writeMessage(msg);
@@ -95,9 +80,6 @@ public class ChannelTipSender extends PeriodicThread
       }
 
     }
-    
-    
-
   }
 
   public void wakeFor(ChannelID cid)
@@ -108,6 +90,35 @@ public class ChannelTipSender extends PeriodicThread
       earliest_time = 0L;
     }
     this.wake();
+  }
+
+  public void sendTip(ChannelID cid, ChannelLink link)
+  {
+		ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+		if (ctx != null)
+		{
+			link.writeMessage(getTip(ctx));
+		}
+  }
+
+  protected ChannelPeerMessage getTip(ChannelContext ctx)
+  {
+			ChannelBlockSummary head_sum = ctx.block_ingestor.getHead();
+			SignedMessage signed_header = null;
+			ChannelTip.Builder tip = ChannelTip.newBuilder();
+
+			if (head_sum != null)
+			{ 
+				signed_header = head_sum.getSignedHeader();
+				tip.setBlockHeader( signed_header );
+			}
+
+			ChannelPeerMessage msg = ChannelPeerMessage.newBuilder()
+				.setChannelId( ctx.cid.getBytes())
+				.setTip(tip.build())
+				.build();
+			return msg;
+    
   }
   
 

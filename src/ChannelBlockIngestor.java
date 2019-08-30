@@ -126,18 +126,10 @@ public class ChannelBlockIngestor
 
         DecimalFormat df = new DecimalFormat("0.0");
 
-        //TODO
-        /*SnowUserService u = node.getUserService();
-        if (u != null)
-        {
-          u.tickleBlocks();
-        }
-        node.getMemPool().tickleBlocks(new ChainHash(summary.getHeader().getUtxoRootHash()));*/
+
+        node.getChannelSubscriber().notifyChannelBlock(cid);
       }
 
-
-      //TODO
-      //node.getPeerage().sendAllTips(cid);
     }
 
     return true;

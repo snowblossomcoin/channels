@@ -89,8 +89,9 @@ public class ChannelPeerMaintainer extends PeriodicThread
           if (ci != null)
           {
             PeerLink pl = node.getPeerManager().connectNode(ci, chan_str);
-            ChannelLink cl = new ChannelLink(pl, cid, ctx);
+            ChannelLink cl = new ChannelLink(node, pl, cid, ctx);
             ctx.addLink(cl);
+            node.getChannelTipSender().sendTip(cid, cl);
           }
         }
       }

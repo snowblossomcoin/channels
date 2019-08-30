@@ -68,10 +68,9 @@ public class ChannelSubscriber
   private ChannelContext openChannelInternal(ChannelID cid)
   {
       ChannelContext ctx = new ChannelContext();
+      ctx.cid = cid;
       ctx.db = node.getChannelDB(cid);
       ctx.block_ingestor = new ChannelBlockIngestor(node, cid);
-
-      node.getChannelPeerMaintainer().wake();
 
       return ctx;
   }
@@ -89,6 +88,13 @@ public class ChannelSubscriber
       s.addAll(chan_map.keySet());
     }
     return s;
+  }
+
+
+  public void notifyChannelBlock(ChannelID cid)
+  {
+    node.getChannelTipSender().wakeFor(cid);
+
   }
 
 }

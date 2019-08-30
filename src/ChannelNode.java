@@ -168,6 +168,7 @@ public class ChannelNode
   public ChannelPeerMaintainer getChannelPeerMaintainer(){return channel_peer_maintainer;}
   public DHTCache getDHTCache(){return dht_cache;}
   public DHTStratUtil getDHTStratUtil(){return dht_strat_util;}
+  public ChannelTipSender getChannelTipSender(){ return channel_tip_sender;}
 
   public void testSelf()
 		throws Exception
