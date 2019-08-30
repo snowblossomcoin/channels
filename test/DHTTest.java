@@ -72,27 +72,37 @@ public class DHTTest
         .setDhtData( DHTData.newBuilder().setElementId(id).setPeerInfo(my_info).build() )
         .build());
 
-      DHTDataSet ds_put = node_a.getDHTServer().storeDHTData(
-        StoreDHTRequest.newBuilder()
-          .setDesiredResultCount(16)
-          .setSignedDhtData(sm)
-        .build());
+      try
+      {
 
-      DHTDataSet ds_get_a = node_a.getDHTServer().getDHTData(
-        GetDHTRequest.newBuilder()
-          .setDesiredResultCount(16)
-          .setElementId(id)
-        .build());
+        DHTDataSet ds_put = node_a.getDHTServer().storeDHTData(
+          StoreDHTRequest.newBuilder()
+            .setDesiredResultCount(16)
+            .setSignedDhtData(sm)
+          .build());
 
-      DHTDataSet ds_get_b = node_b.getDHTServer().getDHTData(
-        GetDHTRequest.newBuilder()
-          .setDesiredResultCount(16)
-          .setElementId(id)
-        .build());
+        DHTDataSet ds_get_a = node_a.getDHTServer().getDHTData(
+          GetDHTRequest.newBuilder()
+            .setDesiredResultCount(16)
+            .setElementId(id)
+          .build());
 
-      Assert.assertTrue(ds_put.getDhtDataCount() == 1);
-      Assert.assertTrue(ds_get_a.getDhtDataCount() == 1);
-      if (ds_get_b.getDhtDataCount() > 0) b_match++;
+        DHTDataSet ds_get_b = node_b.getDHTServer().getDHTData(
+          GetDHTRequest.newBuilder()
+            .setDesiredResultCount(16)
+            .setElementId(id)
+          .build());
+
+        Assert.assertTrue(ds_put.getDhtDataCount() == 1);
+        Assert.assertTrue(ds_get_a.getDhtDataCount() == 1);
+        if (ds_get_b.getDhtDataCount() > 0) b_match++;
+
+      }
+      catch(Throwable t)
+      {
+        System.out.println("Error in put and get: " + t);
+        
+      }
 
     }
     System.out.println("B match: " + b_match);
