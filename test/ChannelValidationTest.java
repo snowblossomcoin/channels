@@ -1,27 +1,19 @@
 package channels;
 
 import com.google.protobuf.ByteString;
-import duckutil.ConfigMem;
-import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
-import java.util.TreeMap;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
-import snowblossom.lib.Globals;
-import java.util.TreeMap;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.client.WalletUtil;
-import snowblossom.lib.NetworkParamsProd;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import snowblossom.lib.DigestUtil;
+import snowblossom.lib.Globals;
+import snowblossom.proto.WalletDatabase;
 
 public class ChannelValidationTest
 {

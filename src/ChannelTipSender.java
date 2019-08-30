@@ -3,8 +3,8 @@ package snowblossom.channels;
 import duckutil.PeriodicThread;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.List;
+import java.util.Set;
 import snowblossom.channels.proto.*;
 
 public class ChannelTipSender extends PeriodicThread

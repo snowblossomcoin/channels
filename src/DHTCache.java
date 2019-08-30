@@ -5,8 +5,6 @@ import duckutil.ExpiringLRUCache;
 import io.grpc.stub.StreamObserver;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ValidationException;
 
 /**

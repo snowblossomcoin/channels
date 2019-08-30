@@ -1,13 +1,12 @@
 package snowblossom.channels;
 
 import io.grpc.stub.StreamObserver;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
-import java.util.TreeMap;
-
 import snowblossom.lib.ValidationException;
 
 /**

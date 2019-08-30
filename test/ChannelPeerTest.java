@@ -1,6 +1,5 @@
 package channels;
 
-import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
 import java.io.File;
 import java.util.Random;
@@ -12,8 +11,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
-import snowblossom.proto.WalletDatabase;
 import snowblossom.lib.*;
+import snowblossom.proto.WalletDatabase;
 
 public class ChannelPeerTest
 {
@@ -30,7 +29,7 @@ public class ChannelPeerTest
   }
 
   @Test
-  public void testDHTReadWrite()
+  public void testChannelPeerAndSync()
     throws Exception
   {
     ChannelNode node_a = startNode();
