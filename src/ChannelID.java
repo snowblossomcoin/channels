@@ -5,6 +5,8 @@ import snowblossom.channels.proto.SignedMessage;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.DigestUtil;
+import snowblossom.lib.Duck32;
+import snowblossom.lib.ValidationException;
 
 public class ChannelID extends AddressSpecHash
 {
@@ -17,7 +19,17 @@ public class ChannelID extends AddressSpecHash
     super(bs);
   }
 
+  public static ChannelID fromString(String str)
+    throws ValidationException
+  {
+    return new ChannelID( Duck32.decode(ChannelGlobals.CHANNEL_ADDRESS_STRING, str) );
+    
+  }
 
+  public String toString()
+  {
+    return asString();
+  }
   public String asString()
   {
     return AddressUtil.getAddressString(ChannelGlobals.CHANNEL_ADDRESS_STRING, this);

@@ -114,6 +114,12 @@ public class ChannelNode
     channel_peer_maintainer.start();
     channel_tip_sender.start();
 
+
+    if (config.isSet("web_port"))
+    {
+      new WebServer(this);
+    }
+
     String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
     logger.info("My node address is: " + node_addr);
 
@@ -169,6 +175,7 @@ public class ChannelNode
   public DHTCache getDHTCache(){return dht_cache;}
   public DHTStratUtil getDHTStratUtil(){return dht_strat_util;}
   public ChannelTipSender getChannelTipSender(){ return channel_tip_sender;}
+  public Config getConfig(){ return config;}
 
   public void testSelf()
 		throws Exception
