@@ -188,7 +188,7 @@ public class ChannelValidation
   }
 
 
-  public static ChannelBlockSummary deepBlockValidation(ChannelID chan_id, ChannelBlock blk, ChannelBlockSummary prev_summary)
+  public static ChannelBlockSummary.Builder deepBlockValidation(ChannelID chan_id, ChannelBlock blk, ChannelBlockSummary prev_summary)
     throws ValidationException
   {
     checkBlockBasics(chan_id, blk, true);
@@ -274,7 +274,7 @@ public class ChannelValidation
     sum.setBlockId(blk.getSignedHeader().getMessageId());
     sum.setEffectiveSettings(settings);
 
-    return sum.build();
+    return sum;
 
   }
 

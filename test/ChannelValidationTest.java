@@ -68,7 +68,7 @@ public class ChannelValidationTest
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
 
-      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), null);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), null).build();
 
     }
 
@@ -113,7 +113,7 @@ public class ChannelValidationTest
       }
 
 
-      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum).build();
     }
     
     // Set new settings
@@ -138,7 +138,7 @@ public class ChannelValidationTest
       blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum).build();
 
     }
     // try new settings
@@ -156,7 +156,7 @@ public class ChannelValidationTest
       blk.setSignedHeader( ChannelSigUtil.signMessage(block_db2.getAddresses(0), block_db2.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum);
+      sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), sum).build();
 
     }
 

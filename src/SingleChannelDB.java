@@ -18,6 +18,8 @@ import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.ProtoDBMap;
 import snowblossom.lib.db.rocksdb.JRocksDB;
+import snowblossom.lib.trie.HashedTrie;
+import snowblossom.lib.trie.TrieDBMap;
 
 /**
  * Database releated to a single channel
@@ -36,6 +38,8 @@ public class SingleChannelDB
   protected ProtoDBMap<SignedMessage> content_map;
   protected ProtoDBMap<ChannelBlockSummary> summary_map;
   protected DBMap block_height_map;
+  protected DBMap data_map;
+  protected HashedTrie data_trie;
 
 
   public SingleChannelDB(Config base_config, ChannelID cid)
@@ -71,12 +75,17 @@ public class SingleChannelDB
     summary_map = new ProtoDBMap(ChannelBlockSummary.newBuilder().build().getParserForType(), prov.openMap("block_sum"));
 		block_height_map = prov.openMap("height");
 
+    data_map = prov.openMap("d");
+    data_trie = new HashedTrie(new TrieDBMap(data_map), true, true);
+
+
   }
 
   public ProtoDBMap<ChannelBlock> getBlockMap(){return block_map; }
   public ProtoDBMap<LocalPeerInfo> getPeerMap(){return peer_map; }
   public ProtoDBMap<SignedMessage> getContentMap(){return content_map; }
   public ProtoDBMap<ChannelBlockSummary> getBlockSummaryMap(){return summary_map; }
+  public HashedTrie getDataTrie() {return data_trie; }
 
   public ChainHash getBlockHashAtHeight(long height)
   {

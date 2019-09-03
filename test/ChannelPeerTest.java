@@ -82,12 +82,9 @@ public class ChannelPeerTest
       header.setPrevBlockHash( ChainHash.ZERO_HASH.getBytes());
       header.setContentMerkle( ChainHash.ZERO_HASH.getBytes());
 
-
       ChannelBlock.Builder blk = ChannelBlock.newBuilder();
       blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
-
-
 			
 			ctx_a = node_a.getChannelSubscriber().openChannel(chan_id);
 			Thread.sleep(500);
@@ -96,9 +93,6 @@ public class ChannelPeerTest
 			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
 
 			ctx_a.block_ingestor.ingestBlock(blk.build());
-
-      //sum = ChannelValidation.deepBlockValidation(chan_id, blk.build(), null);
-
     }
 
     for(int i=0; i<20; i++)

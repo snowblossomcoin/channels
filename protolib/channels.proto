@@ -168,7 +168,7 @@ message ChannelBlockSummary
   ChannelBlockHeader header = 3;
   ChannelSettings effective_settings = 4;
   SignedMessage signed_header = 5;
-
+  bytes data_root_hash = 6;
 
 }
 
@@ -211,12 +211,18 @@ message ContentInfo {
   // and included in a block.  But the block creator can include any content they want
   // regardless of this field
   repeated bytes broadcast_channel_ids = 5; 
-  
 
   /* What this content is in reference to, if anything */
   ContentReference parent_ref = 10;
   repeated ContentReference refs = 11;
   repeated ContentInfo included_content = 12;
+
+  // Things to be stored in the channel map.
+  // The keys with prefix "www/" will be visible as static web files in the channel.
+  // Note: those keys should point to message ids of content infos
+  // Any prefixes can be used, but it is recommented to use "chandata/" for channel specific
+  // data as other prefixes with special handling may be added.
+  map<string, bytes> chan_map_updates = 20;
 }
 
 

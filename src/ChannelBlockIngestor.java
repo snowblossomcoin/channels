@@ -7,12 +7,15 @@ import duckutil.TimeRecordAuto;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.ChannelBlock;
+import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.ChannelBlockHeader;
 import snowblossom.channels.proto.ChannelBlockSummary;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.lib.*;
+import snowblossom.lib.trie.HashUtils;
 
 /**
  * This class takes in new blocks, validates them and stores them in the db.
@@ -88,19 +91,35 @@ public class ChannelBlockIngestor
         }
       }
 
-      ChannelBlockSummary summary = ChannelValidation.deepBlockValidation(cid, blk, prev_summary);
+      ChannelBlockSummary.Builder summary = ChannelValidation.deepBlockValidation(cid, blk, prev_summary);
 
+      ByteString data_hash = HashUtils.hashOfEmpty();
+      if (prev_summary != null)
+      {
+        data_hash = prev_summary.getDataRootHash();
+      }
+      
       try(TimeRecordAuto tra_tx = TimeRecord.openAuto("ChannelBlockIngestor.blockSave"))
       {
         HashMap<ByteString, SignedMessage> content_put_map = new HashMap<>(16,0.5f);
         for(SignedMessage content : blk.getContentList())
         {
           content_put_map.put( content.getMessageId(), content);
+          ContentInfo ci = ChannelSigUtil.quickPayload(content).getContentInfo();
+          if (ci.getChanMapUpdatesCount() > 0)
+          {
+            data_hash = updateDataTrie( ci, data_hash);
+            
+          }
         }
         db.getContentMap().putAll(content_put_map);
         db.getBlockMap().put( blockhash.getBytes(), blk);
-        db.getBlockSummaryMap().put( blockhash.getBytes(), summary);
+        db.getBlockSummaryMap().put( blockhash.getBytes(), summary.build());
       }
+
+      summary.setDataRootHash(data_hash);
+
+      ChannelBlockSummary summary_fin = summary.build();
 
       BigInteger summary_work_sum = BlockchainUtil.readInteger(summary.getWorkSum());
       BigInteger chainhead_work_sum = BigInteger.ZERO;
@@ -112,16 +131,16 @@ public class ChannelBlockIngestor
       // TODO - implement tie breakers
       if (summary_work_sum.compareTo(chainhead_work_sum) > 0)
       {
-        chainhead = summary;
-        db.getBlockSummaryMap().put(HEAD, summary);
+        chainhead = summary_fin;
+        db.getBlockSummaryMap().put(HEAD, summary_fin);
         //System.out.println("UTXO at new root: " + HexUtil.getHexString(summary.getHeader().getUtxoRootHash()));
         //node.getUtxoHashedTrie().printTree(summary.getHeader().getUtxoRootHash());
 
-        updateHeights(summary);
+        updateHeights(summary_fin);
 
-        logger.info(String.format("New chain tip: Height %d %s (tx:%d sz:%d)", summary.getHeader().getBlockHeight(), blockhash, blk.getContentCount(), blk.toByteString().size()));
+        logger.info(String.format("New chain tip: Height %d %s (tx:%d sz:%d)", summary_fin.getHeader().getBlockHeight(), blockhash, blk.getContentCount(), blk.toByteString().size()));
 
-        double age_min = System.currentTimeMillis() - summary.getHeader().getTimestamp();
+        double age_min = System.currentTimeMillis() - summary_fin.getHeader().getTimestamp();
         age_min = age_min / 60000.0;
 
         DecimalFormat df = new DecimalFormat("0.0");
@@ -133,6 +152,20 @@ public class ChannelBlockIngestor
     }
 
     return true;
+
+  }
+
+  private ByteString updateDataTrie(ContentInfo ci, ByteString data_hash)
+  {
+    HashMap<ByteString, ByteString> update_map = new HashMap<>();
+    for(Map.Entry<String, ByteString> me : ci.getChanMapUpdates().entrySet())
+    {
+      ByteString key = ByteString.copyFrom(me.getKey().getBytes());
+      update_map.put(key, me.getValue());
+    }
+
+    data_hash = db.getDataTrie().mergeBatch(data_hash, update_map);
+    return data_hash;
 
   }
 
