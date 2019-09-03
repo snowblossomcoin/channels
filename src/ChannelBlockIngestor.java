@@ -98,7 +98,7 @@ public class ChannelBlockIngestor
       {
         data_hash = prev_summary.getDataRootHash();
       }
-      
+
       try(TimeRecordAuto tra_tx = TimeRecord.openAuto("ChannelBlockIngestor.blockSave"))
       {
         HashMap<ByteString, SignedMessage> content_put_map = new HashMap<>(16,0.5f);
@@ -112,13 +112,12 @@ public class ChannelBlockIngestor
             
           }
         }
+        summary.setDataRootHash(data_hash);
         db.getContentMap().putAll(content_put_map);
         db.getBlockMap().put( blockhash.getBytes(), blk);
         db.getBlockSummaryMap().put( blockhash.getBytes(), summary.build());
       }
-
-      summary.setDataRootHash(data_hash);
-
+      
       ChannelBlockSummary summary_fin = summary.build();
 
       BigInteger summary_work_sum = BlockchainUtil.readInteger(summary.getWorkSum());
@@ -156,7 +155,13 @@ public class ChannelBlockIngestor
   }
 
   private ByteString updateDataTrie(ContentInfo ci, ByteString data_hash)
+    throws ValidationException
   {
+    if ((data_hash == null) || (data_hash.size() != Globals.BLOCKCHAIN_HASH_LEN))
+    {
+      throw new ValidationException("Unset data_hash");
+    }
+    
     HashMap<ByteString, ByteString> update_map = new HashMap<>();
     for(Map.Entry<String, ByteString> me : ci.getChanMapUpdates().entrySet())
     {

@@ -122,12 +122,28 @@ java_test(
     ],
 )
 
+java_test(
+    name = "channel_data_test",
+    srcs = ["test/ChannelDataTest.java", "test/TestUtil.java"],
+    test_class = "channels.ChannelDataTest",
+    size="small",
+    deps = [
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
+
 
 java_test(
     name = "channel_test",
     srcs = ["test/ChannelTest.java"],
     test_class = "channels.ChannelTest",
-    size="medium",
+    size="small",
     deps = [
       "@junit_junit//jar",
       "@snowblossom//lib:lib",

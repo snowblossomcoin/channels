@@ -86,7 +86,6 @@ public class ChannelValidationTest
       for(int j=0; j<i*20; j++)
       {
         SignedMessage ci = randomContent(user_list);
-
         blk.addContent(ci);
         merkle_list.add(new ChainHash(ci.getMessageId()));
         
