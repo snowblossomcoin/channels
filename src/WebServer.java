@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import snowblossom.channels.proto.*;
 
 public class WebServer
 {
@@ -68,9 +69,6 @@ public class WebServer
 
       try
       {
-
-
-
         if (tokens.size() == 0)
         {
           handleRoot(t);
@@ -123,11 +121,38 @@ public class WebServer
       if (content_id == null)
       {
         code = 404;
+        t.getResponseHeaders().add("Content-type","text/plain");
         print_out.println("Item not found: " + cid + path);
+      }
+      else
+      {
+        SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
+        if (content_msg == null)
+        {
+          code = 404;
+          t.getResponseHeaders().add("Content-type","text/plain");
+          print_out.println("Path entry found, but not content info message.");
+        }
+        else
+        {
+          ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
+          if (ci.getMimeType() != null)
+          {
+            t.getResponseHeaders().add("Content-type",ci.getMimeType());
+          }
+          b_out.write(ci.getContent().toByteArray());
+
+          t.sendResponseHeaders(code, ci.getContentLength());
+          OutputStream out = t.getResponseBody();
+          out.write(ci.getContent().toByteArray());
+          out.close();
+
+          return;
+        }
+
 
       }
 
-      t.getResponseHeaders().add("Content-type","text/plain");
 
       byte[] data = b_out.toByteArray();
       t.sendResponseHeaders(code, data.length);
