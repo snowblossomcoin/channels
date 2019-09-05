@@ -157,6 +157,27 @@ public class ChannelValidation
       }
     }
 
+    if (ci.getContentLength() > ChannelGlobals.CONTENT_DATA_BLOCK_SIZE)
+    {
+      int expected_len = (int) (ci.getContentLength() / ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+      if (ci.getContentLength() % ChannelGlobals.CONTENT_DATA_BLOCK_SIZE != 0)
+      {
+        expected_len++;
+      }
+      if (ci.getChunkHashCount() != expected_len)
+      {
+        throw new ValidationException("content is longer than data_block_size so must have chunk_hash defined");
+      }
+      for(int i=0; i<expected_len; i++)
+      {
+        if (ci.getChunkHash(i).size() != Globals.BLOCKCHAIN_HASH_LEN)
+        {
+          throw new ValidationException("chunk_hash element must be " + Globals.BLOCKCHAIN_HASH_LEN + " length");
+        }
+      }
+      
+    }
+
     if (ci.getParentRef().getChannelId().size() > 0)
     {
       validateRef(ci.getParentRef());

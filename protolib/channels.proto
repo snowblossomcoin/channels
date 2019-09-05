@@ -32,6 +32,10 @@ message ChannelPeerMessage
 
     RequestContent req_content = 7;
     ContentInfo content = 8;
+
+    RequestChunk req_chunk = 9;
+    ContentChunk chunk = 10;
+
   }
 }
 
@@ -53,6 +57,26 @@ message RequestBlock
 message RequestContent
 {
 	bytes message_id = 1;
+}
+
+message RequestChunk
+{
+	bytes message_id = 1;
+  int32 chunk = 2;
+}
+
+message ContentChunk
+{
+  bytes message_id = 1;
+  int32 chunk = 2;
+
+  oneof z {
+    bytes chunk_data = 3;
+    // if I can't supply the chunk in question, 
+    // here is bit mapping of the ones I do have
+    // Use with java.util.BitSet
+    bytes chunk_have_bitmap = 4; 
+  }
 }
 
 message StoreDHTRequest
@@ -140,7 +164,7 @@ message ChannelBlockHeader
   bytes prev_block_hash = 4; //aka, prev signed header message_id
   bytes content_merkle = 6;  //merkle root of message_id of the signed content messages
   int64 timestamp = 7;
-  int64 weight = 8;
+  int64 weight = 8; // Maybe make this only settable if signed by admin
 
   oneof z {
     ChannelSettings settings = 20;
@@ -160,6 +184,7 @@ message ChannelBlockHeader
   }
 
 }
+
 
 message ChannelBlockSummary
 {
@@ -211,6 +236,11 @@ message ContentInfo {
   // and included in a block.  But the block creator can include any content they want
   // regardless of this field
   repeated bytes broadcast_channel_ids = 5; 
+
+  // Ordered list of hashes of 1MB blocks making up this content.
+  // If the content size % 1mb != 0, then the last chunk is whatever is left.
+  // must be set if content_length > 1mb
+  repeated bytes chunk_hash = 6;
 
   /* What this content is in reference to, if anything */
   ContentReference parent_ref = 10;
