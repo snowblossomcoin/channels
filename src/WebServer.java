@@ -110,7 +110,6 @@ public class WebServer
       PrintStream print_out = new PrintStream(b_out);
       int code = 200;
 
-
       String path ="/web";
       for(int i=2; i<tokens.size(); i++)
       {
@@ -149,8 +148,6 @@ public class WebServer
 
           return;
         }
-
-
       }
 
 
@@ -159,8 +156,6 @@ public class WebServer
       OutputStream out = t.getResponseBody();
       out.write(data);
       out.close();
-
-
 
     }
 

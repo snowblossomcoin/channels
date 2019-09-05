@@ -6,6 +6,7 @@ java_library(
   deps = [
     "@snowblossom//client:client",
     "@snowblossom//lib:lib",
+    "@snowblossom//iceleaf-ui:iceleaf",
     "@duckutil//:duckutil_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
     "@junit_junit//jar",
@@ -28,6 +29,17 @@ java_binary(
     ":channelslib",
   ],
 )
+
+java_binary(
+  name = "ChannelIceLeaf",
+  main_class = "snowblossom.channels.iceleaf.ChannelIceLeaf",
+  resources = [ "@snowblossom//iceleaf-ui:resources" ],
+  runtime_deps = [
+    ":channelslib",
+  ]
+)
+ 
+
 
 proto_library(
   name = "protosrc",

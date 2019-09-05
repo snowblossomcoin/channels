@@ -41,7 +41,6 @@ public class SingleChannelDB
   protected DBMap data_map;
   protected HashedTrie data_trie;
 
-
   public SingleChannelDB(Config base_config, ChannelID cid)
     throws Exception
   {
@@ -77,7 +76,6 @@ public class SingleChannelDB
 
     data_map = prov.openMap("d");
     data_trie = new HashedTrie(new TrieDBMap(data_map), true, true);
-
 
   }
 
@@ -130,6 +128,5 @@ public class SingleChannelDB
         t.printStackTrace();
       }
     }
-
   }
 }
