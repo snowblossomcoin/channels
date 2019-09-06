@@ -30,8 +30,9 @@ message ChannelPeerMessage
     RequestBlock req_header = 5;
     SignedMessage header = 6;
 
+    // not sure these two are needed
     RequestContent req_content = 7;
-    ContentInfo content = 8;
+    SignedMessage content = 8;
 
     RequestChunk req_chunk = 9;
     ContentChunk chunk = 10;

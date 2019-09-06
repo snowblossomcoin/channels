@@ -40,6 +40,7 @@ public class SingleChannelDB
   protected DBMap block_height_map;
   protected DBMap data_map;
   protected HashedTrie data_trie;
+  protected DBMap chunk_map;
 
   public SingleChannelDB(Config base_config, ChannelID cid)
     throws Exception
@@ -75,6 +76,7 @@ public class SingleChannelDB
 		block_height_map = prov.openMap("height");
 
     data_map = prov.openMap("d");
+    chunk_map = prov.openMap("k");
     data_trie = new HashedTrie(new TrieDBMap(data_map), true, true);
 
   }
@@ -84,6 +86,7 @@ public class SingleChannelDB
   public ProtoDBMap<SignedMessage> getContentMap(){return content_map; }
   public ProtoDBMap<ChannelBlockSummary> getBlockSummaryMap(){return summary_map; }
   public HashedTrie getDataTrie() {return data_trie; }
+  public DBMap getChunkMap(){return chunk_map; }
 
   public ChainHash getBlockHashAtHeight(long height)
   {

@@ -28,6 +28,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   private ChannelID cid;
   private volatile long last_recv;
   private volatile boolean closed;
+  private volatile ChannelTip last_tip;
 
   private TreeMap<Long, ChainHash> peer_block_map = new TreeMap<Long, ChainHash>();
 
@@ -156,6 +157,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
         if (tip.getBlockHeader().getMessageId().size() > 0)
         {
+          this.last_tip = tip;
           
           ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, tip.getBlockHeader());
           ChainHash hash = new ChainHash(tip.getBlockHeader().getMessageId());
@@ -188,7 +190,6 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
           .build());
 
       }
-	
       else if (msg.hasReqHeader())
       {
         ChainHash desired_hash = null;
@@ -242,6 +243,22 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
           close();
           throw(ve);
         }
+      }
+      else if (msg.hasReqContent())
+      {
+        RequestContent rc = msg.getReqContent();
+        ChainHash content_id = new ChainHash(rc.getMessageId());
+        SignedMessage ci = ctx.db.getContentMap().get(content_id.getBytes());
+        if (ci != null)
+        {
+           writeMessage( ChannelPeerMessage.newBuilder()
+              .setChannelId( cid.getBytes()) 
+              .setContent(ci)
+              .build());
+
+        }
+
+
       }
       else
       {
