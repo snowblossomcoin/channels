@@ -1,24 +1,20 @@
 package snowblossom.channels;
 
+import com.google.protobuf.ByteString;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import duckutil.Config;
 import duckutil.TaskMaster;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import com.google.protobuf.ByteString;
-
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.OutputStream;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.PrintStream;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 
 public class WebServer

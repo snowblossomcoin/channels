@@ -1,7 +1,10 @@
 package channels;
 
+import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
 import java.io.File;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 import org.junit.Assert;
@@ -13,9 +16,6 @@ import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletDatabase;
-import java.util.Map;
-import com.google.protobuf.ByteString;
-import java.util.LinkedList;
 
 public class ChannelDataTest
 {

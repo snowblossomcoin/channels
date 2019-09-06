@@ -3,7 +3,6 @@ package snowblossom.channels;
 import com.google.protobuf.ByteString;
 import snowblossom.channels.proto.ChannelBlockSummary;
 
-
 public class ChanDataUtils
 {
   public static ByteString getData(ChannelContext ctx, String key)

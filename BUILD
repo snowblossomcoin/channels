@@ -181,3 +181,18 @@ java_test(
     ],
 )
 
+java_test(
+    name = "chunk_map_util_test",
+    srcs = ["test/ChunkMapUtilsTest.java"],
+    test_class = "channels.ChunkMapUtilsTest",
+    size="medium",
+    deps = [
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
