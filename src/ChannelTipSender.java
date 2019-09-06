@@ -103,22 +103,22 @@ public class ChannelTipSender extends PeriodicThread
 
   protected ChannelPeerMessage getTip(ChannelContext ctx)
   {
-			ChannelBlockSummary head_sum = ctx.block_ingestor.getHead();
-			SignedMessage signed_header = null;
-			ChannelTip.Builder tip = ChannelTip.newBuilder();
+    ChannelBlockSummary head_sum = ctx.block_ingestor.getHead();
+    SignedMessage signed_header = null;
+    ChannelTip.Builder tip = ChannelTip.newBuilder();
 
-			if (head_sum != null)
-			{ 
-				signed_header = head_sum.getSignedHeader();
-				tip.setBlockHeader( signed_header );
-			}
+    if (head_sum != null)
+    { 
+      signed_header = head_sum.getSignedHeader();
+      tip.setBlockHeader( signed_header );
+    }
 
-			ChannelPeerMessage msg = ChannelPeerMessage.newBuilder()
-				.setChannelId( ctx.cid.getBytes())
-				.setTip(tip.build())
-				.build();
-			return msg;
-    
+    ChannelPeerMessage msg = ChannelPeerMessage.newBuilder()
+      .setChannelId( ctx.cid.getBytes())
+      .setTip(tip.build())
+      .build();
+    return msg;
+  
   }
   
 

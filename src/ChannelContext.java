@@ -1,7 +1,10 @@
 package snowblossom.channels;
 
 import com.google.common.collect.ImmutableList;
+import duckutil.LRUCache;
+import java.util.BitSet;
 import java.util.LinkedList;
+import snowblossom.lib.ChainHash;
 
 /**
  * Tracks state of a channel across multiple things.  Mostly so modules can find each other as relates to a single channel.
@@ -14,6 +17,11 @@ public class ChannelContext
   public ChannelBlockIngestor block_ingestor;
 
   private ImmutableList<ChannelLink> links=ImmutableList.of();
+
+
+  /** This BitSets must only be messed with inside a sync on the cache */
+  public LRUCache<ChainHash, BitSet> chunk_set_cache = new LRUCache<>(10000);
+
 
   public synchronized void addLink(ChannelLink link)
   {

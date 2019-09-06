@@ -1,7 +1,12 @@
 package channels;
 
+import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
 import java.io.File;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 import org.junit.Assert;
@@ -56,6 +61,7 @@ public class ChannelPeerTest
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3);
 
     WalletDatabase admin_db = TestUtil.genWallet();
+    WalletDatabase user_db = TestUtil.genWallet();
     ChannelID chan_id = null;
 		ChainHash prev_hash = null;
 
@@ -103,14 +109,29 @@ public class ChannelPeerTest
       header.setVersion(1);
       header.setChannelId( chan_id.getBytes() );
       header.setPrevBlockHash( prev_hash.getBytes());
-      header.setContentMerkle( ChainHash.ZERO_HASH.getBytes());
 
       ChannelBlock.Builder blk = ChannelBlock.newBuilder();
+      LinkedList<ChainHash> merkle_list = new LinkedList<>();
+      LinkedList<ContentChunk> large_chunks = new LinkedList<>();
+      for(int j=0; j<20; j++)
+      {
+        SignedMessage ci = randomContent(user_db, large_chunks, (j==5));
+        blk.addContent(ci);
+        merkle_list.add(new ChainHash(ci.getMessageId()));
+
+      }
+      header.setContentMerkle( DigestUtil.getMerkleRootForTxList(merkle_list).getBytes());
+
         blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
           SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
 			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
 			ctx_a.block_ingestor.ingestBlock(blk.build());
+
+      for(ContentChunk c : large_chunks)
+      {
+        ctx_a.block_ingestor.ingestChunk(c);
+      }
 
     }
 
@@ -123,7 +144,13 @@ public class ChannelPeerTest
     }
 		Assert.assertEquals(1, ctx_a.getLinks().size());
 		Assert.assertEquals(1, ctx_b.getLinks().size());
-    Thread.sleep(500);
+    for(int i=0; i<25; i++)
+    {
+      Thread.sleep(100);
+      if (ctx_b.block_ingestor.getHead() != null)
+      if (ctx_b.block_ingestor.getHead().getHeader().getBlockHeight() == 20) break;
+    }
+
 		Assert.assertEquals(20, ctx_b.block_ingestor.getHead().getHeader().getBlockHeight());
     
   }
@@ -150,4 +177,63 @@ public class ChannelPeerTest
   {
     return AddressUtil.getHashForSpec(db.getAddresses(0));
   }
+
+  protected SignedMessage randomContent(WalletDatabase wdb, List<ContentChunk> large_chunks, boolean large)
+    throws Exception
+  { 
+    Random rnd = new Random();
+
+    ContentInfo.Builder ci = ContentInfo.newBuilder();
+    ci.setMimeType("kelp");
+    int len = rnd.nextInt(25000);
+
+    if (large)
+    {
+      len = rnd.nextInt(2000000)+(int)ChannelGlobals.CONTENT_DATA_BLOCK_SIZE;
+    }
+    byte b[] = new byte[len];
+    rnd.nextBytes(b);
+
+    ByteString data = ByteString.copyFrom(b);
+
+    ci.setContentLength(len);
+    ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(b)) );
+
+    ArrayList<ByteString> chunks = new ArrayList<>();
+
+    if (len < 10000)
+    { 
+      ci.setContent( data);
+    }
+		else
+    {
+      MessageDigest md = DigestUtil.getMD();
+      for(int chunk = 0; chunk*ChannelGlobals.CONTENT_DATA_BLOCK_SIZE < len; chunk++)
+      {
+        int idx = (int) (chunk * ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+        int end = (int) (Math.min(idx + ChannelGlobals.CONTENT_DATA_BLOCK_SIZE, len));
+
+        ByteString chunk_data = data.substring(idx, end);
+
+        ci.addChunkHash( ByteString.copyFrom(md.digest(chunk_data.toByteArray())));
+
+        chunks.add(chunk_data);
+
+      }
+    
+    }
+
+    SignedMessage sm = ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),
+      SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
+
+    for(int i=0; i<chunks.size(); i++)
+    {
+      large_chunks.add( ContentChunk.newBuilder().setMessageId(sm.getMessageId()).setChunk(i).setChunkData(chunks.get(i)).build());
+    }
+
+    return sm;
+  }
+
+
+
 }

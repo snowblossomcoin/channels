@@ -47,6 +47,7 @@ public class ChannelNode
   private DHTCache dht_cache;
   private DHTStratUtil dht_strat_util;
   private ChannelTipSender channel_tip_sender;
+  private ChannelChunkGetter channel_chunk_getter;
 
   private HashMap<ChannelID, SingleChannelDB> db_map;
 
@@ -106,6 +107,7 @@ public class ChannelNode
     dht_cache = new DHTCache(this);
     dht_strat_util = new DHTStratUtil();
     channel_tip_sender = new ChannelTipSender(this);
+    channel_chunk_getter = new ChannelChunkGetter(this);
    
     startServer();
 
@@ -113,6 +115,7 @@ public class ChannelNode
     peer_manager.start();
     channel_peer_maintainer.start();
     channel_tip_sender.start();
+    channel_chunk_getter.start();
 
 
     if (config.isSet("web_port"))
@@ -175,6 +178,7 @@ public class ChannelNode
   public DHTCache getDHTCache(){return dht_cache;}
   public DHTStratUtil getDHTStratUtil(){return dht_strat_util;}
   public ChannelTipSender getChannelTipSender(){ return channel_tip_sender;}
+  public ChannelChunkGetter getChannelChunkGetter(){ return channel_chunk_getter;}
   public Config getConfig(){ return config;}
 
   public void testSelf()

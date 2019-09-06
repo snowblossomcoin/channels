@@ -82,6 +82,43 @@ public class ChunkMapUtilsTest
     }
     Assert.assertEquals(added.size(), bs.cardinality());
 
+    // Now that we have a bitset that will be updated with changes, try it again
+    for(int i=0; i<100; i++)
+    {
+      int idx = 0;
+      while(added.contains(idx))
+      {
+        idx = rnd.nextInt(100000);
+      }
+      added.add(idx);
+      if (rnd.nextDouble() < 0.5)
+      {
+        b = new byte[1048576];
+      }
+      else
+      {
+        b = new byte[ rnd.nextInt(1048575) + 1];
+      }
+      rnd.nextBytes(b);
+
+      ByteString input_data = ByteString.copyFrom(b);
+
+      Assert.assertNull(ChunkMapUtils.getChunk(ctx, content_id, idx));
+      ChunkMapUtils.storeChunk(ctx, content_id ,idx, input_data);
+
+      Assert.assertEquals( input_data, ChunkMapUtils.getChunk(ctx, content_id, idx));
+    }
+
+    bs = ChunkMapUtils.getSavedChunksSet(ctx, content_id);
+
+    for(int idx : added)
+    {
+      Assert.assertTrue( bs.get(idx) );
+    }
+    Assert.assertEquals(added.size(), bs.cardinality());
+
+
+
   }
 
   private ChannelNode startNode()

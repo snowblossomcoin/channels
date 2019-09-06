@@ -6,12 +6,14 @@ import duckutil.TimeRecord;
 import duckutil.TimeRecordAuto;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockHeader;
 import snowblossom.channels.proto.ChannelBlockSummary;
+import snowblossom.channels.proto.ContentChunk;
 import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.lib.*;
@@ -27,6 +29,7 @@ public class ChannelBlockIngestor
   private ChannelNode node;
   private SingleChannelDB db;
   private ChannelID cid;
+  private ChannelContext ctx;
   
   private volatile ChannelBlockSummary chainhead;
 
@@ -34,10 +37,11 @@ public class ChannelBlockIngestor
 
   private LRUCache<ChainHash, Long> block_pull_map = new LRUCache<>(2000);
 
-  public ChannelBlockIngestor(ChannelNode node, ChannelID cid)
+  public ChannelBlockIngestor(ChannelNode node, ChannelID cid, ChannelContext ctx)
   {
     this.node = node;
-    this.db = node.getChannelDB(cid);
+    this.ctx = ctx;
+    this.db = ctx.db;
     this.cid = cid;
 
     chainhead = db.getBlockSummaryMap().get(HEAD);
@@ -109,7 +113,10 @@ public class ChannelBlockIngestor
           if (ci.getChanMapUpdatesCount() > 0)
           {
             data_hash = updateDataTrie( ci, data_hash);
-            
+          }
+          if (ci.getContent().size() < ci.getContentLength())
+          {
+            ChunkMapUtils.markWant(ctx, new ChainHash(content.getMessageId()));
           }
         }
         summary.setDataRootHash(data_hash);
@@ -117,6 +124,8 @@ public class ChannelBlockIngestor
         db.getBlockMap().put( blockhash.getBytes(), blk);
         db.getBlockSummaryMap().put( blockhash.getBytes(), summary.build());
       }
+
+      node.getChannelChunkGetter().wakeFor(cid);
       
       ChannelBlockSummary summary_fin = summary.build();
 
@@ -143,8 +152,7 @@ public class ChannelBlockIngestor
         age_min = age_min / 60000.0;
 
         DecimalFormat df = new DecimalFormat("0.0");
-
-
+        
         node.getChannelSubscriber().notifyChannelBlock(cid);
       }
 
@@ -221,6 +229,54 @@ public class ChannelBlockIngestor
       block_pull_map.put(hash, tm);
       return true;
     }
+  }
+
+
+  public void ingestChunk(ContentChunk chunk)
+    throws ValidationException
+  {
+    ChainHash content_id = new ChainHash(chunk.getMessageId());
+    int n = chunk.getChunk();
+
+    if (chunk.getChunkData().size() == 0) return;
+
+    if (!ChunkMapUtils.doIWant(ctx, content_id))
+    {
+      throw new ValidationException(String.format("I don't want chunk: %s", content_id));
+    }
+
+    ContentInfo ci = ChannelSigUtil.quickPayload(db.getContentMap().get(content_id.getBytes())).getContentInfo();
+
+    ByteString expected_hash = null;
+    if (ci.getContentLength() <= ChannelGlobals.CONTENT_DATA_BLOCK_SIZE)
+    {
+      expected_hash = ci.getContentHash();
+    }
+    else
+    {
+      expected_hash = ci.getChunkHash(n);
+    }
+
+    ByteString found_hash = ByteString.copyFrom(DigestUtil.getMD().digest(chunk.getChunkData().toByteArray()));
+    if (!expected_hash.equals(found_hash))
+    {
+      throw new ValidationException("Chunk hash mismatch");
+    }
+
+    ChunkMapUtils.storeChunk(ctx, content_id, n, chunk.getChunkData());
+    logger.info(String.format("Saved channel %s saved chunk %s %d (%d)", cid, content_id, n, chunk.getChunkData().size() ));
+
+    BitSet bs = ChunkMapUtils.getSavedChunksSet(ctx, content_id);
+    long saved_count = bs.cardinality();
+
+    if (saved_count * ChannelGlobals.CONTENT_DATA_BLOCK_SIZE >= ci.getContentLength())
+    {
+      ChunkMapUtils.markDone(ctx, content_id);
+      logger.info(String.format("Saved channel %s file complete %s", cid, content_id));
+    }
+
+    node.getChannelChunkGetter().wakeFor(cid);
+
   }
 
 }

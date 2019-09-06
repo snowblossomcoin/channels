@@ -1,6 +1,9 @@
 package snowblossom.channels;
 
+import com.google.protobuf.ByteString;
+import duckutil.ExpiringLRUCache;
 import io.grpc.stub.StreamObserver;
+import java.util.BitSet;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,6 +34,8 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   private volatile ChannelTip last_tip;
 
   private TreeMap<Long, ChainHash> peer_block_map = new TreeMap<Long, ChainHash>();
+  private ExpiringLRUCache<ChainHash, BitSet> peer_chunks = new ExpiringLRUCache<>(10000, 30000L);
+
 
 	// As server
 	public ChannelLink(ChannelNode node, StreamObserver<ChannelPeerMessage> sink)
@@ -255,6 +260,56 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
               .setChannelId( cid.getBytes()) 
               .setContent(ci)
               .build());
+
+        }
+        //TODO some sort of error on no data
+
+      }
+      else if (msg.hasReqChunk())
+      {
+        RequestChunk rc = msg.getReqChunk();
+        ChainHash content_id = new ChainHash(rc.getMessageId());
+        int chunk_number = rc.getChunk();
+
+        ContentChunk.Builder chunk_msg = ContentChunk.newBuilder();
+        chunk_msg.setMessageId(content_id.getBytes());
+        chunk_msg.setChunk(chunk_number);
+
+        ByteString data = ChunkMapUtils.getChunk(ctx, content_id, chunk_number);
+        if (data != null)
+        {
+          chunk_msg.setChunkData(data);
+        }
+        else
+        {
+          BitSet bs = ChunkMapUtils.getSavedChunksSet(ctx, content_id);
+          ByteString bs_bytes = ByteString.copyFrom(bs.toByteArray());
+          if (bs_bytes.size() == 0)
+          {
+            // Send something so it is clear we are sending something
+            // otherwise not having any chunks will be the same
+            // as no answer
+            bs_bytes = ByteString.copyFrom(new byte[8]);
+          }
+          chunk_msg.setChunkHaveBitmap(bs_bytes);
+        }
+
+        writeMessage( ChannelPeerMessage.newBuilder()
+          .setChannelId( cid.getBytes()) 
+          .setChunk(chunk_msg.build())
+          .build());
+
+      }
+      else if (msg.hasChunk())
+      {
+        ContentChunk chunk = msg.getChunk();
+
+        ctx.block_ingestor.ingestChunk(chunk);
+        if (chunk.getChunkHaveBitmap().size() > 0)
+        {
+          BitSet bs = BitSet.valueOf(chunk.getChunkHaveBitmap().asReadOnlyByteBuffer());
+          peer_chunks.put( new ChainHash(chunk.getMessageId()), bs);
+
 
         }
 

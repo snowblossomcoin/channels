@@ -70,7 +70,7 @@ public class ChannelSubscriber
       ChannelContext ctx = new ChannelContext();
       ctx.cid = cid;
       ctx.db = node.getChannelDB(cid);
-      ctx.block_ingestor = new ChannelBlockIngestor(node, cid);
+      ctx.block_ingestor = new ChannelBlockIngestor(node, cid, ctx);
 
       return ctx;
   }
