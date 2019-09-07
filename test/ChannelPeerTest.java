@@ -135,6 +135,7 @@ public class ChannelPeerTest
 
     }
 
+    Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_a).size());
 		Assert.assertEquals(20, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
 
     for(int i=0; i<100; i++)
@@ -144,14 +145,16 @@ public class ChannelPeerTest
     }
 		Assert.assertEquals(1, ctx_a.getLinks().size());
 		Assert.assertEquals(1, ctx_b.getLinks().size());
-    for(int i=0; i<25; i++)
+    for(int i=0; i<200; i++)
     {
       Thread.sleep(100);
       if (ctx_b.block_ingestor.getHead() != null)
-      if (ctx_b.block_ingestor.getHead().getHeader().getBlockHeight() == 20) break;
+      if (ctx_b.block_ingestor.getHead().getHeader().getBlockHeight() == 20)
+      if (ChunkMapUtils.getWantList(ctx_b).size() == 0) break;
     }
 
 		Assert.assertEquals(20, ctx_b.block_ingestor.getHead().getHeader().getBlockHeight());
+    Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_b).size());
     
   }
 

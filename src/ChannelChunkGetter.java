@@ -4,8 +4,12 @@ import duckutil.PeriodicThread;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Set;
 import snowblossom.channels.proto.*;
+import snowblossom.lib.ChainHash;
+import java.util.Collections;
+import java.util.BitSet;
 
 public class ChannelChunkGetter extends PeriodicThread
 {
@@ -14,6 +18,8 @@ public class ChannelChunkGetter extends PeriodicThread
   private ChannelNode node;
 
   private long earliest_time = 0L;
+
+  private static final int SENDS_PER_PASS = 4;
 
   public ChannelChunkGetter(ChannelNode node)
   {
@@ -63,16 +69,66 @@ public class ChannelChunkGetter extends PeriodicThread
     }
     for(ChannelID cid : send_set)
     {
+      startPulls(cid);
 
-      ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
-      if (ctx != null)
-      {
-        //TODO -- do things
-				List<ChannelLink> links = ctx.getLinks();
-      }
       synchronized(get_time_map)
       {
         get_time_map.put(cid, now + ChannelGlobals.CHANNEL_TIP_SEND_MS);
+      }
+
+    }
+  }
+
+  private void startPulls(ChannelID cid)
+  {
+    ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+    if (ctx != null)
+    {
+      List<ChainHash> want_list = ChunkMapUtils.getWantList(ctx);
+      List<ChannelLink> links = ctx.getLinks();
+
+      if (links.size() == 0) return;
+
+      int sent = 0;
+
+      // TODO - do something smarter about link selection
+
+      for(ChainHash content_id : want_list)
+      {
+        Collections.shuffle(links);
+        ContentInfo ci = ctx.db.getContentInfo(content_id);
+        if (ci == null) continue;
+
+        BitSet bs = ChunkMapUtils.getSavedChunksSet(ctx, content_id);
+        int total_chunks = MiscUtils.getNumberOfChunks(ci);
+        List<Integer> chunk_want_list = new LinkedList<>();
+        for(int i=0; i<total_chunks; i++)
+        {
+          if (!bs.get(i))
+          {
+            chunk_want_list.add(i);
+          }
+        }
+        Collections.shuffle(chunk_want_list);
+
+        for(int w : chunk_want_list)
+        {
+          Collections.shuffle(links);
+          ChannelLink link = links.get(0);
+    
+          link.writeMessage( 
+            ChannelPeerMessage.newBuilder()
+              .setChannelId( cid.getBytes())
+              .setReqChunk( RequestChunk.newBuilder().setMessageId(content_id.getBytes()).setChunk(w).build() )
+              .build());
+
+          if (sent >= SENDS_PER_PASS) return;
+        }
+
+
+
+  
+        if (sent >= SENDS_PER_PASS) return;
       }
 
     }

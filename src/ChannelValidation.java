@@ -159,11 +159,7 @@ public class ChannelValidation
 
     if (ci.getContentLength() > ChannelGlobals.CONTENT_DATA_BLOCK_SIZE)
     {
-      int expected_len = (int) (ci.getContentLength() / ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
-      if (ci.getContentLength() % ChannelGlobals.CONTENT_DATA_BLOCK_SIZE != 0)
-      {
-        expected_len++;
-      }
+      int expected_len = MiscUtils.getNumberOfChunks(ci);
       if (ci.getChunkHashCount() != expected_len)
       {
         throw new ValidationException("content is longer than data_block_size so must have chunk_hash defined");

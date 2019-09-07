@@ -13,6 +13,7 @@ import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockSummary;
 import snowblossom.channels.proto.LocalPeerInfo;
 import snowblossom.channels.proto.SignedMessage;
+import snowblossom.channels.proto.ContentInfo;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBProvider;
@@ -131,5 +132,14 @@ public class SingleChannelDB
         t.printStackTrace();
       }
     }
+  }
+
+  public ContentInfo getContentInfo(ChainHash hash)
+  {
+    SignedMessage sm = getContentMap().get(hash.getBytes());
+    if (sm == null) return null;
+
+    return ChannelSigUtil.quickPayload(sm).getContentInfo();
+
   }
 }

@@ -47,6 +47,13 @@ public class ChunkMapUtilsTest
 
     ChainHash content_id = new ChainHash(b);
 
+    Assert.assertFalse( ChunkMapUtils.doIWant(ctx, content_id));
+    ChunkMapUtils.markWant(ctx, content_id);
+    Assert.assertTrue( ChunkMapUtils.doIWant(ctx, content_id));
+    ChunkMapUtils.markDone(ctx, content_id);
+    Assert.assertFalse( ChunkMapUtils.doIWant(ctx, content_id));
+
+
     TreeSet<Integer> added=new TreeSet<>();
     for(int i=0; i<100; i++)
     {

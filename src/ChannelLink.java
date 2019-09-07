@@ -309,10 +309,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         {
           BitSet bs = BitSet.valueOf(chunk.getChunkHaveBitmap().asReadOnlyByteBuffer());
           peer_chunks.put( new ChainHash(chunk.getMessageId()), bs);
-
-
         }
-
 
       }
       else

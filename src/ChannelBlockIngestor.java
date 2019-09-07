@@ -242,7 +242,8 @@ public class ChannelBlockIngestor
 
     if (!ChunkMapUtils.doIWant(ctx, content_id))
     {
-      throw new ValidationException(String.format("I don't want chunk: %s", content_id));
+      logger.info(String.format("I don't want chunk: %s", content_id));
+      return;
     }
 
     ContentInfo ci = ChannelSigUtil.quickPayload(db.getContentMap().get(content_id.getBytes())).getContentInfo();
