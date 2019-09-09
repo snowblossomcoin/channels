@@ -10,6 +10,10 @@ import java.util.concurrent.Future;
 public class ChannelSubscriber
 {
   private ChannelNode node;
+
+  // TODO - why the hell did I make this this complicated.
+  //    really we are just making some classes, nothing big.  the peermainterer is doing all the real work.
+  //  no need to screw with futures
   private HashMap<ChannelID, SimpleFuture<ChannelContext> > chan_map;
   
   public ChannelSubscriber(ChannelNode node)

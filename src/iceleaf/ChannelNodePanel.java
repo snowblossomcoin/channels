@@ -155,8 +155,9 @@ public class ChannelNodePanel extends BasePanel
     {
       try
       {
-			  ChannelID cid = ChannelID.fromString(sub_chan_field.getText());
+			  ChannelID cid = ChannelID.fromString(sub_chan_field.getText().trim());
 			  node.getChannelSubscriber().openChannelFuture(cid);
+        setMessageBox("Channel added: " + cid);
       }
       catch(ValidationException t)
       {
