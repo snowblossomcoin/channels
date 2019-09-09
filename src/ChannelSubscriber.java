@@ -4,6 +4,7 @@ import duckutil.SimpleFuture;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 /** Manage channels we are tracking */
 public class ChannelSubscriber
@@ -16,13 +17,8 @@ public class ChannelSubscriber
     this.node = node;
     chan_map = new HashMap<>(16,0.5f);
   }
-
-  /**
-   * open a channel and get context
-   * or if already open, get the context
-   * safe to call a bunch simulantiously for the same channel
-   */
-  public ChannelContext openChannel(ChannelID cid)
+  
+  public SimpleFuture<ChannelContext> openChannelFuture(ChannelID cid)
   {
     SimpleFuture<ChannelContext> cc = null;
     boolean doOpen = false;
@@ -42,8 +38,18 @@ public class ChannelSubscriber
       cc.setResult(openChannelInternal(cid));
       node.getChannelPeerMaintainer().wake();
     }
+    return cc;
+ 
+  }
 
-    return cc.get();
+  /**
+   * open a channel and get context
+   * or if already open, get the context
+   * safe to call a bunch simulantiously for the same channel
+   */
+  public ChannelContext openChannel(ChannelID cid)
+  {
+    return openChannelFuture(cid).get();
   }
 
   /**

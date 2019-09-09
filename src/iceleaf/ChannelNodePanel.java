@@ -3,22 +3,29 @@ package snowblossom.channels.iceleaf;
 import duckutil.ConfigMem;
 import duckutil.PeriodicThread;
 import java.awt.GridBagConstraints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.TreeMap;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import snowblossom.lib.AddressUtil;
-import snowblossom.lib.Globals;
-import snowblossom.lib.SystemUtil;
+import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelNode;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
+import snowblossom.lib.SystemUtil;
+import snowblossom.lib.ValidationException;
 
 public class ChannelNodePanel extends BasePanel
 {
   protected ChannelNode node;
   protected JProgressBar progress;
   protected boolean start_attempt;
+
+	protected JTextField sub_chan_field;
+  protected JButton sub_button;
 
   public ChannelNodePanel(IceLeaf ice_leaf)
   {
@@ -40,6 +47,19 @@ public class ChannelNodePanel extends BasePanel
 
     progress = new JProgressBar(0,0);
     panel.add(progress, c);
+
+    c.gridwidth = 1;
+    panel.add(new JLabel("Subscribe to channel: "), c);
+    sub_chan_field = new JTextField();
+    sub_chan_field.setColumns(50);
+    panel.add(sub_chan_field, c);
+
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    sub_button = new JButton("Subscribe");
+    sub_button.addActionListener( new SubscribeAction());
+    panel.add(sub_button, c);
+
+
 
   }
 
@@ -127,6 +147,23 @@ public class ChannelNodePanel extends BasePanel
     setMessageBox("");
 
 
+  }
+
+  public class SubscribeAction implements ActionListener
+  {
+    public void actionPerformed(ActionEvent e)
+    {
+      try
+      {
+			  ChannelID cid = ChannelID.fromString(sub_chan_field.getText());
+			  node.getChannelSubscriber().openChannelFuture(cid);
+      }
+      catch(ValidationException t)
+      {
+        setMessageBox(t.toString());
+      } 
+
+    }
   }
 
 }

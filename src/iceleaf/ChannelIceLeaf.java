@@ -1,13 +1,12 @@
 package snowblossom.channels.iceleaf;
 
+import java.util.prefs.Preferences;
+import javax.swing.JTabbedPane;
+import snowblossom.channels.ChannelGlobals;
+import snowblossom.iceleaf.IceLeaf;
 import snowblossom.lib.Globals;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsProd;
-import snowblossom.iceleaf.IceLeaf;
-import java.util.prefs.Preferences;
-import snowblossom.channels.ChannelGlobals;
-import javax.swing.JTabbedPane;
-
 
 public class ChannelIceLeaf extends IceLeaf
 {

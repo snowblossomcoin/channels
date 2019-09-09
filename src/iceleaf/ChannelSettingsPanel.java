@@ -3,10 +3,10 @@ package snowblossom.channels.iceleaf;
 import java.awt.GridBagConstraints;
 import java.io.File;
 import javax.swing.JLabel;
-import snowblossom.iceleaf.components.*;
-import snowblossom.iceleaf.BasePanel;
-import snowblossom.lib.NetworkParams;
 import snowblossom.channels.ChannelGlobals;
+import snowblossom.iceleaf.BasePanel;
+import snowblossom.iceleaf.components.*;
+import snowblossom.lib.NetworkParams;
 import snowblossom.lib.SystemUtil;
 
 public class ChannelSettingsPanel extends BasePanel
@@ -38,7 +38,7 @@ public class ChannelSettingsPanel extends BasePanel
 			panel.add(new JLabel("Channel Node Key Directory"), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			File default_channel_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "channel_wallet");
-			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_wallet_path", default_channel_db_path.toString(),70),c);
+			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_wallet_path", default_channel_wallet_path.toString(),70),c);
 
       c.gridwidth = 1;
       panel.add(new JLabel("Service Port"), c);
