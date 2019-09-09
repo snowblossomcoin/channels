@@ -3,25 +3,23 @@ package channels;
 import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
 import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import java.security.MessageDigest;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletDatabase;
-import java.net.URL;
-import java.io.InputStream;
-
 
 public class WebServerTest
 {

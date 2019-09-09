@@ -13,11 +13,11 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
-import java.util.BitSet;
 
 public class WebServer
 {
@@ -49,8 +49,15 @@ public class WebServer
     http_server.start();
 
   }
+
   public class RootHandler implements HttpHandler
   {
+    
+    // this is a mess
+    // TODO - make error reporting helper function to sets code and returns some message
+    // TODO - what the hell is this decomposition
+    // TODO - support range requests
+    // TODO - add hash to returned headers on data get (why not)
     @Override
     public void handle(HttpExchange t) throws IOException {
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();

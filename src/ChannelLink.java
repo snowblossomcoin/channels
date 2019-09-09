@@ -5,13 +5,13 @@ import duckutil.ExpiringLRUCache;
 import io.grpc.stub.StreamObserver;
 import java.util.BitSet;
 import java.util.TreeMap;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.ValidationException;
-import java.util.concurrent.Semaphore;
 
 /**
  * A streaming link for peer messages.  Works for both client and server.

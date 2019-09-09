@@ -1,16 +1,16 @@
 package snowblossom.channels;
 
 import duckutil.PeriodicThread;
+import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
-import java.util.Collections;
-import java.util.BitSet;
-import java.util.concurrent.Semaphore;
 
 public class ChannelChunkGetter extends PeriodicThread
 {
