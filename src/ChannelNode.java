@@ -71,7 +71,6 @@ public class ChannelNode
 
     LogSetup.setup(config);
 		new ChannelNode(config);
-
   }
 
 
