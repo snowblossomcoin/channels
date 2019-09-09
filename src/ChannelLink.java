@@ -11,6 +11,7 @@ import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.ValidationException;
+import java.util.concurrent.Semaphore;
 
 /**
  * A streaming link for peer messages.  Works for both client and server.
@@ -36,6 +37,9 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   private TreeMap<Long, ChainHash> peer_block_map = new TreeMap<Long, ChainHash>();
   private ExpiringLRUCache<ChainHash, BitSet> peer_chunks = new ExpiringLRUCache<>(10000, 30000L);
 
+  private Semaphore chunk_sem;
+  private Semaphore chunk_hold_sem;
+
 
 	// As server
 	public ChannelLink(ChannelNode node, StreamObserver<ChannelPeerMessage> sink)
@@ -45,6 +49,8 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 		this.sink = sink;
     server_side = true;
     client_side = false;
+
+    chunk_hold_sem = new Semaphore(0);
 
 	}
 
@@ -58,10 +64,23 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     this.peer_link = peer_link;
     this.cid = cid;
     this.ctx = ctx;
+    
+    chunk_hold_sem = new Semaphore(0);
 
     sink = peer_link.getChannelAsyncStub().subscribePeering(this);
 
   }
+
+  public void setChunkSem(Semaphore sem)
+  {
+    this.chunk_sem = sem;
+  }
+
+  public Semaphore getChunkHoldSem()
+  {
+    return chunk_hold_sem;
+  }
+
 
   /** returns remote node id if know, null if we are server */
   public AddressSpecHash getRemoteNodeID()
@@ -97,7 +116,11 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     {
       sink.onCompleted();
     }
-
+    int drain = (chunk_hold_sem.drainPermits());
+    if (drain > 0)
+    {
+      chunk_sem.release(drain);
+    }
   }
 
 	@Override
@@ -304,12 +327,18 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       {
         ContentChunk chunk = msg.getChunk();
 
+        if (chunk_hold_sem.tryAcquire())
+        {
+          chunk_sem.release();
+        }
+
         ctx.block_ingestor.ingestChunk(chunk);
         if (chunk.getChunkHaveBitmap().size() > 0)
         {
           BitSet bs = BitSet.valueOf(chunk.getChunkHaveBitmap().asReadOnlyByteBuffer());
           peer_chunks.put( new ChainHash(chunk.getMessageId()), bs);
         }
+
 
       }
       else

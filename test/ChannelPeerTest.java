@@ -26,6 +26,7 @@ public class ChannelPeerTest
 
   private ChannelNode node_a;
   private ChannelNode node_b;
+  private ChannelNode node_c;
 
   @BeforeClass
   public static void loadProvider()
@@ -39,6 +40,7 @@ public class ChannelPeerTest
   {
     ChannelNode node_a = startNode();
     ChannelNode node_b = startNode();
+    ChannelNode node_c = startNode();
 
     Thread.sleep(500);
 
@@ -52,6 +54,7 @@ public class ChannelPeerTest
       Thread.sleep(1000);
       if (node_a.getPeerManager().getPeersWithReason("DHT").size() >= 3)
       if (node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3)
+      if (node_c.getPeerManager().getPeersWithReason("DHT").size() >= 3)
       {
         break;
       }
@@ -59,6 +62,7 @@ public class ChannelPeerTest
 
     Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() >= 3);
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3);
+    Assert.assertTrue(node_c.getPeerManager().getPeersWithReason("DHT").size() >= 3);
 
     WalletDatabase admin_db = TestUtil.genWallet();
     WalletDatabase user_db = TestUtil.genWallet();
@@ -67,6 +71,7 @@ public class ChannelPeerTest
 
 		ChannelContext ctx_a;
     ChannelContext ctx_b;
+    ChannelContext ctx_c;
 
 
     { 
@@ -95,6 +100,7 @@ public class ChannelPeerTest
 			ctx_a = node_a.getChannelSubscriber().openChannel(chan_id);
 			Thread.sleep(500);
 			ctx_b = node_b.getChannelSubscriber().openChannel(chan_id);
+			ctx_c = node_c.getChannelSubscriber().openChannel(chan_id);
 
 			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
 
@@ -141,21 +147,30 @@ public class ChannelPeerTest
     for(int i=0; i<100; i++)
     {
       Thread.sleep(100);
-      if (ctx_a.getLinks().size() + ctx_b.getLinks().size() >= 2) break;
+      if (ctx_a.getLinks().size() 
+        + ctx_b.getLinks().size()
+        + ctx_c.getLinks().size()
+        >= 3) break;
     }
-		Assert.assertEquals(1, ctx_a.getLinks().size());
-		Assert.assertEquals(1, ctx_b.getLinks().size());
-    for(int i=0; i<200; i++)
+    for(int i=0; i<1450; i++)
     {
       Thread.sleep(100);
       if (ctx_b.block_ingestor.getHead() != null)
       if (ctx_b.block_ingestor.getHead().getHeader().getBlockHeight() == 20)
-      if (ChunkMapUtils.getWantList(ctx_b).size() == 0) break;
+      if (ctx_c.block_ingestor.getHead() != null)
+      if (ctx_c.block_ingestor.getHead().getHeader().getBlockHeight() == 20)
+      if (ChunkMapUtils.getWantList(ctx_b).size() == 0) 
+      if (ChunkMapUtils.getWantList(ctx_c).size() == 0)
+      {
+        break;
+      }
     }
 
 		Assert.assertEquals(20, ctx_b.block_ingestor.getHead().getHeader().getBlockHeight());
     Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_b).size());
     
+		Assert.assertEquals(20, ctx_c.block_ingestor.getHead().getHeader().getBlockHeight());
+    Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_c).size());
   }
 
 	private ChannelNode startNode()

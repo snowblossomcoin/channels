@@ -10,16 +10,19 @@ import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
 import java.util.Collections;
 import java.util.BitSet;
+import java.util.concurrent.Semaphore;
 
 public class ChannelChunkGetter extends PeriodicThread
 {
 
   private HashMap<ChannelID, Long> get_time_map = new HashMap<>(16,0.5f);
   private ChannelNode node;
+  private HashMap<ChannelID, Semaphore> request_sem_map;
 
   private long earliest_time = 0L;
 
-  private static final int SENDS_PER_PASS = 4;
+  private static final int SIMULTANTIOUS_REQUESTS_PER_CHANNEL = 32;
+
 
   public ChannelChunkGetter(ChannelNode node)
   {
@@ -28,6 +31,23 @@ public class ChannelChunkGetter extends PeriodicThread
     this.setDaemon(true);
     this.node = node;
 
+    request_sem_map = new HashMap<>(16,0.5f);
+
+  }
+
+  protected Semaphore getChanSem(ChannelID cid)
+  {
+    synchronized(request_sem_map)
+    {
+      Semaphore sem = request_sem_map.get(cid);
+      if (sem == null)
+      {
+        sem = new Semaphore(SIMULTANTIOUS_REQUESTS_PER_CHANNEL);
+        request_sem_map.put(cid, sem);
+      }
+      return sem;
+
+    }
   }
 
   @Override
@@ -54,13 +74,16 @@ public class ChannelChunkGetter extends PeriodicThread
         {
           tm = get_time_map.get(cid);
         }
-        if (tm <= now)
+        if (getChanSem(cid).availablePermits() > 0)
         {
-          send_set.add(cid);
-        }
-        else
-        {
-          next_earliest = Math.min(next_earliest, tm);
+          if (tm <= now)
+          {
+            send_set.add(cid);
+          }
+          else
+          {
+            next_earliest = Math.min(next_earliest, tm);
+          }
         }
 
       }
@@ -81,15 +104,14 @@ public class ChannelChunkGetter extends PeriodicThread
 
   private void startPulls(ChannelID cid)
   {
+    int to_send = getChanSem(cid).availablePermits();
     ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
     if (ctx != null)
     {
       List<ChainHash> want_list = ChunkMapUtils.getWantList(ctx);
-      List<ChannelLink> links = ctx.getLinks();
+      LinkedList<ChannelLink> links = new LinkedList<>(ctx.getLinks());
 
       if (links.size() == 0) return;
-
-      int sent = 0;
 
       // TODO - do something smarter about link selection
 
@@ -115,20 +137,24 @@ public class ChannelChunkGetter extends PeriodicThread
         {
           Collections.shuffle(links);
           ChannelLink link = links.get(0);
-    
-          link.writeMessage( 
-            ChannelPeerMessage.newBuilder()
-              .setChannelId( cid.getBytes())
-              .setReqChunk( RequestChunk.newBuilder().setMessageId(content_id.getBytes()).setChunk(w).build() )
-              .build());
+   
+          if ( getChanSem(cid). tryAcquire())
+          {
+            link.getChunkHoldSem().release();
+            link.writeMessage( 
+              ChannelPeerMessage.newBuilder()
+                .setChannelId( cid.getBytes())
+                .setReqChunk( RequestChunk.newBuilder().setMessageId(content_id.getBytes()).setChunk(w).build() )
+                .build());
+            link.setChunkSem(getChanSem(cid));
+          }
+          else
+          {
+            return;
+          }
 
-          if (sent >= SENDS_PER_PASS) return;
         }
-
-
-
   
-        if (sent >= SENDS_PER_PASS) return;
       }
 
     }
