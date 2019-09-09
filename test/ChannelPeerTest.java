@@ -152,7 +152,7 @@ public class ChannelPeerTest
         + ctx_c.getLinks().size()
         >= 3) break;
     }
-    for(int i=0; i<1450; i++)
+    for(int i=0; i<450; i++)
     {
       Thread.sleep(100);
       if (ctx_b.block_ingestor.getHead() != null)

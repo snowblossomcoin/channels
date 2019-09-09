@@ -136,7 +136,7 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 
       if (next_peer != null)
       {
-        next_peer.getStargateAsyncStub().storeDHTData(req, null);
+        next_peer.getStargateAsyncStub().storeDHTData(req, new NullStreamer<DHTDataSet>());
       }
       else
       {
