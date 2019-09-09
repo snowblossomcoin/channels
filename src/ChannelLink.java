@@ -345,7 +345,10 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         if (chunk.getChunkHaveBitmap().size() > 0)
         {
           BitSet bs = BitSet.valueOf(chunk.getChunkHaveBitmap().asReadOnlyByteBuffer());
-          peer_chunks.put( new ChainHash(chunk.getMessageId()), bs);
+          synchronized(peer_chunks)
+          {
+            peer_chunks.put( new ChainHash(chunk.getMessageId()), bs);
+          }
         }
 
 
@@ -437,6 +440,15 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       {
         sink.onNext(msg);
       }
+    }
+  }
+
+  public BitSet getCachedChunkSet(ChainHash content_id)
+  {
+    synchronized(peer_chunks)
+    {
+      return peer_chunks.get(content_id);
+
     }
   }
 

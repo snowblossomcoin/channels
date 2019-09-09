@@ -114,6 +114,7 @@ public class ChannelChunkGetter extends PeriodicThread
       if (links.size() == 0) return;
 
       // TODO - do something smarter about link selection
+      // like check BitSets or block heights
 
       for(ChainHash content_id : want_list)
       {
