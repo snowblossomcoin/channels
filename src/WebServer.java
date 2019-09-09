@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
+import snowblossom.lib.ChainHash;
+import java.util.BitSet;
 
 public class WebServer
 {
@@ -131,26 +133,75 @@ public class WebServer
         else
         {
           ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
-          if (ci.getMimeType() != null)
-          {
-            t.getResponseHeaders().add("Content-type",ci.getMimeType());
-          }
-          b_out.write(ci.getContent().toByteArray());
-
-          t.sendResponseHeaders(code, ci.getContentLength());
-          OutputStream out = t.getResponseBody();
-          out.write(ci.getContent().toByteArray());
-          out.close();
-
+          sendFile(t, ctx, new ChainHash(content_id), ci);
           return;
         }
       }
-
 
       byte[] data = b_out.toByteArray();
       t.sendResponseHeaders(code, data.length);
       OutputStream out = t.getResponseBody();
       out.write(data);
+      out.close();
+
+    }
+
+    private void sendFile(HttpExchange t, ChannelContext ctx, ChainHash content_id, ContentInfo ci)
+      throws IOException
+    {
+      if (ci.getMimeType() != null)
+      {
+        t.getResponseHeaders().add("Content-type",ci.getMimeType());
+      }
+      int code = 200;
+
+      boolean using_chunks=false;
+      if (ci.getContentLength() > ci.getContent().size())
+      { // need to use chunks 
+        using_chunks=true;
+
+        int total_chunks = MiscUtils.getNumberOfChunks(ci);
+        BitSet bs = ChunkMapUtils.getSavedChunksSet(ctx, content_id);
+        if (bs.cardinality() < total_chunks)
+        {
+          code=404;
+          t.sendResponseHeaders(code, ci.getContentLength());
+
+          ByteArrayOutputStream b_out = new ByteArrayOutputStream();
+          PrintStream print_out = new PrintStream(b_out);
+
+          print_out.println(String.format("We only have %d of %d chunks", bs.cardinality(), total_chunks));
+
+          byte[] data = b_out.toByteArray();
+          t.sendResponseHeaders(code, data.length);
+          OutputStream out = t.getResponseBody();
+          out.write(data);
+          out.close();
+
+          return;
+
+        }
+        
+      }
+
+
+      t.sendResponseHeaders(code, ci.getContentLength());
+      OutputStream out = t.getResponseBody();
+      if (using_chunks)
+      {
+        int total_chunks = MiscUtils.getNumberOfChunks(ci);
+
+        for(int i=0; i<total_chunks; i++)
+        {
+          ByteString chunk_data = ChunkMapUtils.getChunk(ctx, content_id, i);
+          out.write(chunk_data.toByteArray());
+        }
+
+      }
+      else
+      {
+        out.write(ci.getContent().toByteArray());
+      }
       out.close();
 
     }

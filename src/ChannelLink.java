@@ -37,7 +37,16 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   private TreeMap<Long, ChainHash> peer_block_map = new TreeMap<Long, ChainHash>();
   private ExpiringLRUCache<ChainHash, BitSet> peer_chunks = new ExpiringLRUCache<>(10000, 30000L);
 
+  /**
+   * Semaphore for chunk data requests on this channel
+   */
   private Semaphore chunk_sem;
+
+  /**
+   * Semaphore for reseverations from the above channel wide semaphore that
+   * we are holding in this ChannelLink.  Return them to the chunk_sem
+   * as chunks come in or this link is closed.
+   */
   private Semaphore chunk_hold_sem;
 
 

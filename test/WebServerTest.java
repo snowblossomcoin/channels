@@ -4,6 +4,8 @@ import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
 import java.io.File;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
@@ -11,18 +13,24 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import java.security.MessageDigest;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletDatabase;
+import java.net.URL;
+import java.io.InputStream;
 
-public class ChannelDataTest
+
+public class WebServerTest
 {
   @Rule
   public TemporaryFolder test_folder = new TemporaryFolder();
 
   private ChannelNode node_a;
+
+  private int webport;
 
   @BeforeClass
   public static void loadProvider()
@@ -41,9 +49,6 @@ public class ChannelDataTest
 		ChainHash prev_hash = null;
 
 		ChannelContext ctx_a;
-
-      
-    TreeMap<String, ByteString> data_map = new TreeMap<>();
 
     { 
       ChannelSettings.Builder init_settings = ChannelSettings.newBuilder();
@@ -86,9 +91,16 @@ public class ChannelDataTest
       ChannelBlock.Builder blk = ChannelBlock.newBuilder();
 		
       LinkedList<ChainHash> merkle_list = new LinkedList<>();
+      LinkedList<ContentChunk> large_chunks = new LinkedList<>();
+
       for(int j=0; j<20; j++)
       { 
-        SignedMessage ci = randomDataContent(admin_db, data_map);
+        SignedMessage ci = randomContent(admin_db, large_chunks, (j!=7));
+        blk.addContent(ci);
+        merkle_list.add(new ChainHash(ci.getMessageId()));
+      }
+      {
+        SignedMessage ci = webDataMsg(admin_db, blk);
         blk.addContent(ci);
         merkle_list.add(new ChainHash(ci.getMessageId()));
       }
@@ -100,13 +112,25 @@ public class ChannelDataTest
 			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
 			ctx_a.block_ingestor.ingestBlock(blk.build());
 
-			for(String key : data_map.keySet())
-			{
-				Assert.assertEquals( data_map.get(key), ChanDataUtils.getData(ctx_a, key));
-			}
+      for(ContentChunk c : large_chunks)
+      {
+        ctx_a.block_ingestor.ingestChunk(c);
+      }
+      for(SignedMessage sm : blk.getContentList())
+      {
+        ContentInfo ci = ChannelSigUtil.quickPayload(sm).getContentInfo();
+        if (ci.getContentLength() > 0)
+        {
+          ChainHash hash = downloadAndDigest("http://localhost:" + webport + "/channel/" + chan_id + "/" + new ChainHash(sm.getMessageId()));
+          ChainHash expected_hash = new ChainHash(ci.getContentHash());
+          Assert.assertEquals(expected_hash, hash);
+        }
+
+      }
 
     }
 
+    Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_a).size());
 		Assert.assertEquals(20, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
 
   }
@@ -124,7 +148,9 @@ public class ChannelDataTest
     Random rnd = new Random();
     int port = rnd.nextInt(30000) + 10240;
     map.put("port", "" + port);
-
+    
+    webport = rnd.nextInt(30000) + 10240;
+    map.put("web_port", "" + webport);
 
     return new ChannelNode(new ConfigMem(map));
 
@@ -133,39 +159,114 @@ public class ChannelDataTest
   {
     return AddressUtil.getHashForSpec(db.getAddresses(0));
   }
-
-  protected SignedMessage randomDataContent(WalletDatabase user, Map<String, ByteString> data_map)
+  protected SignedMessage randomContent(WalletDatabase wdb, List<ContentChunk> large_chunks, boolean large)
     throws Exception
   {
     Random rnd = new Random();
 
     ContentInfo.Builder ci = ContentInfo.newBuilder();
-    ci.setMimeType("kelp");
-    int len = rnd.nextInt(1000);
+    ci.setMimeType("application/gzip");
+    int len = rnd.nextInt(25000);
+
+    if (large)
+    {
+      len = rnd.nextInt(2000000)+(int)ChannelGlobals.CONTENT_DATA_BLOCK_SIZE;
+    }
     byte b[] = new byte[len];
     rnd.nextBytes(b);
 
+    ByteString data = ByteString.copyFrom(b);
+
     ci.setContentLength(len);
     ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(b)) );
-    if (len < 25000)
-    { 
-      ci.setContent( ByteString.copyFrom(b));
+
+    ArrayList<ByteString> chunks = new ArrayList<>();
+
+    if (len < 10000)
+    {
+      ci.setContent( data);
+    }
+    else
+    {
+      MessageDigest md = DigestUtil.getMD();
+      for(int chunk = 0; chunk*ChannelGlobals.CONTENT_DATA_BLOCK_SIZE < len; chunk++)
+      {
+        int idx = (int) (chunk * ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+        int end = (int) (Math.min(idx + ChannelGlobals.CONTENT_DATA_BLOCK_SIZE, len));
+
+        ByteString chunk_data = data.substring(idx, end);
+
+        ci.addChunkHash( ByteString.copyFrom(md.digest(chunk_data.toByteArray())));
+
+        chunks.add(chunk_data);
+
+      }
+
     }
 
-		for(int i=0;i<20; i++)
+    SignedMessage sm = ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),
+      SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
+
+    for(int i=0; i<chunks.size(); i++)
+    {
+      large_chunks.add( ContentChunk.newBuilder().setMessageId(sm.getMessageId()).setChunk(i).setChunkData(chunks.get(i)).build());
+    }
+
+    return sm;
+  }
+
+
+  protected SignedMessage webDataMsg(WalletDatabase user, ChannelBlock.Builder blk)
+    throws Exception
+  {
+
+    ContentInfo.Builder ci = ContentInfo.newBuilder();
+    ci.setMimeType("kelp");
+    int len = 0;
+    byte b[] = new byte[len];
+
+    ci.setContentLength(len);
+    ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(b)) );
+    ci.setContent( ByteString.copyFrom(b));
+
+		for(SignedMessage sm : blk.getContentList())
 		{
-      String key = "/chantestdata/" + rnd.nextLong();
-      b = new byte[32];
-      rnd.nextBytes(b);
+      ContentInfo f = ChannelSigUtil.quickPayload(sm).getContentInfo();
+      ci.putChanMapUpdates( "/web/" + new ChainHash(sm.getMessageId()), sm.getMessageId());
 
-      ci.putChanMapUpdates(key, ByteString.copyFrom(b));
-      data_map.put(key, ByteString.copyFrom(b));
-
-		}	
+		}
 
     WalletDatabase wdb = user;
     return ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),
       SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
+
+  }
+
+  protected ChainHash downloadAndDigest(String url)
+    throws Exception
+  {
+    System.out.println(url);
+    URL u = new URL(url);
+    InputStream in = u.openStream();
+
+    MessageDigest md = DigestUtil.getMD();
+    byte[] b = new byte[8192];
+    long sz =0;
+
+    while(true)
+    {
+      int r = in.read(b);
+      if (r < 0) break;
+      if (r > 0)
+      {
+        md.update(b,0,r);
+        sz+=r;
+      }
+    }
+    in.close();
+    System.out.println("Read " + url + " - " + sz);
+
+    return new ChainHash(md.digest());
 
   }
 

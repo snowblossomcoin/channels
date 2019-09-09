@@ -149,6 +149,21 @@ java_test(
     ],
 )
 
+java_test(
+    name = "web_server_test",
+    srcs = ["test/WebServerTest.java", "test/TestUtil.java"],
+    test_class = "channels.WebServerTest",
+    size="small",
+    deps = [
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
 
 
 java_test(
