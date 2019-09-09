@@ -153,7 +153,7 @@ java_test(
     name = "web_server_test",
     srcs = ["test/WebServerTest.java", "test/TestUtil.java"],
     test_class = "channels.WebServerTest",
-    size="small",
+    size="medium",
     deps = [
       "@junit_junit//jar",
       "@snowblossom//lib:lib",
