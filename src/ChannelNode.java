@@ -181,6 +181,7 @@ public class ChannelNode
   public ChannelTipSender getChannelTipSender(){ return channel_tip_sender;}
   public ChannelChunkGetter getChannelChunkGetter(){ return channel_chunk_getter;}
   public Config getConfig(){ return config;}
+  public WalletDatabase getWalletDB() {return wallet_db; }
 
   public void testSelf()
 		throws Exception

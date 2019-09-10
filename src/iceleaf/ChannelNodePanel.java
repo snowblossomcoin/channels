@@ -19,6 +19,8 @@ import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
 import snowblossom.lib.SystemUtil;
 import snowblossom.lib.ValidationException;
+import snowblossom.lib.HexUtil;
+import snowblossom.channels.BlockGenUtils;
 
 public class ChannelNodePanel extends BasePanel
 {
@@ -26,8 +28,12 @@ public class ChannelNodePanel extends BasePanel
   protected JProgressBar progress;
   protected boolean start_attempt;
 
-	protected JTextField sub_chan_field;
+  protected JTextField sub_chan_field;
   protected JButton sub_button;
+
+  protected JTextField create_chan_field;
+  protected JButton create_button;
+
 
   public ChannelNodePanel(IceLeaf ice_leaf)
   {
@@ -60,6 +66,17 @@ public class ChannelNodePanel extends BasePanel
     sub_button = new JButton("Subscribe");
     sub_button.addActionListener( new SubscribeAction());
     panel.add(sub_button, c);
+
+    c.gridwidth = 1;
+    panel.add(new JLabel("Create channel: "), c);
+    create_chan_field = new JTextField();
+    create_chan_field.setColumns(50);
+    panel.add(create_chan_field, c);
+
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    create_button = new JButton("Create");
+    create_button.addActionListener( new CreateAction());
+    panel.add(create_button, c);
 
 
 
@@ -98,13 +115,16 @@ public class ChannelNodePanel extends BasePanel
         {
           sb.append("  ");
           sb.append(cid);
-          sb.append("  ");
+          sb.append(" ");
           ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
           if (ctx != null)
           {
             if (ctx.block_ingestor.getHead() != null)
             {
-              sb.append(String.format("blocks:%d ", ctx.block_ingestor.getHead().getHeader().getBlockHeight()));
+              sb.append("{");
+              sb.append( HexUtil.getSafeString(ctx.block_ingestor.getHead().getEffectiveSettings().getDisplayName()));
+              sb.append("}");
+              sb.append(String.format(" blocks:%d ", ctx.block_ingestor.getHead().getHeader().getBlockHeight()));
             }
             sb.append(String.format("peers:%d ", ctx.getLinks().size()));
             sb.append(String.format("missing_chunks:%d", ChunkMapUtils.getWantList(ctx).size()));
@@ -171,6 +191,24 @@ public class ChannelNodePanel extends BasePanel
 
   }
 
+  public class CreateAction implements ActionListener
+  {
+    public void actionPerformed(ActionEvent e)
+    {
+      try
+      {
+        ChannelID cid = BlockGenUtils.createChannel(node, node.getWalletDB(), create_chan_field.getText().trim());
+        setMessageBox("Channel created: " + cid);
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(t.toString());
+      } 
+
+    }
+  }
+
+
   public class SubscribeAction implements ActionListener
   {
     public void actionPerformed(ActionEvent e)
@@ -181,7 +219,7 @@ public class ChannelNodePanel extends BasePanel
 			  node.getChannelSubscriber().openChannel(cid);
         setMessageBox("Channel added: " + cid);
       }
-      catch(ValidationException t)
+      catch(Throwable t)
       {
         setMessageBox(t.toString());
       } 

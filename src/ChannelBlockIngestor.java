@@ -231,8 +231,13 @@ public class ChannelBlockIngestor
     }
   }
 
-
   public void ingestChunk(ContentChunk chunk)
+    throws ValidationException
+  {
+    ingestChunk(chunk, false);
+  }
+
+  public void ingestChunk(ContentChunk chunk, boolean force)
     throws ValidationException
   {
     ChainHash content_id = new ChainHash(chunk.getMessageId());
@@ -240,10 +245,13 @@ public class ChannelBlockIngestor
 
     if (chunk.getChunkData().size() == 0) return;
 
-    if (!ChunkMapUtils.doIWant(ctx, content_id))
+    if (!force)
     {
-      logger.info(String.format("I don't want chunk: %s", content_id));
-      return;
+      if (!ChunkMapUtils.doIWant(ctx, content_id))
+      {
+        logger.info(String.format("I don't want chunk: %s", content_id));
+        return;
+      }
     }
 
     ContentInfo ci = ChannelSigUtil.quickPayload(db.getContentMap().get(content_id.getBytes())).getContentInfo();
