@@ -28,6 +28,7 @@ public class ChannelsDB
 
   protected ProtoDBMap<LocalPeerInfo> peer_map;
   protected ProtoDBMap<SignedMessage> dht_data_map;
+  protected DBMap subscription_map;
 
   private Config config;
   private DBProvider prov;
@@ -54,21 +55,12 @@ public class ChannelsDB
   {
     peer_map = new ProtoDBMap(LocalPeerInfo.newBuilder().build().getParserForType(), prov.openMap("peer"));
     dht_data_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("dht_data"));
-
-    /*Random rnd = new Random();
-    byte[] b=new byte[64];
-    for(int i=0; i<1000; i++)
-    {
-      rnd.nextBytes(b);
-      DBMap d = prov.openMap("load_test/" + i);
-      
-      d.put("s" + rnd.nextInt(), ByteString.copyFrom(b));
-    }*/
-
+    subscription_map = prov.openMap("subscription");
   }
 
   public ProtoDBMap<LocalPeerInfo> getPeerMap(){return peer_map; }
   public ProtoDBMap<SignedMessage> getDHTDataMap(){return dht_data_map; }
+  protected DBMap getSubscriptionMap(){return subscription_map; }
 
   protected void dbShutdownHandler()
   {

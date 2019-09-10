@@ -116,6 +116,8 @@ public class ChannelNode
     channel_tip_sender.start();
     channel_chunk_getter.start();
 
+    channel_subscriber.loadFromDB();    
+
 
     if (config.isSet("web_port"))
     {

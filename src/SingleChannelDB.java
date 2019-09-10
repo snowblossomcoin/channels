@@ -51,7 +51,7 @@ public class SingleChannelDB
     base_config.require("db_path");
 
     File db_path_int = new File(base_config.get("db_path"), "channels");
-    File db_path = new File(db_path_int, cid.asString());
+    File db_path = new File(db_path_int, cid.asStringWithoutColon());
 
     this.config = new ConfigCat(new ConfigMem(
       ImmutableMap.of("db_path", db_path.getPath(), "db_separate", "false")), base_config);

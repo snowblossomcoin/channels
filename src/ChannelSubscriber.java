@@ -1,51 +1,34 @@
 package snowblossom.channels;
 
-import duckutil.SimpleFuture;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Future;
+import com.google.protobuf.ByteString;
 
 /** Manage channels we are tracking */
 public class ChannelSubscriber
 {
   private ChannelNode node;
 
-  // TODO - why the hell did I make this this complicated.
-  //    really we are just making some classes, nothing big.  the peermainterer is doing all the real work.
-  //  no need to screw with futures
-  private HashMap<ChannelID, SimpleFuture<ChannelContext> > chan_map;
+  private HashMap<ChannelID, ChannelContext> chan_map;
   
   public ChannelSubscriber(ChannelNode node)
   {
     this.node = node;
     chan_map = new HashMap<>(16,0.5f);
+
+    
+  }
+
+  public void loadFromDB()
+  {
+    for(ByteString c : node.getDB().getSubscriptionMap().getByPrefix(ByteString.EMPTY, 1000000).values())
+    {
+      ChannelID cid = new ChannelID(c);
+      openChannel(cid);
+    }
   }
   
-  public SimpleFuture<ChannelContext> openChannelFuture(ChannelID cid)
-  {
-    SimpleFuture<ChannelContext> cc = null;
-    boolean doOpen = false;
-    synchronized(chan_map)
-    {
-      cc = chan_map.get(cid);
-      if (cc == null)
-      {
-        cc = new SimpleFuture<ChannelContext>();
-        chan_map.put(cid, cc);
-        doOpen = true;
-      }
-    }
-
-    if (doOpen)
-    {
-      cc.setResult(openChannelInternal(cid));
-      node.getChannelPeerMaintainer().wake();
-    }
-    return cc;
- 
-  }
-
   /**
    * open a channel and get context
    * or if already open, get the context
@@ -53,7 +36,26 @@ public class ChannelSubscriber
    */
   public ChannelContext openChannel(ChannelID cid)
   {
-    return openChannelFuture(cid).get();
+    ChannelContext ctx = null;
+    boolean opened=false;
+    synchronized(chan_map)
+    {
+      ctx = chan_map.get(cid);
+
+      if (ctx == null)
+      {
+        ctx = openChannelInternal(cid);
+        chan_map.put(cid, ctx);
+        opened=true;
+      }
+    }
+
+    if (opened)
+    {
+      node.getChannelPeerMaintainer().wake();
+    }
+
+    return ctx; 
   }
 
   /**
@@ -61,17 +63,10 @@ public class ChannelSubscriber
    */
   public ChannelContext getContext(ChannelID cid)
   {
-    SimpleFuture<ChannelContext> cc = null;
     synchronized(chan_map)
     {
-      cc = chan_map.get(cid);
-      if (cc == null)
-      {
-        return null;
-      }
+      return chan_map.get(cid);
     }
-
-    return cc.get();
    
   }
 
@@ -81,6 +76,8 @@ public class ChannelSubscriber
       ctx.cid = cid;
       ctx.db = node.getChannelDB(cid);
       ctx.block_ingestor = new ChannelBlockIngestor(node, cid, ctx);
+
+      node.getDB().getSubscriptionMap().put(cid.getBytes(), cid.getBytes());
 
       return ctx;
   }

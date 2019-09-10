@@ -35,6 +35,13 @@ public class ChannelID extends AddressSpecHash
     return AddressUtil.getAddressString(ChannelGlobals.CHANNEL_ADDRESS_STRING, this);
   }
 
+  // Suitable for file systems, but can still be rendered with 'fromString'
+  public String asStringWithoutColon()
+  {
+    String s = asString();
+    return s.split(":")[1];
+  }
+
   public static ChannelID fromSignedBlockHeader(SignedMessage sm)
   {
     ByteString base_hash = sm.getMessageId();
