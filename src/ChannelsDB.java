@@ -1,8 +1,6 @@
 package snowblossom.channels;
 
-import com.google.protobuf.ByteString;
 import duckutil.Config;
-import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

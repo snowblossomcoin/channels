@@ -11,8 +11,10 @@ import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import snowblossom.channels.ChannelContext;
 import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelNode;
+import snowblossom.channels.ChunkMapUtils;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
 import snowblossom.lib.SystemUtil;
@@ -92,6 +94,26 @@ public class ChannelNodePanel extends BasePanel
         sb.append("\n");
         sb.append("Channels: " + node.getChannelSubscriber().getChannelSet().size());
         sb.append("\n");
+        for(ChannelID cid : node.getChannelSubscriber().getChannelSet())
+        {
+          sb.append("  ");
+          sb.append(cid);
+          sb.append("  ");
+          ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+          if (ctx != null)
+          {
+            if (ctx.block_ingestor.getHead() != null)
+            {
+              sb.append(String.format("blocks:%d ", ctx.block_ingestor.getHead().getHeader().getBlockHeight()));
+            }
+            sb.append(String.format("peers:%d ", ctx.getLinks().size()));
+            sb.append(String.format("missing_chunks:%d", ChunkMapUtils.getWantList(ctx).size()));
+            
+
+
+          }
+          sb.append("\n");
+        }
 
         setStatusBox(sb.toString().trim());
 

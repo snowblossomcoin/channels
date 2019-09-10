@@ -1,9 +1,9 @@
 package snowblossom.channels;
 
+import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import com.google.protobuf.ByteString;
 
 /** Manage channels we are tracking */
 public class ChannelSubscriber

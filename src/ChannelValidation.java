@@ -214,7 +214,6 @@ public class ChannelValidation
 
     ChannelBlockHeader header = header_payload.getChannelBlockHeader();
     
-    //TODO
 
     // Validate signer of block vs effective settings
     // if changing settings, validate that it is admin
@@ -263,6 +262,14 @@ public class ChannelValidation
         throw new ValidationException("Block signer not on admin list");
       }
     }
+    if (header.getWeight()>0)
+    {
+      if (!admin_signers.contains(signer.getBytes()))
+      {
+        throw new ValidationException("Block signer not on admin list");
+      }
+    }
+
 
     ChannelBlockSummary.Builder sum = ChannelBlockSummary.newBuilder();
 
