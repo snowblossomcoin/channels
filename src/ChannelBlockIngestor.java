@@ -116,7 +116,11 @@ public class ChannelBlockIngestor
           }
           if (ci.getContent().size() < ci.getContentLength())
           {
-            ChunkMapUtils.markWant(ctx, new ChainHash(content.getMessageId()));
+            int chunks = MiscUtils.getNumberOfChunks(ci);
+            if (chunks != ChunkMapUtils.getSavedChunksSet(ctx, new ChainHash(content.getMessageId())).cardinality())
+            {
+              ChunkMapUtils.markWant(ctx, new ChainHash(content.getMessageId()));
+            }
           }
         }
         summary.setDataRootHash(data_hash);
@@ -234,10 +238,10 @@ public class ChannelBlockIngestor
   public void ingestChunk(ContentChunk chunk)
     throws ValidationException
   {
-    ingestChunk(chunk, false);
+    ingestChunk(chunk, false, null);
   }
 
-  public void ingestChunk(ContentChunk chunk, boolean force)
+  public void ingestChunk(ContentChunk chunk, boolean force, ContentInfo ci)
     throws ValidationException
   {
     ChainHash content_id = new ChainHash(chunk.getMessageId());
@@ -254,7 +258,10 @@ public class ChannelBlockIngestor
       }
     }
 
-    ContentInfo ci = ChannelSigUtil.quickPayload(db.getContentMap().get(content_id.getBytes())).getContentInfo();
+    if (ci == null)
+    {
+      ci = ChannelSigUtil.quickPayload(db.getContentMap().get(content_id.getBytes())).getContentInfo();
+    }
 
     ByteString expected_hash = null;
     if (ci.getContentLength() <= ChannelGlobals.CONTENT_DATA_BLOCK_SIZE)

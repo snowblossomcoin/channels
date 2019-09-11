@@ -5,26 +5,27 @@ import duckutil.PeriodicThread;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.TreeMap;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import snowblossom.channels.BlockGenUtils;
 import snowblossom.channels.ChannelContext;
 import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelNode;
 import snowblossom.channels.ChunkMapUtils;
+import snowblossom.channels.MiscUtils;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
-import snowblossom.lib.SystemUtil;
-import snowblossom.lib.ValidationException;
 import snowblossom.lib.HexUtil;
-import snowblossom.channels.BlockGenUtils;
+import snowblossom.lib.SystemUtil;
 
 public class ChannelNodePanel extends BasePanel
 {
-  protected ChannelNode node;
+  protected volatile ChannelNode node;
   protected JProgressBar progress;
   protected boolean start_attempt;
 
@@ -34,6 +35,8 @@ public class ChannelNodePanel extends BasePanel
   protected JTextField create_chan_field;
   protected JButton create_button;
 
+  protected ChannelComboBox channel_import_box;
+  protected JButton import_button;
 
   public ChannelNodePanel(IceLeaf ice_leaf)
   {
@@ -77,6 +80,25 @@ public class ChannelNodePanel extends BasePanel
     create_button = new JButton("Create");
     create_button.addActionListener( new CreateAction());
     panel.add(create_button, c);
+
+    c.gridwidth = 1;
+    panel.add(new JLabel("Import files to channel: "), c);
+    while(node == null)
+    {
+      try
+      {
+      Thread.sleep(10); // evil person, sleeping in ui thread
+      }
+      catch(Throwable t){}
+    }
+    channel_import_box = new ChannelComboBox(node);
+    panel.add(channel_import_box, c);
+
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    import_button = new JButton("Import");
+    import_button.addActionListener( new ImportAction());
+    panel.add(import_button, c);
+
 
 
 
@@ -128,9 +150,6 @@ public class ChannelNodePanel extends BasePanel
             }
             sb.append(String.format("peers:%d ", ctx.getLinks().size()));
             sb.append(String.format("missing_chunks:%d", ChunkMapUtils.getWantList(ctx).size()));
-            
-
-
           }
           sb.append("\n");
         }
@@ -198,15 +217,44 @@ public class ChannelNodePanel extends BasePanel
       try
       {
         ChannelID cid = BlockGenUtils.createChannel(node, node.getWalletDB(), create_chan_field.getText().trim());
+
+        String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
+        File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
+        channel_upload_path.mkdirs();
+
         setMessageBox("Channel created: " + cid);
       }
       catch(Throwable t)
       {
-        setMessageBox(t.toString());
+        setMessageBox(MiscUtils.printStackTrace(t));
       } 
 
     }
   }
+
+  public class ImportAction implements ActionListener
+  {
+    public void actionPerformed(ActionEvent e)
+    {
+      try
+      {
+        ChannelID cid = ChannelID.fromString((String)channel_import_box.getSelectedItem());
+
+        String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
+        File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
+
+        BlockGenUtils.createBlockForFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, node.getWalletDB());
+
+        setMessageBox("Channel files imported: " + cid);
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(MiscUtils.printStackTrace(t));
+      } 
+
+    }
+  }
+
 
 
   public class SubscribeAction implements ActionListener
@@ -221,7 +269,7 @@ public class ChannelNodePanel extends BasePanel
       }
       catch(Throwable t)
       {
-        setMessageBox(t.toString());
+        setMessageBox(MiscUtils.printStackTrace(t));
       } 
 
     }

@@ -246,7 +246,9 @@ message ContentInfo {
   /* What this content is in reference to, if anything */
   ContentReference parent_ref = 10;
   repeated ContentReference refs = 11;
-  repeated ContentInfo included_content = 12;
+
+  // this is dumb
+  //repeated ContentInfo included_content = 12;
 
   // Things to be stored in the channel map.
   // The keys with prefix "www/" will be visible as static web files in the channel.

@@ -1,15 +1,18 @@
 package snowblossom.channels;
 
-import snowblossom.proto.WalletDatabase;
+import com.google.protobuf.ByteString;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.security.MessageDigest;
+import java.util.LinkedList;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
-import snowblossom.lib.ChainHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.ValidationException;
-import java.util.LinkedList;
-import com.google.protobuf.ByteString;
+import snowblossom.proto.WalletDatabase;
 
 public class BlockGenUtils
 {
@@ -51,7 +54,7 @@ public class BlockGenUtils
    * Creates a block for the files in the directory and broadcasts it to the channel
    */ 
   public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin)
-    throws ValidationException
+    throws ValidationException, java.io.IOException
   {
     ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
     if (prev_sum == null)
@@ -93,7 +96,7 @@ public class BlockGenUtils
 
   private static void addFiles(ChannelContext ctx, File path, 
     String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig)
-    throws ValidationException
+    throws ValidationException, java.io.IOException
   {
     if (path.isDirectory())
     {
@@ -108,9 +111,34 @@ public class BlockGenUtils
       ContentInfo.Builder ci = ContentInfo.newBuilder();
       ci.setContentLength(len);
 
+      String mime = Mimer.guessContentType(path.getName());
+      if (mime != null)
+      {
+        ci.setMimeType(mime);
+      } 
       // Save hash
-      // save mime-type
       // save merkle list
+      MessageDigest md_whole = DigestUtil.getMD();
+      MessageDigest md_part = DigestUtil.getMD();
+      DataInputStream din = new DataInputStream(new FileInputStream(path));
+      long loc = 0;
+      while (loc < len)
+      {
+        int read_len = (int) Math.min( len-loc, ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+
+        byte[] b = new byte[read_len];
+        din.readFully(b);
+        loc += read_len;
+
+        ByteString part_hash = ByteString.copyFrom(md_part.digest(b));
+        ci.addChunkHash(part_hash);
+        md_whole.update(b);
+      }
+      din.close();
+
+      ci.setContentHash(ByteString.copyFrom(md_whole.digest()));
+
+      ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
 
       SignedMessage sm = 
         ChannelSigUtil.signMessage( sig.getAddresses(0), sig.getKeys(0),
@@ -119,7 +147,28 @@ public class BlockGenUtils
       blk.addContent(sm);
       file_map_ci.putChanMapUpdates("/web" + prefix, sm.getMessageId());
 
-      // save chunks
+      din = new DataInputStream(new FileInputStream(path));
+      loc = 0;
+      int chunk_count =0;
+      while (loc < len)
+      {
+        int read_len = (int) Math.min( len-loc, ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+
+        byte[] b = new byte[read_len];
+        din.readFully(b);
+        loc += read_len;
+
+        ctx.block_ingestor.ingestChunk(
+          ContentChunk.newBuilder()
+            .setMessageId(sm.getMessageId())
+            .setChunk(chunk_count) 
+            .setChunkData(ByteString.copyFrom(b))
+            .build()
+          ,true, ci.build());
+
+        chunk_count++;
+      }
+      din.close();
     }
   }
 

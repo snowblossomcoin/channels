@@ -186,10 +186,6 @@ public class ChannelValidation
     {
       validateRef(ref);
     }
-    for(ContentInfo sub_ci : ci.getIncludedContentList())
-    {
-      validateContent(sub_ci, md);
-    }
 
  
   }

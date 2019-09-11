@@ -40,6 +40,13 @@ public class ChannelSettingsPanel extends BasePanel
 			File default_channel_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "channel_wallet");
 			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_wallet_path", default_channel_wallet_path.toString(),70),c);
 
+			c.gridwidth = 1;
+			panel.add(new JLabel("Channel Upload Directory"), c);
+			c.gridwidth = GridBagConstraints.REMAINDER;
+			File default_channel_upload_path = new File(SystemUtil.getNodeDataDirectory(params), "channel_upload");
+			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_upload_path", default_channel_upload_path.toString(),70),c);
+
+
       c.gridwidth = 1;
       panel.add(new JLabel("Service Port"), c);
       c.gridwidth = GridBagConstraints.REMAINDER;

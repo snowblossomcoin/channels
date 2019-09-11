@@ -1,5 +1,6 @@
 package snowblossom.channels;
 
+
 import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,8 +17,6 @@ public class ChannelSubscriber
   {
     this.node = node;
     chan_map = new HashMap<>(16,0.5f);
-
-    
   }
 
   public void loadFromDB()
