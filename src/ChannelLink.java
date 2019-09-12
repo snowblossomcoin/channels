@@ -141,7 +141,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 	@Override
 	public void onError(Throwable t)
 	{ 
-		logger.log(Level.WARNING, "wobble", t);
+		//logger.log(Level.WARNING, "wobble", t);
 		close();
 	}
 	

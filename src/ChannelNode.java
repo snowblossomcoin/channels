@@ -127,6 +127,14 @@ public class ChannelNode
     String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
     logger.info("My node address is: " + node_addr);
 
+    if (config.isSet("channel_list"))
+    {
+      for(String s : config.getList("channel_list"))
+      {
+        getChannelSubscriber().openChannel(ChannelID.fromString(s));
+      }
+    }
+
     //testSelf();
 
   }
