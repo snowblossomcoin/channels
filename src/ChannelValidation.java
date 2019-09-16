@@ -130,6 +130,47 @@ public class ChannelValidation
 
   }
 
+  public static void validateOutsiderContent(SignedMessage sm, ChannelBlockSummary head)
+    throws ValidationException
+  {
+    validateContent(sm);
+
+    if (head == null) throw new ValidationException("No known head");
+   
+    ChannelSettings settings = head.getEffectiveSettings();
+    if (!settings.getAllowOutsideMessages()) throw new ValidationException("No outside messages allowed on channel");
+
+    //TODO - check required_outsider_snow_days
+
+    if (settings.getMaxOutsiderMessageSize() <= sm.toByteString().size())
+    {
+      throw new ValidationException("Outsider message too large");
+    }
+
+    SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
+    if (payload.getTimestamp() + settings.getMaxOutsiderAgeMs()  < System.currentTimeMillis())
+    {
+      throw new ValidationException("Outsider message too old");
+    }
+
+    ContentInfo ci = payload.getContentInfo();
+
+    HashSet<ByteString> broadcast_ids = new HashSet<>();
+    broadcast_ids.addAll( ci.getBroadcastChannelIdsList() );
+
+    ByteString channel_id = head.getHeader().getChannelId();
+    if (!broadcast_ids.contains(channel_id))
+    {
+      throw new ValidationException("Outsider not broadcast to this channel");
+    }
+
+  }
+
+  public static void validateContent(SignedMessage sm)
+    throws ValidationException
+  {
+    validateContent(sm, DigestUtil.getMD());
+  }
   public static void validateContent(SignedMessage sm, MessageDigest md)
     throws ValidationException
   {

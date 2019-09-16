@@ -38,6 +38,7 @@ public class SingleChannelDB
   protected ProtoDBMap<LocalPeerInfo> peer_map;
   protected ProtoDBMap<SignedMessage> content_map;
   protected ProtoDBMap<ChannelBlockSummary> summary_map;
+  protected ProtoDBMap<SignedMessage> outsider_map;
   protected DBMap block_height_map;
   protected DBMap data_map;
   protected HashedTrie data_trie;
@@ -73,6 +74,7 @@ public class SingleChannelDB
     block_map = new ProtoDBMap(ChannelBlock.newBuilder().build().getParserForType(), prov.openMap("blocks"));
     peer_map = new ProtoDBMap(LocalPeerInfo.newBuilder().build().getParserForType(), prov.openMap("peer"));
     content_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("c"));
+    outsider_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("outsider"));
     summary_map = new ProtoDBMap(ChannelBlockSummary.newBuilder().build().getParserForType(), prov.openMap("block_sum"));
 		block_height_map = prov.openMap("height");
 
@@ -86,6 +88,7 @@ public class SingleChannelDB
   public ProtoDBMap<LocalPeerInfo> getPeerMap(){return peer_map; }
   public ProtoDBMap<SignedMessage> getContentMap(){return content_map; }
   public ProtoDBMap<ChannelBlockSummary> getBlockSummaryMap(){return summary_map; }
+  public ProtoDBMap<SignedMessage> getOutsiderMap(){return outsider_map; }
   public HashedTrie getDataTrie() {return data_trie; }
   public DBMap getChunkMap(){return chunk_map; }
 

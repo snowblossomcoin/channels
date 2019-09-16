@@ -82,7 +82,16 @@ public class WebServer
         else if ((tokens.get(0).equals("channel")) && (tokens.size() >= 2))
         {
           ChannelID cid = ChannelID.fromString(tokens.get(1));
-          handleChannelGet(cid, tokens, t);
+          if ((tokens.size() >= 3) && (tokens.get(2).equals("api")))
+          {
+            handleChannelApi(cid, tokens, t);
+
+          }
+          else
+          {
+            handleChannelGet(cid, tokens, t);
+          }
+
         }
         else
         {
@@ -106,6 +115,41 @@ public class WebServer
       out.close();
 
     }
+    private void handleChannelApi(ChannelID cid, ArrayList<String> tokens, HttpExchange t)
+      throws IOException
+    {
+      ChannelContext ctx = node.getChannelSubscriber().openChannel(cid);
+      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
+      PrintStream print_out = new PrintStream(b_out);
+      int code = 200;
+
+      String api_path = "";
+      for(int i=3; i<tokens.size(); i++)
+      {
+        api_path += "/" + tokens.get(i);
+      }
+
+      if (api_path.equals("/outsider/order_by_time"))
+      {
+        t.getResponseHeaders().add("Content-type","application/json");
+        print_out.println(ApiUtils.getOutsiderByTime(ctx));
+
+
+      }
+      else
+      {
+        code = 404;
+        print_out.println("Unknown api: " + api_path);
+      }   
+
+
+      byte[] data = b_out.toByteArray();
+      t.sendResponseHeaders(code, data.length);
+      OutputStream out = t.getResponseBody();
+      out.write(data);
+      out.close();
+    }
+
 
     private void handleChannelGet(ChannelID cid, ArrayList<String> tokens, HttpExchange t)
       throws IOException
@@ -115,7 +159,7 @@ public class WebServer
       PrintStream print_out = new PrintStream(b_out);
       int code = 200;
 
-      String path ="/web";
+      String path = "/web";
       for(int i=2; i<tokens.size(); i++)
       {
         path += "/" + tokens.get(i);
@@ -188,9 +232,7 @@ public class WebServer
           return;
 
         }
-        
       }
-
 
       t.sendResponseHeaders(code, ci.getContentLength());
       OutputStream out = t.getResponseBody();
@@ -222,7 +264,14 @@ public class WebServer
       int code = 200;
 
       print_out.println("Snowblossom Channels Web Server");
-
+      print_out.println(t.getRequestURI());
+      for(String k : t.getRequestHeaders().keySet())
+      {
+        for(String v : t.getRequestHeaders().get(k))
+        {
+          print_out.println(k + ": " + v); 
+        }
+      }
 
       t.getResponseHeaders().add("Content-type","text/plain");
 
@@ -231,8 +280,6 @@ public class WebServer
       OutputStream out = t.getResponseBody();
       out.write(data);
       out.close();
-
-
     }
   }
 

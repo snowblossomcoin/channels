@@ -286,14 +286,18 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         RequestContent rc = msg.getReqContent();
         ChainHash content_id = new ChainHash(rc.getMessageId());
         SignedMessage ci = ctx.db.getContentMap().get(content_id.getBytes());
+        if (ci == null)
+        {
+          ci = ctx.db.getOutsiderMap().get(content_id.getBytes());
+        }
         if (ci != null)
         {
            writeMessage( ChannelPeerMessage.newBuilder()
               .setChannelId( cid.getBytes()) 
               .setContent(ci)
               .build());
-
         }
+
         //TODO some sort of error on no data
 
       }
@@ -350,8 +354,29 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
             peer_chunks.put( new ChainHash(chunk.getMessageId()), bs);
           }
         }
+      }
+      else if (msg.hasContent())
+      {
+        SignedMessage sm = msg.getContent();
+        ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead());
 
+        if (ctx.db.getOutsiderMap().get(sm.getMessageId()) == null)
+        {
+          ctx.db.getOutsiderMap().put(sm.getMessageId(), sm);
+          
+          ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
+            .setChannelId(cid.getBytes())
+            .setContent(sm)
+            .build();
 
+          for(ChannelLink link : ctx.getLinks())
+          {
+            if (link != this)
+            {
+              link.writeMessage(m_out);
+            }
+          }
+        }
       }
       else
       {

@@ -13,6 +13,7 @@ java_library(
     "@bcprov//jar",
     "@bcpkix//jar",
     "@weupnp//jar",
+    "@orgjson//jar",
     ":protolib",
     "@netty_tcnative//jar",
     "@build_stack_rules_proto//java:grpc_netty",

@@ -12,7 +12,6 @@ public class MiscUtils
 
     if (ci.getContentLength() % ChannelGlobals.CONTENT_DATA_BLOCK_SIZE != 0) x++;
     return x;
-
   }
 
   public static String printStackTrace(Throwable t)

@@ -30,7 +30,6 @@ message ChannelPeerMessage
     RequestBlock req_header = 5;
     SignedMessage header = 6;
 
-    // not sure these two are needed
     RequestContent req_content = 7;
     SignedMessage content = 8;
 
@@ -247,8 +246,7 @@ message ContentInfo {
   ContentReference parent_ref = 10;
   repeated ContentReference refs = 11;
 
-  // this is dumb
-  //repeated ContentInfo included_content = 12;
+  map<string, bytes> content_data_map = 12;
 
   // Things to be stored in the channel map.
   // The keys with prefix "www/" will be visible as static web files in the channel.
@@ -273,6 +271,8 @@ message ChannelSettings
   repeated DHTStrategy dht_strategies = 5;
   bool allow_outside_messages = 6;
   int64 required_outsider_snow_days = 7; // flakes * days required for staking
+  int32 max_outsider_message_size = 8;
+  int32 max_outsider_age_ms = 9;
 }
 
 message DHTStrategy
