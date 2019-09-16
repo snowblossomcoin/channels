@@ -15,12 +15,6 @@ maven_jar(
 )
 
 maven_jar(
-  name = "orgjson",
-  artifact = "org.json:json:20190722",
-  sha1 = "07bce7bacf0ab5e9f894d307a3de8b7f540064d5",
-)
-
-maven_jar(
   name = "weupnp",
   artifact = "org.bitlet:weupnp:0.1.4",
   sha1 = "b99cd791ede89b7c17426e6c51a0f171dc925def",

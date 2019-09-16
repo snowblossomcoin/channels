@@ -129,7 +129,7 @@ public class WebServer
         api_path += "/" + tokens.get(i);
       }
 
-      if (api_path.equals("/outsider/order_by_time"))
+      if (api_path.equals("/beta/outsider/order_by_time"))
       {
         t.getResponseHeaders().add("Content-type","application/json");
         print_out.println(ApiUtils.getOutsiderByTime(ctx));
