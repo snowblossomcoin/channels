@@ -9,6 +9,8 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import snowblossom.channels.proto.*;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.RpcUtil;
@@ -63,9 +65,15 @@ public class ApiUtils
     JSONObject jo = new JSONObject();
     jo.put("message_id", HexUtil.getHexString(sm.getMessageId()));
 
+    SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
+
+    AddressSpecHash sender = AddressUtil.getHashForSpec(payload.getClaim());
+    jo.put("sender", AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING , sender));
+
+
     try
     {
-      jo.put("payload", RpcUtil.protoToJson( ChannelSigUtil.quickPayload(sm) ));
+      jo.put("payload", RpcUtil.protoToJson( payload ));
     }
     catch(Exception e)
     {
