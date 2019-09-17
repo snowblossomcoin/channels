@@ -48,6 +48,7 @@ public class ChannelNode
   private DHTStratUtil dht_strat_util;
   private ChannelTipSender channel_tip_sender;
   private ChannelChunkGetter channel_chunk_getter;
+  private ChannelOutsiderSender channel_outsider_sender;
 
   private HashMap<ChannelID, SingleChannelDB> db_map;
 
@@ -107,6 +108,7 @@ public class ChannelNode
     dht_strat_util = new DHTStratUtil();
     channel_tip_sender = new ChannelTipSender(this);
     channel_chunk_getter = new ChannelChunkGetter(this);
+    channel_outsider_sender = new ChannelOutsiderSender(this);
    
     startServer();
 
@@ -115,6 +117,7 @@ public class ChannelNode
     channel_peer_maintainer.start();
     channel_tip_sender.start();
     channel_chunk_getter.start();
+    channel_outsider_sender.start();
 
     channel_subscriber.loadFromDB();    
 
