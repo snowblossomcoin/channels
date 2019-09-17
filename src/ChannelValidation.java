@@ -183,7 +183,7 @@ public class ChannelValidation
   {
     if (ci.getContentHash().size() != Globals.BLOCKCHAIN_HASH_LEN)
     {
-      throw new ValidationException("Missing content info");
+      throw new ValidationException("Missing content info hash");
     }
 
     Validation.validateNonNegValue( ci.getContentLength(), "content length");

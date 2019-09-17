@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
+import net.minidev.json.JSONObject;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
 
@@ -116,7 +117,7 @@ public class WebServer
 
     }
     private void handleChannelApi(ChannelID cid, ArrayList<String> tokens, HttpExchange t)
-      throws IOException
+      throws Exception
     {
       ChannelContext ctx = node.getChannelSubscriber().openChannel(cid);
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
@@ -132,9 +133,23 @@ public class WebServer
       if (api_path.equals("/beta/outsider/order_by_time"))
       {
         t.getResponseHeaders().add("Content-type","application/json");
-        print_out.println(ApiUtils.getOutsiderByTime(ctx));
+        print_out.println(ApiUtils.getOutsiderByTime(ctx, 1000));
+      }
+      else if (api_path.equals("/beta/outsider/submit"))
+      {
+        if (!t.getRequestMethod().equals("POST"))
+        {
+          code = 401;
+          print_out.println("Submit must be a POST");
+        }
+        else
+        {
+          JSONObject input = ApiUtils.readJSON(t.getRequestBody());
+          ApiUtils.submitContent(input, node, ctx);
 
+        }
 
+        
       }
       else
       {
@@ -264,6 +279,7 @@ public class WebServer
       int code = 200;
 
       print_out.println("Snowblossom Channels Web Server");
+      print_out.println(t.getRequestMethod());
       print_out.println(t.getRequestURI());
       for(String k : t.getRequestHeaders().keySet())
       {

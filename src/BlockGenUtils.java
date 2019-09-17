@@ -23,6 +23,11 @@ public class BlockGenUtils
     ChannelSettings.Builder init_settings = ChannelSettings.newBuilder();
     init_settings.setDisplayName(display_name);
     init_settings.addAdminSignerSpecHashes( getAddr(admin).getBytes() );
+
+    // For chat channel
+    init_settings.setAllowOutsideMessages(true);
+    init_settings.setMaxOutsiderMessageSize(8192);
+    init_settings.setMaxOutsiderAgeMs( 86400L * 14L * 1000L); //2 weeks
     
     SignedMessage signed_init_settings = ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelSettings(init_settings.build()).build());

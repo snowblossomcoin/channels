@@ -272,7 +272,7 @@ message ChannelSettings
   bool allow_outside_messages = 6;
   int64 required_outsider_snow_days = 7; // flakes * days required for staking
   int32 max_outsider_message_size = 8;
-  int32 max_outsider_age_ms = 9;
+  int64 max_outsider_age_ms = 9;
 }
 
 message DHTStrategy

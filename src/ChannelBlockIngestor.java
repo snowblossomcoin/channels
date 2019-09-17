@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockHeader;
 import snowblossom.channels.proto.ChannelBlockSummary;
+import snowblossom.channels.proto.ChannelPeerMessage;
 import snowblossom.channels.proto.ContentChunk;
 import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.SignedMessage;
@@ -233,6 +234,28 @@ public class ChannelBlockIngestor
       block_pull_map.put(hash, tm);
       return true;
     }
+  }
+
+  public void ingestContent(SignedMessage sm)
+		throws ValidationException
+  {
+			ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead());
+
+			if (ctx.db.getOutsiderMap().get(sm.getMessageId()) == null)
+			{
+				ctx.db.getOutsiderMap().put(sm.getMessageId(), sm);
+
+				ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
+					.setChannelId(cid.getBytes())
+					.setContent(sm)
+					.build();
+
+				for(ChannelLink link : ctx.getLinks())
+				{
+					link.writeMessage(m_out);
+				}
+			}
+
   }
 
   public void ingestChunk(ContentChunk chunk)

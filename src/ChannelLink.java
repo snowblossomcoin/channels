@@ -358,25 +358,8 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       else if (msg.hasContent())
       {
         SignedMessage sm = msg.getContent();
-        ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead());
 
-        if (ctx.db.getOutsiderMap().get(sm.getMessageId()) == null)
-        {
-          ctx.db.getOutsiderMap().put(sm.getMessageId(), sm);
-          
-          ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
-            .setChannelId(cid.getBytes())
-            .setContent(sm)
-            .build();
-
-          for(ChannelLink link : ctx.getLinks())
-          {
-            if (link != this)
-            {
-              link.writeMessage(m_out);
-            }
-          }
-        }
+        ctx.block_ingestor.ingestContent(sm);
       }
       else
       {
