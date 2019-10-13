@@ -26,7 +26,7 @@ public class ChannelPeerMaintainer extends PeriodicThread
   //private HashMap<AddressSpecHash, Long> connection_attempt_times = new HashMap<>(16,0.5f);
   //private ImmutableSet<AddressSpecHash> current_links;
 
-  private static final int DESIRED_CHANNEL_PEERS = 5;
+  private static final int DESIRED_CHANNEL_PEERS = 7;
   private static final int CONNECT_CHANNEL_PEERS_PER_PASS = 2;
 
   private boolean first_pass_done;

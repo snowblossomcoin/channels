@@ -77,7 +77,7 @@ public class WebServerTest
 			ctx_a.block_ingestor.ingestBlock(blk.build());
     }
 
-    for(int i=0; i<20; i++)
+    for(int i=0; i<25; i++)
     { // next block
       ChannelBlockHeader.Builder header = ChannelBlockHeader.newBuilder();
       header.setBlockHeight(1L + i);
@@ -119,17 +119,16 @@ public class WebServerTest
         ContentInfo ci = ChannelSigUtil.quickPayload(sm).getContentInfo();
         if (ci.getContentLength() > 0)
         {
+          System.out.println(String.format("Downloading %s - expecting %d ",  new ChainHash(sm.getMessageId()), ci.getContentLength()));
           ChainHash hash = downloadAndDigest("http://localhost:" + webport + "/channel/" + chan_id + "/" + new ChainHash(sm.getMessageId()));
           ChainHash expected_hash = new ChainHash(ci.getContentHash());
           Assert.assertEquals(expected_hash, hash);
         }
-
       }
-
     }
 
     Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_a).size());
-		Assert.assertEquals(20, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
+		Assert.assertEquals(25, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
 
   }
 

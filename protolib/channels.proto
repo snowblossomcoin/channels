@@ -128,6 +128,7 @@ message SignedMessagePayload {
     ContentInfo content_info = 21;
     ChannelSettings channel_settings = 22;
   }
+  TxOutPoint fbo_utxo = 50;
 }
 
 message ChannelPeerInfo {

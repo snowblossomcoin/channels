@@ -16,12 +16,14 @@ import snowblossom.channels.BlockGenUtils;
 import snowblossom.channels.ChannelContext;
 import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelNode;
+import snowblossom.channels.ChannelGlobals;
 import snowblossom.channels.ChunkMapUtils;
 import snowblossom.channels.MiscUtils;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.SystemUtil;
+import snowblossom.lib.AddressUtil;
 
 public class ChannelNodePanel extends BasePanel
 {
@@ -129,6 +131,9 @@ public class ChannelNodePanel extends BasePanel
 
         StringBuilder sb=new StringBuilder();
 
+        sb.append("Local node ID: " + AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING,  node.getNodeID()));
+        sb.append("\n");
+
         sb.append("DHT peers: " + node.getPeerManager().getPeersWithReason("DHT").size());
         sb.append("\n");
         sb.append("Channels: " + node.getChannelSubscriber().getChannelSet().size());
@@ -202,7 +207,7 @@ public class ChannelNodePanel extends BasePanel
 
     ConfigMem config = new ConfigMem(config_map);
 
-    node = new ChannelNode(config);
+    node = new ChannelNode(config, ice_leaf.getStubHolder());
 
     setStatusBox("Node started");
     setMessageBox("");

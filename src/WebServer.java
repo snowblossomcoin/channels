@@ -104,7 +104,7 @@ public class WebServer
       {
         print_out.println("Error: " + e);
         code = 400;
-
+        e.printStackTrace();
       }
       
       t.getResponseHeaders().add("Content-type","text/plain");
@@ -133,7 +133,7 @@ public class WebServer
       if (api_path.equals("/beta/outsider/order_by_time"))
       {
         t.getResponseHeaders().add("Content-type","application/json");
-        print_out.println(ApiUtils.getOutsiderByTime(ctx, 1000));
+        print_out.println(ApiUtils.getOutsiderByTime(node, ctx, 1000));
       }
       else if (api_path.equals("/beta/outsider/submit"))
       {

@@ -20,6 +20,8 @@ import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.client.WalletUtil;
+import snowblossom.client.StubUtil;
+import snowblossom.client.StubHolder;
 import snowblossom.lib.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.db.rocksdb.JRocksDB;
@@ -34,6 +36,7 @@ public class ChannelNode
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
   private Config config;
+  private StubHolder stub_holder;
   private WalletDatabase wallet_db;
   private NetworkParams params;
   private ChannelsDB db;
@@ -71,14 +74,21 @@ public class ChannelNode
     Config config = new ConfigCat(new ConfigMem(mem_config), f_config);
 
     LogSetup.setup(config);
+
 		new ChannelNode(config);
   }
-
 
   public ChannelNode(Config config)
 		throws Exception
   {
+    this(config, new StubHolder(StubUtil.openChannel(config, new NetworkParamsProd())));
+  }
+
+  public ChannelNode(Config config, StubHolder stub_holder)
+		throws Exception
+  {
     this.config = config;
+    this.stub_holder = stub_holder;
 
     config.require("wallet_path");
 
@@ -193,6 +203,7 @@ public class ChannelNode
   public ChannelChunkGetter getChannelChunkGetter(){ return channel_chunk_getter;}
   public Config getConfig(){ return config;}
   public WalletDatabase getWalletDB() {return wallet_db; }
+  public StubHolder getStubHolder() {return stub_holder; }
 
   public void testSelf()
 		throws Exception

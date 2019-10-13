@@ -14,12 +14,19 @@ import snowblossom.lib.AddressUtil;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.RpcUtil;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.client.StubHolder;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.RequestAddress;
+import snowblossom.proto.TxOutList;
+import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.TxOutPoint;
 
 public class ApiUtils
 {
-  public static JSONObject getOutsiderByTime(ChannelContext ctx, int max_return)
+  public static JSONObject getOutsiderByTime(ChannelNode node, ChannelContext ctx, int max_return)
   {
     TreeMap<Double, SignedMessage> message_map = new TreeMap<>();
 
@@ -51,7 +58,7 @@ public class ApiUtils
     while(message_map.size() > 0)
     {
       SignedMessage sm = message_map.pollFirstEntry().getValue();
-      msg_list.add(getPrettyJsonForContent(sm));
+      msg_list.add(getPrettyJsonForContent(sm, node));
     }
 
     reply.put("messages", msg_list);
@@ -60,16 +67,24 @@ public class ApiUtils
   }
 
 
-  public static JSONObject getPrettyJsonForContent(SignedMessage sm)
+  public static JSONObject getPrettyJsonForContent(SignedMessage sm, ChannelNode node)
   {
     JSONObject jo = new JSONObject();
     jo.put("message_id", HexUtil.getHexString(sm.getMessageId()));
 
     SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
 
-    AddressSpecHash sender = AddressUtil.getHashForSpec(payload.getClaim());
-    jo.put("sender", AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING , sender));
+    String name = getNameForPayload(payload, node);
 
+    if (name != null)
+    {
+      jo.put("sender", name);
+    }
+    else
+    {
+      AddressSpecHash sender = AddressUtil.getHashForSpec(payload.getClaim());
+      jo.put("sender", AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING , sender));
+    }
 
     try
     {
@@ -110,23 +125,58 @@ public class ApiUtils
         String value = me.getValue().toString();
         ci.putContentDataMap(key, ByteString.copyFrom(value.getBytes()));
       }
-      
     }
-
 
     ci.addBroadcastChannelIds(ctx.cid.getBytes());
 
 		ci.setContentHash( ByteString.copyFrom( DigestUtil.getMD().digest( ci.getContent().toByteArray() ) ) );
-
    
 		WalletDatabase wdb = node.getWalletDB();
 
+    TxOutPoint fbo_out = getFboOutpoint(node, wdb.getAddresses(0));
+    System.out.println("FBO OUT: " + fbo_out);
+
+
+    SignedMessagePayload.Builder payload = SignedMessagePayload.newBuilder();
+
+    payload.setContentInfo(ci.build());
+    if (fbo_out != null)
+    {
+      payload.setFboUtxo(fbo_out);
+    }
+
     SignedMessage sm = ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),
-      SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
+      payload.build());
 
 		ctx.block_ingestor.ingestContent(sm);
-
-
   }
+
+  public static TxOutPoint getFboOutpoint(ChannelNode node, AddressSpec address)
+  {
+    AddressSpecHash address_hash = AddressUtil.getHashForSpec(address);
+    TxOutList out_list = node.getStubHolder().getBlockingStub().getFBOList( 
+      RequestAddress.newBuilder().setAddressSpecHash( address_hash.getBytes() ).build() );
+
+    // TODO - do something smarter if multiple
+    if (out_list.getOutListCount() > 0)
+    {
+      return out_list.getOutList(0);
+    }
+    return null;
+  }
+
+  public static String getNameForPayload(SignedMessagePayload payload, ChannelNode node)
+  {
+    if (payload.getFboUtxo().getTxHash().size() == 0) return null;
+    // TODO, validate transactoin output isn't lies
+    // TODO, validate UTXO is still valid
+
+    TransactionOutput tx_out = payload.getFboUtxo().getOut();
+    if (tx_out.getIds().getUsername().size() ==0) return null;
+
+    // TODO, make sure name is correct for this address
+
+    return new String(tx_out.getIds().getUsername().toByteArray());
+  } 
 
 }
