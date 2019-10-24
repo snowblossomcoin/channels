@@ -165,7 +165,7 @@ public class WebServer
       else if (api_path.equals("/beta/block/tail"))
       {
         t.getResponseHeaders().add("Content-type","application/json");
-        print_out.println(ApiUtils.getBlockTail(node, ctx, 10));
+        print_out.println(ApiUtils.getBlockTail(node, ctx, 100));
       }
       else if (api_path.equals("/beta/am_i_block_signer"))
       {

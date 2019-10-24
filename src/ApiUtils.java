@@ -179,10 +179,15 @@ public class ApiUtils
   {
     ContentInfo.Builder ci = ContentInfo.newBuilder();
 
+    if (input.containsKey("mime_type"))
+    {
+      ci.setMimeType( input.get("mime_type").toString() );
+    }
 		if (input.containsKey("content"))
     {
       ci.setContent( ByteString.copyFrom(input.get("content").toString().getBytes()));
       ci.setContentLength( ci.getContent().size() );
+      
     }
     if ((input.containsKey("data_map")) && (input.get("data_map") instanceof JSONObject))
     {
@@ -235,13 +240,13 @@ public class ApiUtils
   {
     LinkedList<SignedMessage> content = new LinkedList<>();
 
-    if (input.containsKey("content"))
+    if (input.containsKey("content_list"))
     {
-      JSONArray content_array = (JSONArray) input.get("content");
+      JSONArray content_array = (JSONArray) input.get("content_list");
       for(int i = 0; i<content_array.size(); i++)
       {
         JSONObject msg = (JSONObject) content_array.get(i);
-        content.add(getContentFromJson( msg, node, ctx));
+        content.add(getContentFromJson( msg, node, null));
       }
 
     }
