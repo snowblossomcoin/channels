@@ -3,8 +3,10 @@ package snowblossom.channels;
 import com.google.protobuf.ByteString;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.LinkedList;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -15,6 +17,7 @@ import snowblossom.lib.DigestUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.RpcUtil;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.ChainHash;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.client.StubHolder;
@@ -26,6 +29,46 @@ import snowblossom.proto.TxOutPoint;
 
 public class ApiUtils
 {
+
+  public static JSONObject getBlockTail(ChannelNode node, ChannelContext ctx, int max_return)
+  {
+    JSONArray block_lst = new JSONArray();
+
+    ChainHash next_block_hash = null;
+    
+    ChannelBlockSummary head_summary = ctx.block_ingestor.getHead();
+    if (head_summary != null)
+    {
+      next_block_hash = new ChainHash(head_summary.getBlockId());
+    }
+
+    for(int i=0; i<max_return; i++)
+    {
+      if ((next_block_hash == null) || (next_block_hash.equals(ChainHash.ZERO_HASH)))
+      {
+        break;
+      }
+      ChannelBlock blk = ctx.db.getBlockMap().get(next_block_hash.getBytes());
+      ChannelBlockHeader header = ChannelSigUtil.quickPayload(blk.getSignedHeader()).getChannelBlockHeader();
+
+      block_lst.add(getPrettyJsonForBlock(blk, node));
+
+      next_block_hash = new ChainHash(header.getPrevBlockHash());
+
+
+
+    }
+
+
+    JSONObject reply = new JSONObject();
+    reply.put("blocks", block_lst);
+
+
+    return reply;
+
+  }
+
+
   public static JSONObject getOutsiderByTime(ChannelNode node, ChannelContext ctx, int max_return)
   {
     TreeMap<Double, SignedMessage> message_map = new TreeMap<>();
@@ -67,6 +110,29 @@ public class ApiUtils
   }
 
 
+  public static JSONObject getPrettyJsonForBlock(ChannelBlock blk, ChannelNode node)
+  {
+    ChannelBlockHeader header = ChannelSigUtil.quickPayload(blk.getSignedHeader()).getChannelBlockHeader();
+    JSONObject jo = new JSONObject();
+
+    jo.put("block_id", HexUtil.getHexString(blk.getSignedHeader().getMessageId()));
+    jo.put("block_height", header.getBlockHeight());
+    jo.put("prev_block_hash", HexUtil.getHexString( header.getPrevBlockHash() ));
+    jo.put("channel_id", new ChannelID(header.getChannelId()).toString());
+    jo.put("timestamp", header.getTimestamp());
+
+    JSONArray content = new JSONArray();
+
+    for(SignedMessage sm : blk.getContentList())
+    {
+      content.add(getPrettyJsonForContent(sm, node));
+    }
+
+    jo.put("content", content);
+
+    return jo;
+
+  }
   public static JSONObject getPrettyJsonForContent(SignedMessage sm, ChannelNode node)
   {
     JSONObject jo = new JSONObject();
@@ -105,7 +171,10 @@ public class ApiUtils
     return (JSONObject) parser.parse(in);
   }
 
-  public static void submitContent(JSONObject input, ChannelNode node, ChannelContext ctx)
+  /**
+   * Take a JSON object and convert it into a ContentInfo and sign it with this node's key
+   */
+  public static SignedMessage getContentFromJson(JSONObject input, ChannelNode node, ChannelContext ctx)
 		throws Exception
   {
     ContentInfo.Builder ci = ContentInfo.newBuilder();
@@ -127,7 +196,10 @@ public class ApiUtils
       }
     }
 
-    ci.addBroadcastChannelIds(ctx.cid.getBytes());
+    if (ctx != null)
+    {
+      ci.addBroadcastChannelIds(ctx.cid.getBytes());
+    }
 
 		ci.setContentHash( ByteString.copyFrom( DigestUtil.getMD().digest( ci.getContent().toByteArray() ) ) );
    
@@ -147,9 +219,36 @@ public class ApiUtils
 
     SignedMessage sm = ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),
       payload.build());
+    return sm;
 
+  }
+
+  public static void submitContent(JSONObject input, ChannelNode node, ChannelContext ctx)
+		throws Exception
+  {
+    SignedMessage sm = getContentFromJson(input, node, ctx);
 		ctx.block_ingestor.ingestContent(sm);
   }
+
+  public static void submitBlock(JSONObject input, ChannelNode node, ChannelContext ctx)
+		throws Exception
+  {
+    LinkedList<SignedMessage> content = new LinkedList<>();
+
+    if (input.containsKey("content"))
+    {
+      JSONArray content_array = (JSONArray) input.get("content");
+      for(int i = 0; i<content_array.size(); i++)
+      {
+        JSONObject msg = (JSONObject) content_array.get(i);
+        content.add(getContentFromJson( msg, node, ctx));
+      }
+
+    }
+
+    BlockGenUtils.createBlockForContent(ctx, content,  node.getWalletDB());
+  }
+
 
   public static TxOutPoint getFboOutpoint(ChannelNode node, AddressSpec address)
   {
@@ -178,5 +277,52 @@ public class ApiUtils
 
     return new String(tx_out.getIds().getUsername().toByteArray());
   } 
+
+  public static JSONObject amIBlockSigner(ChannelNode node, ChannelContext ctx)
+    throws Exception
+  {
+    JSONObject reply = new JSONObject();
+
+    ChannelBlockSummary head_summary = ctx.block_ingestor.getHead();
+    if (head_summary != null)
+    {
+      ChannelSettings settings = head_summary.getEffectiveSettings();
+
+      reply.put("settings", RpcUtil.protoToJson(settings));
+
+      HashSet<ByteString> allowed_signers = new HashSet<>();
+      allowed_signers.addAll(settings.getBlockSignerSpecHashesList());
+      allowed_signers.addAll(settings.getAdminSignerSpecHashesList());
+
+
+		  WalletDatabase wdb = node.getWalletDB();
+
+      AddressSpec addr = wdb.getAddresses(0);
+
+      AddressSpecHash hash = AddressUtil.getHashForSpec(addr);
+      if (allowed_signers.contains(hash.getBytes()))
+      {
+        reply.put("result", true);
+      }
+      else
+      {
+        reply.put("result", false);
+
+      }
+
+
+
+    }
+    else
+    {
+      reply.put("result", false);
+    }
+
+
+
+
+    return reply;
+
+  }
 
 }

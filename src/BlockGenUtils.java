@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.List;
 import java.security.MessageDigest;
 import java.util.LinkedList;
 import snowblossom.channels.proto.*;
@@ -54,6 +55,41 @@ public class BlockGenUtils
     return chan_id;
   }
 
+  /**
+   * Create a block with the provided list of contentinfo messages
+   */
+  public static void createBlockForContent(ChannelContext ctx, List<SignedMessage> content, WalletDatabase admin)
+    throws ValidationException
+  {
+    ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
+    if (prev_sum == null)
+    {
+      throw new ValidationException("Unknown previous block");
+    }
+    ChannelBlockHeader.Builder header = ChannelBlockHeader.newBuilder();
+    header.setBlockHeight(1L + prev_sum.getHeader().getBlockHeight());
+
+    header.setVersion(1);
+    header.setChannelId( ctx.cid.getBytes() );
+    header.setPrevBlockHash( prev_sum.getBlockId());
+
+    ChannelBlock.Builder blk = ChannelBlock.newBuilder();
+
+    LinkedList<ChainHash> merkle_list = new LinkedList<>();
+    for(SignedMessage sm : content)
+    {
+      blk.addContent(sm);
+      merkle_list.add(new ChainHash(sm.getMessageId()));
+    }
+
+    header.setContentMerkle( DigestUtil.getMerkleRootForTxList(merkle_list).getBytes());
+    
+    blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
+      SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
+
+    ctx.block_ingestor.ingestBlock(blk.build());
+
+  }
 
   /**
    * Creates a block for the files in the directory and broadcasts it to the channel

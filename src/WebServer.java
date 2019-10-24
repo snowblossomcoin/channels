@@ -148,7 +148,29 @@ public class WebServer
           ApiUtils.submitContent(input, node, ctx);
 
         }
-
+      }
+      else if (api_path.equals("/beta/block/submit"))
+      {
+        if (!t.getRequestMethod().equals("POST"))
+        {
+          code = 401;
+          print_out.println("Submit must be a POST");
+        }
+        else
+        {
+          JSONObject input = ApiUtils.readJSON(t.getRequestBody());
+          ApiUtils.submitBlock(input, node, ctx);
+        }
+      }
+      else if (api_path.equals("/beta/block/tail"))
+      {
+        t.getResponseHeaders().add("Content-type","application/json");
+        print_out.println(ApiUtils.getBlockTail(node, ctx, 10));
+      }
+      else if (api_path.equals("/beta/am_i_block_signer"))
+      {
+        t.getResponseHeaders().add("Content-type","application/json");
+        print_out.println(ApiUtils.amIBlockSigner(node, ctx));
         
       }
       else
