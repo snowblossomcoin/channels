@@ -11,9 +11,12 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ChannelChunkGetter extends PeriodicThread
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
   private HashMap<ChannelID, Long> get_time_map = new HashMap<>(16,0.5f);
   private ChannelNode node;
@@ -22,6 +25,7 @@ public class ChannelChunkGetter extends PeriodicThread
   private long earliest_time = 0L;
 
   private static final int SIMULTANTIOUS_REQUESTS_PER_CHANNEL = 32;
+  private static final int SIMULTANTIOUS_REQUESTS_PER_LINK = 4;
 
 
   public ChannelChunkGetter(ChannelNode node)
@@ -102,6 +106,21 @@ public class ChannelChunkGetter extends PeriodicThread
     }
   }
 
+  private LinkedList<ChannelLink> shuffleAndFilter(LinkedList<ChannelLink> links)
+  {
+    Collections.shuffle(links);
+    LinkedList<ChannelLink> good_links = new LinkedList<>();
+    for(ChannelLink link : links)
+    {
+      if (link.getChunkHoldSem().availablePermits() < SIMULTANTIOUS_REQUESTS_PER_LINK)
+      {
+        good_links.add(link);
+      }
+    }
+    return good_links;
+
+  }
+
   private void startPulls(ChannelID cid)
   {
     int to_send = getChanSem(cid).availablePermits();
@@ -111,6 +130,7 @@ public class ChannelChunkGetter extends PeriodicThread
       List<ChainHash> want_list = ChunkMapUtils.getWantList(ctx);
       LinkedList<ChannelLink> links = new LinkedList<>(ctx.getLinks());
 
+      links = shuffleAndFilter(links);
       if (links.size() == 0) return;
 
       // TODO - do something smarter about link selection
@@ -118,7 +138,6 @@ public class ChannelChunkGetter extends PeriodicThread
 
       for(ChainHash content_id : want_list)
       {
-        Collections.shuffle(links);
         ContentInfo ci = ctx.db.getContentInfo(content_id);
         if (ci == null) continue;
 
@@ -132,22 +151,23 @@ public class ChannelChunkGetter extends PeriodicThread
             chunk_want_list.add(i);
           }
         }
-        Collections.shuffle(chunk_want_list);
 
         for(int w : chunk_want_list)
         {
-          Collections.shuffle(links);
+          links = shuffleAndFilter(links);
+          if (links.size() == 0) return;
+
           ChannelLink link = links.get(0);
    
-          if ( getChanSem(cid). tryAcquire())
+          if ( getChanSem(cid).tryAcquire())
           {
+            link.setChunkSem(getChanSem(cid));
             link.getChunkHoldSem().release();
             link.writeMessage( 
               ChannelPeerMessage.newBuilder()
                 .setChannelId( cid.getBytes())
                 .setReqChunk( RequestChunk.newBuilder().setMessageId(content_id.getBytes()).setChunk(w).build() )
                 .build());
-            link.setChunkSem(getChanSem(cid));
           }
           else
           {
