@@ -211,4 +211,16 @@ java_test(
       ":protolib",
     ],
 )
+java_test(
+    name = "multipart_upload_test",
+    srcs = ["test/MultipartUploadTest.java"],
+    test_class = "channels.MultipartUploadTest",
+    size="medium",
+    deps = [
+      "@junit_junit//jar",
+      "@snowblossom//lib:lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
 

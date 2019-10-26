@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import net.minidev.json.JSONObject;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
+import snowblossom.lib.HexUtil;
 
 public class WebServer
 {
@@ -173,6 +174,13 @@ public class WebServer
         print_out.println(ApiUtils.amIBlockSigner(node, ctx));
         
       }
+      else if (api_path.equals("/beta/block/submit_files"))
+      {
+        processFileUpload(print_out, t, ctx);
+
+       
+
+      }
       else
       {
         code = 404;
@@ -203,6 +211,11 @@ public class WebServer
       }
 
       ByteString content_id = ChanDataUtils.getData(ctx, path);
+      if ((content_id == null) && (path.startsWith("/web/content_direct/")))
+      {
+        content_id = HexUtil.hexStringToBytes(tokens.get(3));
+
+      }
       if (content_id == null)
       {
         code = 404;
@@ -334,4 +347,16 @@ public class WebServer
     return tokens;
 
   }
+
+  private void processFileUpload(PrintStream print_out, HttpExchange t, ChannelContext ctx)
+    throws Exception
+  {
+
+    t.getResponseHeaders().add("Content-type","text/plain");
+    print_out.println("");
+    print_out.println("Submit called");
+
+    ApiUtils.submitFileBlock(t.getRequestBody(), node, ctx);
+  }
+
 }

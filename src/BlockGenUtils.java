@@ -4,9 +4,10 @@ import com.google.protobuf.ByteString;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.List;
 import java.security.MessageDigest;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeMap;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
@@ -88,6 +89,81 @@ public class BlockGenUtils
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
     ctx.block_ingestor.ingestBlock(blk.build());
+
+  }
+
+  /**
+   * @param base_content_info merge this into all the created content info objects
+   */
+  public static void createBlockForFilesMultipart(ChannelContext ctx, MultipartSlicer ms, WalletDatabase admin, ContentInfo base_content_info)
+    throws ValidationException
+  {
+    List<SignedMessage> content_list = new LinkedList<>();
+
+    for(MultipartSlicer.FileData fd : ms.getFiles())
+    {
+      ContentInfo.Builder ci = ContentInfo.newBuilder();
+
+      ci.mergeFrom(base_content_info);
+
+      ci.setContentLength(fd.file_data.size());
+
+      String mime = fd.meta.get("Content-Type");
+      if (mime != null)
+      {
+        ci.setMimeType(mime);
+      } 
+      String filename = fd.meta.get("filename");
+      if (filename != null)
+      {
+        ci.putContentDataMap("filename", ByteString.copyFrom(filename.getBytes()));
+      }
+
+      MessageDigest md_part = DigestUtil.getMD();
+
+      int loc = 0;
+      int len = fd.file_data.size();
+
+      TreeMap<Integer, ByteString> chunk_map = new TreeMap<>();
+      int chunk_no =0;
+      while (loc < len)
+      {
+        int read_len = (int) Math.min( len-loc, ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+
+        ByteString chunk_data = fd.file_data.substring(loc, read_len+loc);
+        loc += read_len;
+
+        ByteString part_hash = DigestUtil.hash(chunk_data);
+        ci.addChunkHash(part_hash);
+
+        chunk_map.put(chunk_no, chunk_data);
+        chunk_no++;
+      }
+      
+      ci.setContentHash(DigestUtil.hash(fd.file_data));
+
+      ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
+
+      SignedMessage sm = 
+        ChannelSigUtil.signMessage( admin.getAddresses(0), admin.getKeys(0),
+          SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
+
+      content_list.add(sm);
+
+      for(int c : chunk_map.keySet())
+      {
+        ctx.block_ingestor.ingestChunk(
+          ContentChunk.newBuilder()
+            .setMessageId(sm.getMessageId())
+            .setChunk(c) 
+            .setChunkData(chunk_map.get(c))
+            .build()
+          ,true, ci.build());
+      }
+    }
+
+    // once we are done playing with files, call 
+    createBlockForContent(ctx, content_list, admin);
 
   }
 

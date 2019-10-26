@@ -247,6 +247,7 @@ message ContentInfo {
   ContentReference parent_ref = 10;
   repeated ContentReference refs = 11;
 
+  // Just whatever extra data we want to store
   map<string, bytes> content_data_map = 12;
 
   // Things to be stored in the channel map.

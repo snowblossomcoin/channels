@@ -2,30 +2,28 @@ package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.LinkedList;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
+import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.RpcUtil;
-import snowblossom.lib.AddressUtil;
-import snowblossom.lib.ChainHash;
 import snowblossom.lib.ValidationException;
-import snowblossom.proto.WalletDatabase;
-import snowblossom.client.StubHolder;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.RequestAddress;
-import snowblossom.proto.TxOutList;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.TxOutList;
 import snowblossom.proto.TxOutPoint;
+import snowblossom.proto.WalletDatabase;
 
 public class ApiUtils
 {
@@ -254,6 +252,19 @@ public class ApiUtils
     BlockGenUtils.createBlockForContent(ctx, content,  node.getWalletDB());
   }
 
+  public static void submitFileBlock(InputStream in, ChannelNode node, ChannelContext ctx)
+    throws Exception
+  {
+    MultipartSlicer ms = new MultipartSlicer(in);
+
+    ContentInfo.Builder ci_proto = ContentInfo.newBuilder();
+
+    ci_proto.putContentDataMap("blog_entry", ByteString.copyFrom("true".getBytes()));
+
+    BlockGenUtils.createBlockForFilesMultipart(ctx, ms, node.getWalletDB(), ci_proto.build()); 
+
+  }
+
 
   public static TxOutPoint getFboOutpoint(ChannelNode node, AddressSpec address)
   {
@@ -299,7 +310,6 @@ public class ApiUtils
       allowed_signers.addAll(settings.getBlockSignerSpecHashesList());
       allowed_signers.addAll(settings.getAdminSignerSpecHashesList());
 
-
 		  WalletDatabase wdb = node.getWalletDB();
 
       AddressSpec addr = wdb.getAddresses(0);
@@ -314,17 +324,11 @@ public class ApiUtils
         reply.put("result", false);
 
       }
-
-
-
     }
     else
     {
       reply.put("result", false);
     }
-
-
-
 
     return reply;
 

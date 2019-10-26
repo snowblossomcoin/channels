@@ -1,7 +1,6 @@
 package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
-import snowblossom.lib.ValidationException;
 import duckutil.PeriodicThread;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +8,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import snowblossom.channels.proto.*;
+import snowblossom.lib.ValidationException;
 
 public class ChannelOutsiderSender extends PeriodicThread
 {

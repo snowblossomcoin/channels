@@ -9,10 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ChannelChunkGetter extends PeriodicThread
 {
