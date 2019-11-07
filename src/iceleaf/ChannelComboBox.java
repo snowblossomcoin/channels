@@ -11,12 +11,12 @@ import snowblossom.channels.ChannelNode;
 public class ChannelComboBox extends JComboBox<String>
 {
   
-  private ChannelNode node;
+  private ChannelNodePanel node_panel;
   protected TreeSet<String> current_select_box_items=new TreeSet<>();
 
-  public ChannelComboBox(ChannelNode node)
+  public ChannelComboBox(ChannelNodePanel node_panel)
   {
-    this.node = node;
+    this.node_panel = node_panel;
 
 		UpdateThread ut = new UpdateThread();
 		ut.start();
@@ -34,6 +34,9 @@ public class ChannelComboBox extends JComboBox<String>
       try
       { 
         TreeSet<String> names = new TreeSet<>();
+        ChannelNode node = node_panel.getNode();
+        if (node == null) return;
+
         for(ChannelID cid : node.getChannelSubscriber().getChannelSet())
         {
           names.add(cid.toString());

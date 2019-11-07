@@ -85,15 +85,7 @@ public class ChannelNodePanel extends BasePanel
 
     c.gridwidth = 1;
     panel.add(new JLabel("Import files to channel: "), c);
-    while(node == null)
-    {
-      try
-      {
-      Thread.sleep(10); // evil person, sleeping in ui thread
-      }
-      catch(Throwable t){}
-    }
-    channel_import_box = new ChannelComboBox(node);
+    channel_import_box = new ChannelComboBox(this);
     panel.add(channel_import_box, c);
 
     c.gridwidth = GridBagConstraints.REMAINDER;
@@ -101,9 +93,12 @@ public class ChannelNodePanel extends BasePanel
     import_button.addActionListener( new ImportAction());
     panel.add(import_button, c);
 
+  }
 
-
-
+  // May very well be null on startup
+  public ChannelNode getNode()
+  {
+    return node;
   }
 
   public class NodeUpdateThread extends PeriodicThread
@@ -128,6 +123,8 @@ public class ChannelNodePanel extends BasePanel
         {
           startNode();
         }
+
+        if (node == null) return;
 
         StringBuilder sb=new StringBuilder();
 
@@ -164,7 +161,7 @@ public class ChannelNodePanel extends BasePanel
       }
       catch(Exception e)
       {
-        String text = e.toString();
+        String text = MiscUtils.printStackTrace(e);
         setMessageBox(text);
         e.printStackTrace();
        
@@ -192,6 +189,7 @@ public class ChannelNodePanel extends BasePanel
   private void startNode()
     throws Exception
   {
+    //There are too many side effects to try this more than once
     start_attempt=true;
     TreeMap<String, String> config_map = new TreeMap();
 
@@ -211,7 +209,6 @@ public class ChannelNodePanel extends BasePanel
 
     setStatusBox("Node started");
     setMessageBox("");
-
 
   }
 
