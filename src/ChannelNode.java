@@ -135,6 +135,11 @@ public class ChannelNode
     if (config.isSet("web_port"))
     {
       new WebServer(this);
+
+      if (config.isSet("socks_port"))
+      {
+        new SocksServer(config.getInt("socks_port"),"127.0.0.1", config.getInt("web_port"));
+      }
     }
 
     String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
