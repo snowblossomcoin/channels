@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.BitSet;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -71,29 +72,44 @@ public class WebServer
 
       print_out.println("Request: " + uri);
 
-      ArrayList<String> tokens = tokenizePath(uri);
+      List<String> tokens = tokenizePath(uri);
       print_out.println("Tokens: " + tokens);
 
       try
       {
+        ChannelID cid = null;
+        String host = t.getRequestHeaders().get("Host").get(0);
+        cid = getChannelFromHost(host);
+
+        if ((tokens.size() >= 2) && (tokens.get(0).equals("channel")))
+        {
+          cid = ChannelID.fromString(tokens.get(1));
+          tokens = tokens.subList(2, tokens.size());
+        }
+
         if (tokens.size() == 0)
         {
-          handleRoot(t);
-          return;
+          if (cid == null)
+          {
+            handleRoot(t);
+            return;
+          }
+          else
+          {
+            tokens.add("index.html");
+          }
+
         }
-        else if ((tokens.get(0).equals("channel")) && (tokens.size() >= 2))
+        if (cid != null)
         {
-          ChannelID cid = ChannelID.fromString(tokens.get(1));
-          if ((tokens.size() >= 3) && (tokens.get(2).equals("api")))
+          if ((tokens.size() >= 1) && (tokens.get(0).equals("api")))
           {
             handleChannelApi(cid, tokens, t);
-
           }
           else
           {
             handleChannelGet(cid, tokens, t);
           }
-
         }
         else
         {
@@ -117,7 +133,7 @@ public class WebServer
       out.close();
 
     }
-    private void handleChannelApi(ChannelID cid, ArrayList<String> tokens, HttpExchange t)
+    private void handleChannelApi(ChannelID cid, List<String> tokens, HttpExchange t)
       throws Exception
     {
       ChannelContext ctx = node.getChannelSubscriber().openChannel(cid);
@@ -126,7 +142,7 @@ public class WebServer
       int code = 200;
 
       String api_path = "";
-      for(int i=3; i<tokens.size(); i++)
+      for(int i=1; i<tokens.size(); i++)
       {
         api_path += "/" + tokens.get(i);
       }
@@ -177,9 +193,6 @@ public class WebServer
       else if (api_path.equals("/beta/block/submit_files"))
       {
         processFileUpload(print_out, t, ctx);
-
-       
-
       }
       else
       {
@@ -196,7 +209,7 @@ public class WebServer
     }
 
 
-    private void handleChannelGet(ChannelID cid, ArrayList<String> tokens, HttpExchange t)
+    private void handleChannelGet(ChannelID cid, List<String> tokens, HttpExchange t)
       throws IOException
     {
       ChannelContext ctx = node.getChannelSubscriber().openChannel(cid);
@@ -205,7 +218,7 @@ public class WebServer
       int code = 200;
 
       String path = "/web";
-      for(int i=2; i<tokens.size(); i++)
+      for(int i=0; i<tokens.size(); i++)
       {
         path += "/" + tokens.get(i);
       }
@@ -213,7 +226,7 @@ public class WebServer
       ByteString content_id = ChanDataUtils.getData(ctx, path);
       if ((content_id == null) && (path.startsWith("/web/content_direct/")))
       {
-        content_id = HexUtil.hexStringToBytes(tokens.get(3));
+        content_id = HexUtil.hexStringToBytes(tokens.get(1));
 
       }
       if (content_id == null)
@@ -334,8 +347,28 @@ public class WebServer
     }
   }
 
+  private ChannelID getChannelFromHost(String host)
+    throws Exception
+  {
+    if (host.endsWith(".snowblossom.io"))
+    {
+      StringTokenizer stok = new StringTokenizer(host,".");
+      ArrayList<String> tokens = new ArrayList<>();
 
-  ArrayList<String> tokenizePath(URI uri)
+      while(stok.hasMoreTokens())
+      {
+        tokens.add( stok.nextToken());
+      }
+      if (tokens.size() == 3)
+      {
+        return ChannelID.fromString(tokens.get(0)); 
+      }
+    }
+
+    return null;
+  }
+
+  private ArrayList<String> tokenizePath(URI uri)
   {
     StringTokenizer stok = new StringTokenizer(uri. getPath(), "/");
     ArrayList<String> tokens = new ArrayList<>();
