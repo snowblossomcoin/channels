@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 
 import java.net.InetAddress;
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 
 
 /**
@@ -151,7 +152,6 @@ public class SocksServer
             addr = new byte[addr_len];
             in.readFully(addr);
             addr_str = new String(addr);
-            addr_ia = InetAddress.getByName(addr_str);
           }
           else if (address_type == 4)
           {
@@ -166,19 +166,51 @@ public class SocksServer
 
           logger.log(Level.INFO, String.format("Socks request v%d c%d a%d %s %d", ver, cmd, address_type, addr_str, port));
 
+          int success = 0;
+          Socket relay_sock = null;
+
+          try
+          {
+            if (addr_str.endsWith(".snowblossom.io"))
+            {
+              relay_sock = new Socket(target_addr, target_port);
+            }
+            else
+            {
+              if (addr_ia == null)
+              {
+                addr_ia = InetAddress.getByName(addr_str);
+              }
+              relay_sock = new Socket(addr_ia, port);
+            }
+          }
+          catch(IOException e)
+          {
+            success = 1;
+          }
 
           out.write(5); // version
-          out.write(0); // success
+          out.write(success); // success
           out.write(0); // reserved
-          out.write(1); // ipv4
 
-          //We aren't exactly setting these accurately, but no one cares
-          out.write(target_addr.getAddress());
-          writeShortAsUnsigned(out, port);
+          if (relay_sock == null)
+          {
+            return;
+          }
+          if (relay_sock.getLocalAddress() instanceof Inet4Address)
+          {
+            out.write(1);
+          }
+          if (relay_sock.getLocalAddress() instanceof Inet6Address)
+          {
+            out.write(4);
+          }
+
+          out.write(relay_sock.getLocalAddress().getAddress());
+          writeShortAsUnsigned(out, relay_sock.getLocalPort());
 
           out.flush();
 
-          Socket relay_sock = new Socket(addr_ia, port);
 
           relay_sock.setTcpNoDelay(true);
           relay_sock.setSoTimeout(TIMEOUT);
@@ -191,7 +223,7 @@ public class SocksServer
       }
       catch(Throwable t)
       {
-        logger.log(Level.INFO, "Sock5 error",t);
+        logger.log(Level.FINE, "Sock5 error",t);
       }
       
     }
@@ -230,7 +262,7 @@ public class SocksServer
       }
       catch(IOException e)
       {
-        logger.log(Level.INFO, "Sock5 xfer", e);
+        logger.log(Level.FINE, "Sock5 xfer", e);
       }
 
     }
