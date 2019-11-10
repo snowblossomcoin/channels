@@ -19,6 +19,7 @@ import snowblossom.channels.ChannelNode;
 import snowblossom.channels.ChannelGlobals;
 import snowblossom.channels.ChunkMapUtils;
 import snowblossom.channels.MiscUtils;
+import snowblossom.channels.SocksServer;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
 import snowblossom.lib.HexUtil;
@@ -206,6 +207,15 @@ public class ChannelNodePanel extends BasePanel
     ConfigMem config = new ConfigMem(config_map);
 
     node = new ChannelNode(config, ice_leaf.getStubHolder());
+
+    if (ice_leaf_prefs.getBoolean("channel_run_socks5", true))
+    {
+      int socks_port = Integer.parseInt(ice_leaf_prefs.get("channel_socks5_port", null));
+      int web_port = Integer.parseInt(ice_leaf_prefs.get("channel_web_port", null));
+      new SocksServer(socks_port, "127.0.0.1", web_port);
+
+
+    }
 
     setStatusBox("Node started");
     setMessageBox("");

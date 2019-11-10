@@ -58,6 +58,16 @@ public class ChannelSettingsPanel extends BasePanel
       panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_web_port", "8080",8),c);
 
 
+      c.gridwidth = GridBagConstraints.REMAINDER;
+      panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Run SOCKS5 proxy", "channel_run_socks5", true), c);
+
+
+      c.gridwidth = 1;
+      panel.add(new JLabel("SOCKS5 Port"), c);
+      c.gridwidth = GridBagConstraints.REMAINDER;
+      panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_socks5_port", "1080",8),c);
+
+
 
 
       panel.add(new JLabel("NOTE: almost all changes here will require a restart to take effect.\n"),c);
