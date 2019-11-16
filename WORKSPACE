@@ -23,7 +23,7 @@ maven_jar(
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-  tag = "1.5.2.5",
+  tag = "1.6.0",
 )
 
 git_repository(

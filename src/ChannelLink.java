@@ -198,7 +198,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
           
           ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, tip.getBlockHeader());
           ChainHash hash = new ChainHash(tip.getBlockHeader().getMessageId());
-          logger.info(String.format("Channel %s got tip from remote %d %s ", cid.asString(), header.getBlockHeight(), hash.toString()));
+          logger.fine(String.format("Channel %s got tip from remote %d %s ", cid.asString(), header.getBlockHeight(), hash.toString()));
           considerChannelHeader(hash, header);
         }
       }

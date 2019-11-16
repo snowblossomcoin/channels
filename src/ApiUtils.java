@@ -209,7 +209,7 @@ public class ApiUtils
 		WalletDatabase wdb = node.getWalletDB();
 
     TxOutPoint fbo_out = getFboOutpoint(node, wdb.getAddresses(0));
-    System.out.println("FBO OUT: " + fbo_out);
+    //System.out.println("FBO OUT: " + fbo_out);
 
 
     SignedMessagePayload.Builder payload = SignedMessagePayload.newBuilder();

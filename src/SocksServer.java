@@ -15,7 +15,6 @@ import java.net.InetAddress;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 
-
 /**
  * A super simple socks5 server that directs things towards a specific port regardless of what it is asked
  */
@@ -106,7 +105,7 @@ public class SocksServer
             
           }
           sb.append(")");
-          logger.log(Level.INFO, sb.toString());
+          logger.log(Level.FINE, sb.toString());
         }
 
 
@@ -164,7 +163,7 @@ public class SocksServer
           }
           int port = readShortAsUnsigned(in);
 
-          logger.log(Level.INFO, String.format("Socks request v%d c%d a%d %s %d", ver, cmd, address_type, addr_str, port));
+          logger.log(Level.FINE, String.format("Socks request v%d c%d a%d %s %d", ver, cmd, address_type, addr_str, port));
 
           int success = 0;
           Socket relay_sock = null;
@@ -291,7 +290,6 @@ public class SocksServer
   private static void writeShortAsUnsigned(OutputStream out, int v)
     throws IOException
   {
-    logger.info("Port: " +v);
     byte[] b = new byte[4];
     ByteBuffer bb = ByteBuffer.wrap(b);
     bb.putInt(v);

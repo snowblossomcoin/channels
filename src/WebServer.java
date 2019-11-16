@@ -68,7 +68,7 @@ public class WebServer
       int code = 200;
 
       URI uri = t.getRequestURI();
-      logger.info("Web request: " + uri);
+      logger.fine("Web request: " + uri);
 
       print_out.println("Request: " + uri);
 

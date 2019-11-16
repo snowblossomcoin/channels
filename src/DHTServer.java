@@ -107,9 +107,7 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
     p.setPeerInfo( node.getNetworkExaminer().createPeerInfo() );
 
     return node.signMessage(p.build());
-    
   }
-
 
   @Override
   public void storeDHTData(StoreDHTRequest req, StreamObserver<DHTDataSet> o)

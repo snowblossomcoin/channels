@@ -82,7 +82,7 @@ public class DHTCache
     @Override
     public void onError(Throwable t)
     {
-      logger.warning("Error in get DHT data: " + t);
+      logger.fine("Error in get DHT data: " + t);
     }
 
     @Override

@@ -97,15 +97,15 @@ public class DHTMaintainer extends PeriodicThread
         }
       }
     }
-    logger.info("Connected peers: " + connected_peers);
-    logger.info("New connections: " + connect_map.keySet());
+    logger.fine("Connected peers: " + connected_peers);
+    logger.fine("New connections: " + connect_map.keySet());
     int desired_peers = ChannelGlobals.NEAR_POINTS + ChannelGlobals.RING_DIVISONS * 2;
     int to_close_count = connected_peers.size() - desired_peers;
     while ((to_close_count > 0) && (extra_peers.size() > 0))
     {
       AddressSpecHash id = extra_peers.pollFirst();
       to_close_count--;
-      logger.info("Closed extra peer: " + id);
+      logger.fine("Closed extra peer: " + id);
       node.getPeerManager().removeReason(id, "DHT");
     }
 
@@ -117,7 +117,7 @@ public class DHTMaintainer extends PeriodicThread
       }
       catch(Exception e)
       {
-        logger.info("Connect failed: " + e);
+        logger.fine("Connect failed: " + e);
       }
     }
     synchronized(connection_attempt_times)
@@ -280,24 +280,6 @@ public class DHTMaintainer extends PeriodicThread
         .setPort(ChannelGlobals.NETWORK_PORT)
         .build())
       .build());
-
-
-    /*seed_list.add( ChannelPeerInfo.newBuilder()
-      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
-        "node:dqh252gynxjsw5a8pzz306xvra8r2v3wz9x8xc6m").getBytes())
-      .setVersion("seed")
-      .putConnectInfos("ipv4", ConnectInfo.newBuilder()
-        .setProtocol("ipv4")
-        .setHost("snow-tx1.snowblossom.org")
-        .setPort(ChannelGlobals.NETWORK_PORT)
-        .build())
-      .putConnectInfos("ipv6", ConnectInfo.newBuilder()
-        .setProtocol("ipv6")
-        .setHost("snow-tx1.snowblossom.org")
-        .setPort(ChannelGlobals.NETWORK_PORT)
-        .build())
-      .build());*/
-
 
     return seed_list;
 
