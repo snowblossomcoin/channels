@@ -127,6 +127,8 @@ public class ChannelChunkGetter extends PeriodicThread
     if (ctx != null)
     {
       List<ChainHash> want_list = ChunkMapUtils.getWantList(ctx);
+
+      Collections.shuffle(want_list);
       LinkedList<ChannelLink> links = new LinkedList<>(ctx.getLinks());
 
       links = shuffleAndFilter(links);
@@ -150,6 +152,8 @@ public class ChannelChunkGetter extends PeriodicThread
             chunk_want_list.add(i);
           }
         }
+
+        Collections.shuffle(chunk_want_list);
 
         for(int w : chunk_want_list)
         {
