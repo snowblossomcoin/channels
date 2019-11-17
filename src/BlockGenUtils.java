@@ -255,6 +255,24 @@ public class BlockGenUtils
 
       ci.setContentHash(ByteString.copyFrom(md_whole.digest()));
 
+      //check existing data
+      //
+      ByteString old_content_id = ChanDataUtils.getData(ctx, "/web" + prefix);
+      if (old_content_id != null)
+      {
+        SignedMessage old_content_msg = ctx.db.getContentMap().get(old_content_id);
+        if (old_content_msg != null)
+        {
+          ContentInfo old_ci = ChannelSigUtil.quickPayload(old_content_msg).getContentInfo();
+          if(old_ci.getContentHash().equals(old_ci.getContentHash()))
+          {
+            return; 
+          }
+        }
+
+      }
+
+
       ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
 
       SignedMessage sm = 
