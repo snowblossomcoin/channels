@@ -18,6 +18,7 @@ import snowblossom.lib.ChainHash;
 import snowblossom.lib.db.DBMap;
 import snowblossom.lib.db.DBProvider;
 import snowblossom.lib.db.ProtoDBMap;
+import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.lib.trie.HashedTrie;
 import snowblossom.lib.trie.TrieDBMap;
@@ -56,8 +57,23 @@ public class SingleChannelDB
 
     this.config = new ConfigCat(new ConfigMem(
       ImmutableMap.of("db_path", db_path.getPath(), "db_separate", "false")), base_config);
-    
-    this.prov = new JRocksDB(config);
+   
+    String db_type = base_config.get("db_type");
+
+    if((db_type==null) || (db_type.equals("rocksdb")))
+    { 
+      this.prov = new JRocksDB(config);
+    }
+    else if (db_type.equals("lobstack"))
+    { 
+      this.prov = new LobstackDB(config);
+    }
+    else
+    { 
+      logger.log(Level.SEVERE, String.format("Unknown db_type: %s", db_type));
+      throw new RuntimeException("Unable to load DB");
+    }
+
 
     open();
   }

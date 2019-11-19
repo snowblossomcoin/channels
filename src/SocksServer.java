@@ -1,19 +1,17 @@
 package snowblossom.channels;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import java.net.InetAddress;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A super simple socks5 server that directs things towards a specific port regardless of what it is asked

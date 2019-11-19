@@ -4,26 +4,21 @@ import duckutil.Config;
 import duckutil.ConfigCat;
 import duckutil.ConfigFile;
 import duckutil.ConfigMem;
-import io.grpc.ManagedChannel;
 import io.grpc.Server;
-import io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.NettyServerBuilder;
-import io.netty.handler.ssl.SslContext;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
-import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.client.StubHolder;
 import snowblossom.client.StubUtil;
 import snowblossom.client.WalletUtil;
 import snowblossom.lib.*;
 import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.db.lobstack.LobstackDB;
 import snowblossom.lib.db.rocksdb.JRocksDB;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
@@ -104,7 +99,23 @@ public class ChannelNode
       WalletUtil.saveWallet(wallet_db, wallet_path);
     }
 
-    db = new ChannelsDB(config, new JRocksDB(config) );
+		String db_type = config.get("db_type");
+
+    if((db_type==null) || (db_type.equals("rocksdb")))
+    { 
+      db = new ChannelsDB(config, new JRocksDB(config));
+    }
+    else if (db_type.equals("lobstack"))
+    { 
+      db = new ChannelsDB(config, new LobstackDB(config));
+    }
+    else
+    { 
+      logger.log(Level.SEVERE, String.format("Unknown db_type: %s", db_type));
+      throw new RuntimeException("Unable to load DB");
+    }
+
+
     db_map = new HashMap<>(16,0.5f);
 
     net_ex = new NetworkExaminer(this);
@@ -152,8 +163,6 @@ public class ChannelNode
         getChannelSubscriber().openChannel(ChannelID.fromString(s));
       }
     }
-
-    //testSelf();
 
   }
   public int getPort()
@@ -209,30 +218,6 @@ public class ChannelNode
   public Config getConfig(){ return config;}
   public WalletDatabase getWalletDB() {return wallet_db; }
   public StubHolder getStubHolder() {return stub_holder; }
-
-  public void testSelf()
-		throws Exception
-  {
-    logger.log(Level.FINEST, "Starting test self");
-
-    Random rnd = new Random();
-    int port = rnd.nextInt(60000) + 1024;
-    port = ChannelGlobals.NETWORK_PORT;
-
-      SslContext ssl_ctx = GrpcSslContexts.forClient()
-      .trustManager(SnowTrustManagerFactorySpi.getFactory(null))
-    .build();
-
-    ManagedChannel channel = NettyChannelBuilder
-      .forAddress("127.0.0.1", port)
-      .useTransportSecurity()
-      .sslContext(ssl_ctx)
-      .build();
-
-    StargateServiceBlockingStub stub = StargateServiceGrpc.newBlockingStub(channel);
-    stub.getDHTPeers(GetDHTPeersRequest.newBuilder().setSelfPeerInfo(dht_server.getSignedPeerInfoSelf()).build());
-
-  }
 
   public AddressSpecHash getNodeID()
   {

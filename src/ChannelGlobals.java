@@ -2,7 +2,7 @@ package snowblossom.channels;
 
 public class ChannelGlobals
 {
-  public static final String VERSION = "dev.2019.11.16.1";
+  public static final String VERSION = "dev.2019.11.19.0";
 
   public static final String NODE_ADDRESS_STRING="node";
   public static final String CHANNEL_ADDRESS_STRING="chan";
@@ -49,6 +49,7 @@ public class ChannelGlobals
   public static final long CONTENT_DATA_BLOCK_SIZE = 1048576L;
 
 }
+
 
 
 

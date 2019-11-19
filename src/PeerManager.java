@@ -58,7 +58,7 @@ public class PeerManager extends PeriodicThread
     }
     if (to_remove.size() > 0)
     {
-      logger.info(String.format("Removed %d stale links", to_remove.size()));
+      logger.fine(String.format("Removed %d stale links", to_remove.size()));
     }
 
   }

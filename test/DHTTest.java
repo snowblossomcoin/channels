@@ -32,8 +32,8 @@ public class DHTTest
   public void testDHTReadWrite()
     throws Exception
   {
-    ChannelNode node_a = startNode();
-    ChannelNode node_b = startNode();
+    ChannelNode node_a = startNode("rocksdb");
+    ChannelNode node_b = startNode("rocksdb");
 
     Thread.sleep(500);
 
@@ -110,7 +110,7 @@ public class DHTTest
   
   }
 
-	private ChannelNode startNode()
+	private ChannelNode startNode(String db_type)
     throws Exception
 	{
     File base_dir = test_folder.newFolder();
@@ -119,6 +119,7 @@ public class DHTTest
     map.put("db_separate", "true");
     map.put("db_path", new File(base_dir, "db").getPath());
     map.put("wallet_path", new File(base_dir, "wallet").getPath());
+    map.put("db_type", db_type);
 
     Random rnd = new Random();
     int port = rnd.nextInt(30000) + 10240;

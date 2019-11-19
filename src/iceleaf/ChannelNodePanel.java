@@ -14,17 +14,17 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import snowblossom.channels.BlockGenUtils;
 import snowblossom.channels.ChannelContext;
+import snowblossom.channels.ChannelGlobals;
 import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelNode;
-import snowblossom.channels.ChannelGlobals;
 import snowblossom.channels.ChunkMapUtils;
 import snowblossom.channels.MiscUtils;
 import snowblossom.channels.SocksServer;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.SystemUtil;
-import snowblossom.lib.AddressUtil;
 
 public class ChannelNodePanel extends BasePanel
 {
