@@ -24,6 +24,7 @@ import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.TxOutList;
 import snowblossom.proto.TxOutPoint;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.RequestNameID;
 
 public class ApiUtils
 {
@@ -265,6 +266,20 @@ public class ApiUtils
 
   }
 
+  public static ChannelID getChannelByName(ChannelNode node, String name)
+  {
+    TxOutList lst = node.getStubHolder().getBlockingStub().getIDList( 
+      RequestNameID.newBuilder()
+        .setNameType(RequestNameID.IdType.CHANNELNAME)
+        .setName(ByteString.copyFrom(name.getBytes()))
+        .build());
+    if (lst.getOutListCount() == 0) return null;
+
+    TransactionOutput out = lst.getOutList(0).getOut();
+
+    return new ChannelID(out.getForBenefitOfSpecHash());
+
+  }
 
   public static TxOutPoint getFboOutpoint(ChannelNode node, AddressSpec address)
   {

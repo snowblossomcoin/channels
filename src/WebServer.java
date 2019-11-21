@@ -83,7 +83,7 @@ public class WebServer
 
         if ((tokens.size() >= 2) && (tokens.get(0).equals("channel")))
         {
-          cid = ChannelID.fromString(tokens.get(1));
+          cid = ChannelID.fromStringWithNames(tokens.get(1), node);
           tokens = tokens.subList(2, tokens.size());
         }
 
@@ -361,7 +361,7 @@ public class WebServer
       }
       if (tokens.size() == 3)
       {
-        return ChannelID.fromString(tokens.get(0)); 
+        return ChannelID.fromStringWithNames(tokens.get(0), node);
       }
     }
 
