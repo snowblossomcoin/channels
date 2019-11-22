@@ -20,11 +20,11 @@ import snowblossom.lib.RpcUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.RequestAddress;
+import snowblossom.proto.RequestNameID;
 import snowblossom.proto.TransactionOutput;
 import snowblossom.proto.TxOutList;
 import snowblossom.proto.TxOutPoint;
 import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.RequestNameID;
 
 public class ApiUtils
 {
@@ -268,6 +268,7 @@ public class ApiUtils
 
   public static ChannelID getChannelByName(ChannelNode node, String name)
   {
+    // TODO - do some caching nerd
     TxOutList lst = node.getStubHolder().getBlockingStub().getIDList( 
       RequestNameID.newBuilder()
         .setNameType(RequestNameID.IdType.CHANNELNAME)
