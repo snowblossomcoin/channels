@@ -101,7 +101,6 @@ public class DHTTest
       catch(Throwable t)
       {
         System.out.println("Error in put and get: " + t);
-        
       }
 
     }

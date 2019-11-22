@@ -5,19 +5,19 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 maven_jar(
   name = "bcpkix",
   artifact = "org.bouncycastle:bcpkix-jdk15on:1.60",
-  sha1 = "d0c46320fbc07be3a24eb13a56cee4e3d38e0c75",
+  sha256 = "a82ac5bc24bcbf6ba9eb70f334d6782e25245c8da36d9848ad553b5b7b68efd1",
 )
 
 maven_jar(
   name = "netty_tcnative",
   artifact = "io.netty:netty-tcnative-boringssl-static:2.0.25.Final",
-  sha1 = "185980556f9f083b5339825f19c9641c6c879417",
+  sha256 = "96d9c14ab4c47cbad7fec9bdb083917db971d3754d6c7fa89f958bc719e230ed",
 )
 
 maven_jar(
   name = "weupnp",
   artifact = "org.bitlet:weupnp:0.1.4",
-  sha1 = "b99cd791ede89b7c17426e6c51a0f171dc925def",
+  sha256 = "88df7e6504929d00bdb832863761385c68ab92af945b04f0770b126270a444fb",
 )
 
 git_repository(
@@ -35,7 +35,7 @@ git_repository(
 maven_jar(
   name = "protobuf",
   artifact = "com.google.protobuf:protobuf-java:3.5.1",
-  sha1 = "8c3492f7662fa1cbf8ca76a0f5eb1146f7725acd",
+  sha256 = "b5e2d91812d183c9f053ffeebcbcda034d4de6679521940a19064714966c2cd4",
 )
 
 
@@ -57,9 +57,6 @@ grpc_java_repositories(omit_com_google_protobuf = True)
 load("@build_stack_rules_proto//java:deps.bzl", "java_grpc_library")
 
 java_grpc_library()
-
-
-
 
 maven_jar(
   name = "org_rocksdb_rocksdbjni",

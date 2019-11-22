@@ -202,6 +202,10 @@ public class ChannelNodePanel extends BasePanel
     config_map.put("db_separate","true");
     config_map.put("key_count", "1");
 
+    boolean autojoin = ice_leaf_prefs.getBoolean("auto_join", false);
+
+    config_map.put("autojoin", "" + autojoin);
+
     setMessageBox(config_map.toString());
 
     ConfigMem config = new ConfigMem(config_map);
@@ -275,7 +279,7 @@ public class ChannelNodePanel extends BasePanel
     {
       try
       {
-			  ChannelID cid = ChannelID.fromString(sub_chan_field.getText().trim());
+			  ChannelID cid = ChannelID.fromStringWithNames(sub_chan_field.getText().trim(), node);
 			  node.getChannelSubscriber().openChannel(cid);
         setMessageBox("Channel added: " + cid);
       }

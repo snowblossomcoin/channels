@@ -49,6 +49,7 @@ public class ChannelNode
   private ChannelOutsiderSender channel_outsider_sender;
 
   private HashMap<ChannelID, SingleChannelDB> db_map;
+  private boolean autojoin = false;
 
   public static void main(String args[])
 		throws Exception
@@ -84,6 +85,8 @@ public class ChannelNode
   {
     this.config = config;
     this.stub_holder = stub_holder;
+
+    this.autojoin = config.getBoolean("autojoin");
 
     config.require("wallet_path");
 
@@ -160,7 +163,7 @@ public class ChannelNode
     {
       for(String s : config.getList("channel_list"))
       {
-        getChannelSubscriber().openChannel(ChannelID.fromString(s));
+        getChannelSubscriber().openChannel(ChannelID.fromStringWithNames(s, this));
       }
     }
 
@@ -218,6 +221,7 @@ public class ChannelNode
   public Config getConfig(){ return config;}
   public WalletDatabase getWalletDB() {return wallet_db; }
   public StubHolder getStubHolder() {return stub_holder; }
+  public boolean getAutoJoin(){ return autojoin;}
 
   public AddressSpecHash getNodeID()
   {

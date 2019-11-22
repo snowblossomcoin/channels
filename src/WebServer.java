@@ -136,70 +136,93 @@ public class WebServer
     private void handleChannelApi(ChannelID cid, List<String> tokens, HttpExchange t)
       throws Exception
     {
-      ChannelContext ctx = node.getChannelSubscriber().openChannel(cid);
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream print_out = new PrintStream(b_out);
       int code = 200;
-
-      String api_path = "";
-      for(int i=1; i<tokens.size(); i++)
+      ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+      if (ctx == null)
       {
-        api_path += "/" + tokens.get(i);
-      }
-
-      if (api_path.equals("/beta/outsider/order_by_time"))
-      {
-        t.getResponseHeaders().add("Content-type","application/json");
-        print_out.println(ApiUtils.getOutsiderByTime(node, ctx, 1000));
-      }
-      else if (api_path.equals("/beta/outsider/submit"))
-      {
-        if (!t.getRequestMethod().equals("POST"))
+        if (node.getAutoJoin())
         {
-          code = 401;
-          print_out.println("Submit must be a POST");
+          ctx = node.getChannelSubscriber().openChannel(cid);
         }
         else
         {
-          JSONObject input = ApiUtils.readJSON(t.getRequestBody());
-          ApiUtils.submitContent(input, node, ctx);
-
+          code = 404;
+          print_out.println("Channel not subscribed and autojoin is disabled.");
         }
       }
-      else if (api_path.equals("/beta/block/submit"))
+
+
+      if (ctx != null)
       {
-        if (!t.getRequestMethod().equals("POST"))
+
+        String api_path = "";
+        for(int i=1; i<tokens.size(); i++)
         {
-          code = 401;
-          print_out.println("Submit must be a POST");
+          api_path += "/" + tokens.get(i);
+        }
+
+        if (api_path.equals("/beta/outsider/order_by_time"))
+        {
+          t.getResponseHeaders().add("Content-type","application/json");
+          print_out.println(ApiUtils.getOutsiderByTime(node, ctx, 1000));
+        }
+        else if (api_path.equals("/beta/outsider/submit"))
+        {
+          if (!t.getRequestMethod().equals("POST"))
+          {
+            code = 401;
+            print_out.println("Submit must be a POST");
+          }
+          else
+          {
+            JSONObject input = ApiUtils.readJSON(t.getRequestBody());
+            ApiUtils.submitContent(input, node, ctx);
+
+          }
+        }
+        else if (api_path.equals("/beta/block/submit"))
+        {
+          if (!t.getRequestMethod().equals("POST"))
+          {
+            code = 401;
+            print_out.println("Submit must be a POST");
+          }
+          else
+          {
+            JSONObject input = ApiUtils.readJSON(t.getRequestBody());
+            ApiUtils.submitBlock(input, node, ctx);
+          }
+        }
+        else if (api_path.equals("/beta/block/tail"))
+        {
+          t.getResponseHeaders().add("Content-type","application/json");
+          print_out.println(ApiUtils.getBlockTail(node, ctx, 100));
+        }
+        else if (api_path.equals("/beta/am_i_block_signer"))
+        {
+          t.getResponseHeaders().add("Content-type","application/json");
+          print_out.println(ApiUtils.amIBlockSigner(node, ctx));
+          
+        }
+        else if (api_path.equals("/beta/block/submit_files"))
+        {
+          processFileUpload(print_out, t, ctx);
+        }
+        else if (api_path.startsWith("/beta/content/get"))
+        {
+          String id = api_path.substring("/beta/content/get/".length());
+          processApiGet(t, ctx, id);
+          return;
+
         }
         else
         {
-          JSONObject input = ApiUtils.readJSON(t.getRequestBody());
-          ApiUtils.submitBlock(input, node, ctx);
-        }
+          code = 404;
+          print_out.println("Unknown api: " + api_path);
+        }   
       }
-      else if (api_path.equals("/beta/block/tail"))
-      {
-        t.getResponseHeaders().add("Content-type","application/json");
-        print_out.println(ApiUtils.getBlockTail(node, ctx, 100));
-      }
-      else if (api_path.equals("/beta/am_i_block_signer"))
-      {
-        t.getResponseHeaders().add("Content-type","application/json");
-        print_out.println(ApiUtils.amIBlockSigner(node, ctx));
-        
-      }
-      else if (api_path.equals("/beta/block/submit_files"))
-      {
-        processFileUpload(print_out, t, ctx);
-      }
-      else
-      {
-        code = 404;
-        print_out.println("Unknown api: " + api_path);
-      }   
-
 
       byte[] data = b_out.toByteArray();
       t.sendResponseHeaders(code, data.length);
@@ -208,47 +231,92 @@ public class WebServer
       out.close();
     }
 
+    private void processApiGet(HttpExchange t, ChannelContext ctx, String id)
+      throws IOException
+    {
+      ByteString content_id = HexUtil.hexStringToBytes(id);
+      SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
+      if (content_msg == null)
+      {
+        int code = 404;
+        ByteArrayOutputStream b_out = new ByteArrayOutputStream();
+        PrintStream print_out = new PrintStream(b_out);
+        t.getResponseHeaders().add("Content-type","text/plain");
+        print_out.println("Path entry found, but not content info message.");
+        byte[] data = b_out.toByteArray();
+        t.sendResponseHeaders(code, data.length);
+
+        OutputStream out = t.getResponseBody();
+        out.write(data);
+        out.close();
+      }
+      else
+      {
+        ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
+        sendFile(t, ctx, new ChainHash(content_id), ci);
+        return;
+      }
+
+    }
+
 
     private void handleChannelGet(ChannelID cid, List<String> tokens, HttpExchange t)
       throws IOException
     {
-      ChannelContext ctx = node.getChannelSubscriber().openChannel(cid);
+      int code = 200;
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
       PrintStream print_out = new PrintStream(b_out);
-      int code = 200;
 
-      String path = "/web";
-      for(int i=0; i<tokens.size(); i++)
+      ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+      if (ctx == null)
       {
-        path += "/" + tokens.get(i);
-      }
-
-      ByteString content_id = ChanDataUtils.getData(ctx, path);
-      if ((content_id == null) && (path.startsWith("/web/content_direct/")))
-      {
-        content_id = HexUtil.hexStringToBytes(tokens.get(1));
-
-      }
-      if (content_id == null)
-      {
-        code = 404;
-        t.getResponseHeaders().add("Content-type","text/plain");
-        print_out.println("Item not found: " + cid + path);
-      }
-      else
-      {
-        SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
-        if (content_msg == null)
+        if (node.getAutoJoin())
         {
-          code = 404;
-          t.getResponseHeaders().add("Content-type","text/plain");
-          print_out.println("Path entry found, but not content info message.");
+          ctx = node.getChannelSubscriber().openChannel(cid);
         }
         else
         {
-          ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
-          sendFile(t, ctx, new ChainHash(content_id), ci);
-          return;
+          code = 404;
+          print_out.println("Channel not subscribed and autojoin is disabled.");
+        }
+      }
+      if (ctx != null)
+      {
+
+        String path = "/web";
+        for(int i=0; i<tokens.size(); i++)
+        {
+          path += "/" + tokens.get(i);
+        }
+
+        ByteString content_id = ChanDataUtils.getData(ctx, path);
+
+        // TODO - deprecated
+        if ((content_id == null) && (path.startsWith("/web/content_direct/")))
+        {
+          content_id = HexUtil.hexStringToBytes(tokens.get(1));
+        }
+        if (content_id == null)
+        {
+          code = 404;
+          t.getResponseHeaders().add("Content-type","text/plain");
+          print_out.println("Item not found: " + cid + path);
+        }
+        else
+        {
+          SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
+          if (content_msg == null)
+          {
+            code = 404;
+            t.getResponseHeaders().add("Content-type","text/plain");
+            print_out.println("Path entry found, but not content info message.");
+          }
+          else
+          {
+            ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
+            sendFile(t, ctx, new ChainHash(content_id), ci);
+            return;
+          }
         }
       }
 

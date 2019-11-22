@@ -264,7 +264,7 @@ public class BlockGenUtils
         if (old_content_msg != null)
         {
           ContentInfo old_ci = ChannelSigUtil.quickPayload(old_content_msg).getContentInfo();
-          if(old_ci.getContentHash().equals(old_ci.getContentHash()))
+          if(ci.getContentHash().equals(old_ci.getContentHash()))
           {
             return; 
           }

@@ -46,6 +46,8 @@ public class ChannelSettingsPanel extends BasePanel
 			File default_channel_upload_path = new File(SystemUtil.getNodeDataDirectory(params), "channel_upload");
 			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_upload_path", default_channel_upload_path.toString(),70),c);
 
+      c.gridwidth = GridBagConstraints.REMAINDER;
+      panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Autojoin Channels", "auto_join", false), c);
 
       c.gridwidth = 1;
       panel.add(new JLabel("Service Port"), c);
