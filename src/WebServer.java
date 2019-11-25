@@ -291,11 +291,6 @@ public class WebServer
 
         ByteString content_id = ChanDataUtils.getData(ctx, path);
 
-        // TODO - deprecated
-        if ((content_id == null) && (path.startsWith("/web/content_direct/")))
-        {
-          content_id = HexUtil.hexStringToBytes(tokens.get(1));
-        }
         if (content_id == null)
         {
           code = 404;
