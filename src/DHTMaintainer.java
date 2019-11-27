@@ -281,6 +281,23 @@ public class DHTMaintainer extends PeriodicThread
         .build())
       .build());
 
+    seed_list.add( ChannelPeerInfo.newBuilder()
+      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
+        "node:ut58s0rxxtyqe8u3c695xt59drxxf7vspz79p60a").getBytes())
+      .setVersion("seed")
+      .putConnectInfos("ipv4", ConnectInfo.newBuilder()
+        .setProtocol("ipv4")
+        .setHost("snowplough.kekku.li")
+        .setPort(ChannelGlobals.NETWORK_PORT)
+        .build())
+      .putConnectInfos("ipv6", ConnectInfo.newBuilder()
+        .setProtocol("ipv6")
+        .setHost("snowplough.kekku.li")
+        .setPort(ChannelGlobals.NETWORK_PORT)
+        .build())
+      .build());
+
+
     return seed_list;
 
   }
