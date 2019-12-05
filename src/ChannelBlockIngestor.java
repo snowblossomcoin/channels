@@ -158,7 +158,7 @@ public class ChannelBlockIngestor
 
         DecimalFormat df = new DecimalFormat("0.0");
         
-        node.getChannelSubscriber().notifyChannelBlock(cid);
+        node.getChannelSubscriber().notifyChannelBlock(cid, blk);
       }
 
     }
@@ -254,6 +254,7 @@ public class ChannelBlockIngestor
 				{
 					link.writeMessage(m_out);
 				}
+        node.getChannelSubscriber().notifyChannelContent(cid, sm);
 			}
 
   }

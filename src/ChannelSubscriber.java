@@ -5,13 +5,31 @@ import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.LinkedList;
+import snowblossom.channels.proto.*;
 
-/** Manage channels we are tracking */
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import snowblossom.lib.DaemonThreadFactory;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+
+/** 
+ * Manage channels we are tracking 
+ * Also handles notifications of events to people watching channels
+ */
 public class ChannelSubscriber
 {
   private ChannelNode node;
 
   private HashMap<ChannelID, ChannelContext> chan_map;
+
+	private HashMap<ChannelID, LinkedList<ChannelWatcherInterface> > watcher_map= new HashMap<>(16,0.5f);
+
+
+	protected Executor exec;
   
   public ChannelSubscriber(ChannelNode node)
   {
@@ -97,9 +115,85 @@ public class ChannelSubscriber
   }
 
 
-  public void notifyChannelBlock(ChannelID cid)
+  public void notifyChannelBlock(ChannelID cid, ChannelBlock blk)
   {
     node.getChannelTipSender().wakeFor(cid);
+
+    List<ChannelWatcherInterface> notify_list = getNotifyList(cid);
+    for(ChannelWatcherInterface watcher : notify_list)
+    {
+      getExec().execute(new Runnable(){
+        public void run()
+        {
+          watcher.onBlock(cid, blk);
+        }
+      });
+    }
+
+  }
+
+  public void notifyChannelContent(ChannelID cid, SignedMessage sm)
+  {
+    List<ChannelWatcherInterface> notify_list = getNotifyList(cid);
+    for(ChannelWatcherInterface watcher : notify_list)
+    {
+      getExec().execute(new Runnable(){
+        public void run()
+        {
+          watcher.onContent(cid, sm);
+        }
+      });
+    }
+
+
+  }
+
+
+  public List<ChannelWatcherInterface> getNotifyList(ChannelID cid)
+  {
+    synchronized(watcher_map)
+    {
+      LinkedList<ChannelWatcherInterface> lst = watcher_map.get(cid);
+      if (lst != null)
+      {
+        return ImmutableList.copyOf(lst);
+      }
+      else
+      {
+        return ImmutableList.of();
+      }
+    }
+
+  }
+
+  public void registerWatcher(ChannelID cid, ChannelWatcherInterface watcher)
+  {
+		synchronized(watcher_map)
+		{
+			LinkedList<ChannelWatcherInterface> lst = watcher_map.get(cid);
+      if (lst == null)
+      {
+        lst = new LinkedList<ChannelWatcherInterface>();
+        watcher_map.put(cid, lst);
+      }
+      lst.add(watcher);
+		}
+
+  }
+
+
+  protected synchronized Executor getExec()
+  {
+    if (exec == null)
+    {
+      exec = new ThreadPoolExecutor(
+        32,
+        32,
+        2, TimeUnit.DAYS,
+        new LinkedBlockingQueue<Runnable>(),
+        new DaemonThreadFactory("watcher_exec"));
+    }
+    return exec;
 
   }
 
