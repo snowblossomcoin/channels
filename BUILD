@@ -9,17 +9,14 @@ java_library(
     "@snowblossom//iceleaf-ui:iceleaf",
     "@duckutil//:duckutil_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
-    "@junit_junit//jar",
-    "@bcprov//jar",
-    "@bcpkix//jar",
-    "@weupnp//jar",
-    "@json_smart//jar",
-    ":protolib",
-    "@netty_tcnative//jar",
-    "@build_stack_rules_proto//java:grpc_netty",
-    "@io_netty_netty_handler//jar",
     "@io_grpc_grpc_java//netty",
-    "@com_google_protobuf//:protobuf_java",
+    "@io_netty_netty_handler//:io_netty_netty_handler",
+    "@maven//:junit_junit",
+    "@maven//:net_minidev_json_smart",
+    "@maven//:org_bouncycastle_bcpkix_jdk15on",
+    "@maven//:org_bouncycastle_bcprov_jdk15on",
+    "@maven//:org_bitlet_weupnp",
+    ":protolib",
   ],
 )
 
@@ -66,10 +63,9 @@ java_test(
     test_class = "channels.HashMathTest",
     size="small",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
-      ":channelslib",
       "@com_google_protobuf//:protobuf_java",
+      ":channelslib",
     ],
 )
 
@@ -79,12 +75,11 @@ java_test(
     test_class = "channels.CertGenTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
-      "@io_netty_netty_handler//jar",
       "@io_grpc_grpc_java//netty",
+      "@io_netty_netty_handler//:io_netty_netty_handler",
       ":channelslib",
       ":protolib",
     ],
@@ -96,7 +91,6 @@ java_test(
     test_class = "channels.ChannelSigUtilTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -111,7 +105,6 @@ java_test(
     test_class = "channels.DHTTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -126,7 +119,6 @@ java_test(
     test_class = "channels.ChannelPeerTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -141,7 +133,6 @@ java_test(
     test_class = "channels.ChannelDataTest",
     size="small",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -156,7 +147,6 @@ java_test(
     test_class = "channels.WebServerTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -173,7 +163,6 @@ java_test(
     test_class = "channels.ChannelTest",
     size="small",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -188,7 +177,6 @@ java_test(
     test_class = "channels.ChannelValidationTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -203,7 +191,6 @@ java_test(
     test_class = "channels.ChunkMapUtilsTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
@@ -217,7 +204,6 @@ java_test(
     test_class = "channels.MultipartUploadTest",
     size="medium",
     deps = [
-      "@junit_junit//jar",
       "@snowblossom//lib:lib",
       ":channelslib",
       ":protolib",
