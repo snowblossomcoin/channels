@@ -151,6 +151,10 @@ public class ChannelSubscriber
 
   public List<ChannelWatcherInterface> getNotifyList(ChannelID cid)
   {
+    // TODO - improve this synchronization - this will be a major bottleneck
+    // once we get a lot of things flowing through on a lot of channels
+    // Maybe have an immutable map of immutable lists that gets cloned and updated
+    // on registrations (which should be rare).
     synchronized(watcher_map)
     {
       LinkedList<ChannelWatcherInterface> lst = watcher_map.get(cid);
