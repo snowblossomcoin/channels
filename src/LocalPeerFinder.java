@@ -1,22 +1,19 @@
 package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
+import duckutil.ExpiringLRUCache;
 import duckutil.PeriodicThread;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.InterfaceAddress;
 import java.net.MulticastSocket;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Enumeration;
-import java.util.HashSet;
-import snowblossom.lib.ValidationException;
+import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
-import snowblossom.channels.proto.*;
-import duckutil.ExpiringLRUCache;
+import snowblossom.lib.ValidationException;
 
 public class LocalPeerFinder
 {
