@@ -1,8 +1,9 @@
 package snowblossom.channels;
 
+
 public class ChannelGlobals
 {
-  public static final String VERSION = "dev.2019.12.20.0";
+  public static final String VERSION = "dev.2020.01.03.00";
 
   public static final String NODE_ADDRESS_STRING="node";
   public static final String CHANNEL_ADDRESS_STRING="chan";
@@ -10,6 +11,11 @@ public class ChannelGlobals
 
 
   public static final int NETWORK_PORT=4862;
+
+  public static final String MULTICAST_IPV4_ADDRESS="224.48.62.1";
+
+  // Subject to change after I understand WTF https://tools.ietf.org/html/rfc7371 is on about
+  public static final String MULTICAST_IPV6_ADDRESS="FFFF::e030:3e01";
 
   public static final long ALLOWED_CLOCK_SKEW=45000; //ms
 
@@ -35,6 +41,10 @@ public class ChannelGlobals
   public static final long PEER_LINK_TIMEOUT=60000L;
   public static final long CHANNEL_LINK_TIMEOUT=60000L;
 
+  public static final long MULTICAST_BROADCAST_PERIOD=60000L;
+  public static final long MULTICAST_CACHE_EXPIRE=MULTICAST_BROADCAST_PERIOD*2L;
+
+
   // 2500 channels, 100 elements each
   public static final int DHT_CACHE_ELEMENTS = 2500 * 100;
   public static final long DHT_CACHE_EXPIRE = 120000L;
@@ -49,6 +59,7 @@ public class ChannelGlobals
   public static final long CONTENT_DATA_BLOCK_SIZE = 1048576L;
 
 }
+
 
 
 

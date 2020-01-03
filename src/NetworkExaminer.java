@@ -2,6 +2,11 @@ package snowblossom.channels;
 
 import duckutil.NetUtil;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.bitlet.weupnp.GatewayDevice;
 import org.bitlet.weupnp.GatewayDiscover;
@@ -22,7 +27,11 @@ public class NetworkExaminer
 		updateHosts();
 	}
 
+  
 
+  // TODO - on failure of this, might want to use getAllAddresses().
+  // Any non-link-local ipv6 address is a good bet for IPV6.
+  // Any non-private ipv4 address is also probably good.
   private void updateHosts()
   {
 		try{
@@ -72,7 +81,6 @@ public class NetworkExaminer
         {
           logger.warning(String.format("Port %d already mapped to %s:%d. Consider using a different port.", port, mapped, portMapping.getInternalPort())); 
           logger.warning(String.format("While I am on %s:%d", local, port));
-          
         }
       }
       else
@@ -80,18 +88,42 @@ public class NetworkExaminer
         if(d.addPortMapping(port, port, localAddress.getHostAddress(),"TCP","snowchannel"))
         {
           logger.info("Port mapped with upnp gateway");
-
         }
       }
     }
 
   }
 
+  /**
+   * Get all local addresses on all interfaces, ipv4 and ipv6 minus any loopback addresses.
+   * Might or might not be globally routable, will include internal IPs (behind NAT)
+   * and IPv6 link-local addresses.
+   */
+  public Set<InetAddress> getAllAddresses()
+    throws java.io.IOException
+  {
+		HashSet<InetAddress> addrs = new HashSet<>();
 
+		Enumeration<NetworkInterface> faces = NetworkInterface.getNetworkInterfaces();
+		while(faces.hasMoreElements())
+		{ 
+			NetworkInterface ni = faces.nextElement();
+			for(InterfaceAddress ia : ni.getInterfaceAddresses())
+			{ 
+				InetAddress a = ia.getAddress();
+				if (!a.	isLoopbackAddress())
+				{
+          InetAddress a2 = InetAddress.getByAddress(a.getAddress());
+					addrs.add(a2);
+				}
+			}
+		}
+		return addrs;
+
+  }
 
   public boolean hasIpv4() { return ipv4_host != null; }
   public boolean hasIpv6() { return ipv6_host != null; }
-
 
   public ChannelPeerInfo createPeerInfo()
   {

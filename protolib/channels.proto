@@ -127,6 +127,7 @@ message SignedMessagePayload {
     ChannelBlockHeader channel_block_header = 20;
     ContentInfo content_info = 21;
     ChannelSettings channel_settings = 22;
+    LocalPeerDisco local_peer_disco = 23;
   }
   TxOutPoint fbo_utxo = 50;
 }
@@ -137,9 +138,21 @@ message ChannelPeerInfo {
   bytes address_spec_hash = 3; //Also the node ID
 }
 
+// This message being signed indicates that the peer is in fact using
+// multicast announcement to find local network peers
+// and a node should try to connect to this node via whatever address this multicast appears
+// to come from.
+// Note: this does open up a MITM attack/DOS attack if an attacker for connections from node A to node B
+// if the attack is both on local network B (to get this signed LocalPeerDisco ) and network A (to 
+// multicast that signed message).  In this case, the TLS will still protect the connection.
+message LocalPeerDisco {
+  repeated string ip_addresses = 1;
+  int32 port = 2;
+  SignedMessage signed_peer_info = 3;
+}
+
 // The local information we store about a peer
 message LocalPeerInfo {
-
   ChannelPeerInfo info = 1;
   SignedMessage signed_peer_info = 2;
   int64 last_connected = 3;

@@ -1,20 +1,19 @@
 package snowblossom.channels;
 
 
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.LinkedList;
-import snowblossom.channels.proto.*;
-
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import snowblossom.channels.proto.*;
 import snowblossom.lib.DaemonThreadFactory;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 
 /** 
  * Manage channels we are tracking 

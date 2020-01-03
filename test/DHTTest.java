@@ -32,8 +32,13 @@ public class DHTTest
   public void testDHTReadWrite()
     throws Exception
   {
-    ChannelNode node_a = startNode("rocksdb");
-    ChannelNode node_b = startNode("rocksdb");
+
+    // if B is working, but C is not, likely there is something wrong with the multicast discovery
+
+    ChannelNode node_a = startNode("rocksdb", false);
+    ChannelNode node_b = startNode("rocksdb", false);
+    ChannelNode node_c = startNode("rocksdb", true);
+
 
     Thread.sleep(500);
 
@@ -42,11 +47,15 @@ public class DHTTest
     Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() > 0);
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() > 0);
 
+    // C is going to take a bit longer
+    // Assert.assertTrue(node_c.getPeerManager().getPeersWithReason("DHT").size() > 0);
+
     for(int i=0; i<45; i++)
     {
       Thread.sleep(1000);
       if (node_a.getPeerManager().getPeersWithReason("DHT").size() >= 3)
       if (node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3)
+      if (node_c.getPeerManager().getPeersWithReason("DHT").size() >= 3)
       {
         break;
       }
@@ -54,12 +63,14 @@ public class DHTTest
 
     Assert.assertTrue(node_a.getPeerManager().getPeersWithReason("DHT").size() >= 3);
     Assert.assertTrue(node_b.getPeerManager().getPeersWithReason("DHT").size() >= 3);
+    Assert.assertTrue("Likely a multicast problem", node_c.getPeerManager().getPeersWithReason("DHT").size() >= 3);
     
 
     Random rnd = new Random();
     byte[] id_bytes = new byte[32];
    
     int b_match = 0;
+    int c_match = 0;
     for(int i=0; i<100; i++)
     {
       ChannelPeerInfo my_info = node_a.getNetworkExaminer().createPeerInfo();
@@ -93,9 +104,17 @@ public class DHTTest
             .setElementId(id)
           .build());
 
+        DHTDataSet ds_get_c = node_c.getDHTServer().getDHTData(
+          GetDHTRequest.newBuilder()
+            .setDesiredResultCount(16)
+            .setElementId(id)
+          .build());
+
+
         Assert.assertTrue(ds_put.getDhtDataCount() == 1);
         Assert.assertTrue(ds_get_a.getDhtDataCount() == 1);
         if (ds_get_b.getDhtDataCount() > 0) b_match++;
+        if (ds_get_c.getDhtDataCount() > 0) c_match++;
 
       }
       catch(Throwable t)
@@ -107,9 +126,11 @@ public class DHTTest
     System.out.println("B match: " + b_match);
     Assert.assertTrue(b_match > 60);
   
+    System.out.println("C match: " + c_match);
+    Assert.assertTrue(c_match > 60);
   }
 
-	private ChannelNode startNode(String db_type)
+	private ChannelNode startNode(String db_type, boolean skip_seeds)
     throws Exception
 	{
     File base_dir = test_folder.newFolder();
@@ -119,6 +140,10 @@ public class DHTTest
     map.put("db_path", new File(base_dir, "db").getPath());
     map.put("wallet_path", new File(base_dir, "wallet").getPath());
     map.put("db_type", db_type);
+    if (skip_seeds)
+    {
+      map.put("testing_skip_seeds", "true");
+    }
 
     Random rnd = new Random();
     int port = rnd.nextInt(30000) + 10240;

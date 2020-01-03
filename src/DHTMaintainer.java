@@ -33,6 +33,11 @@ public class DHTMaintainer extends PeriodicThread
   private HashMap<AddressSpecHash, Long> connection_attempt_times = new HashMap<>(16,0.5f);
   private ImmutableSet<AddressSpecHash> current_links;
 
+  // TODO - select older nodes if we get don't have any links
+  // Something like max_age = 1h.
+  // If not enough links, max_age = Math.max(max_age * 2, 1 year)
+  // else max_age = 1h (to reset to one hour once we have some reasonable number)
+  // https://github.com/snowblossomcoin/channels/issues/21
   public DHTMaintainer(ChannelNode node)
   {
     super(5000L);
@@ -88,12 +93,19 @@ public class DHTMaintainer extends PeriodicThread
     if (connected_peers.size() + connect_map.size() < ChannelGlobals.NEAR_POINTS)
     {
       // Add Seeds
-      for(ChannelPeerInfo info : getSeeds())
+      if (node.getConfig().getBoolean("testing_skip_seeds"))
       {
-        AddressSpecHash id = new AddressSpecHash(info.getAddressSpecHash());
-        if (!connected_peers.contains(id))
+        logger.warning("Not using seeds - config option 'testing_skip_seeds'");
+      }
+      else
+      {
+        for(ChannelPeerInfo info : getSeeds())
         {
-          connect_map.put(id, info);
+          AddressSpecHash id = new AddressSpecHash(info.getAddressSpecHash());
+          if (!connected_peers.contains(id))
+          {
+            connect_map.put(id, info);
+          }
         }
       }
     }
@@ -296,7 +308,6 @@ public class DHTMaintainer extends PeriodicThread
         .setPort(ChannelGlobals.NETWORK_PORT)
         .build())
       .build());
-
 
     return seed_list;
 

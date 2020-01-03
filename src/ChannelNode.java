@@ -47,6 +47,7 @@ public class ChannelNode
   private ChannelTipSender channel_tip_sender;
   private ChannelChunkGetter channel_chunk_getter;
   private ChannelOutsiderSender channel_outsider_sender;
+  private LocalPeerFinder local_peer_finder;
 
   private HashMap<ChannelID, SingleChannelDB> db_map;
   private boolean autojoin = false;
@@ -133,6 +134,7 @@ public class ChannelNode
     channel_tip_sender = new ChannelTipSender(this);
     channel_chunk_getter = new ChannelChunkGetter(this);
     channel_outsider_sender = new ChannelOutsiderSender(this);
+    local_peer_finder = new LocalPeerFinder(this);
    
     startServer();
 
@@ -143,8 +145,8 @@ public class ChannelNode
     channel_chunk_getter.start();
     channel_outsider_sender.start();
 
-    channel_subscriber.loadFromDB();    
-
+    channel_subscriber.loadFromDB();
+    local_peer_finder.start();
 
     if (config.isSet("web_port"))
     {
@@ -221,6 +223,7 @@ public class ChannelNode
   public Config getConfig(){ return config;}
   public WalletDatabase getWalletDB() {return wallet_db; }
   public StubHolder getStubHolder() {return stub_holder; }
+  public LocalPeerFinder getLocalPeerFinder() {return local_peer_finder;}
   public boolean getAutoJoin(){ return autojoin;}
 
   public AddressSpecHash getNodeID()

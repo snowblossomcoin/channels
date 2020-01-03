@@ -46,12 +46,13 @@ public class PeerLink implements StreamObserver<PeerList>
     this.node = node;
     this.info = info;
 
-    ConnectInfo conn_info = findConnectInfo(info, node.getNetworkExaminer());
+		this.remote_node_id = new AddressSpecHash(info.getAddressSpecHash());
+
+    ConnectInfo conn_info = findConnectInfo();
     if (conn_info == null)
     {
       throw new Exception("Unable to connect - no protocols in common");
     }
-		remote_node_id = new AddressSpecHash(info.getAddressSpecHash());
 
     SslContext ssl_ctx = GrpcSslContexts.forClient()
       .trustManager(SnowTrustManagerFactorySpi.getFactory(remote_node_id))
@@ -87,8 +88,20 @@ public class PeerLink implements StreamObserver<PeerList>
   public ChannelServiceStub getChannelAsyncStub() {return channel_stub; }
   
 
-  public static ConnectInfo findConnectInfo(ChannelPeerInfo info, NetworkExaminer net_ex)
+  private ConnectInfo findConnectInfo()
   {
+    NetworkExaminer net_ex = node.getNetworkExaminer();
+    LocalPeerDisco disco = node.getLocalPeerFinder().getDiscoCache(remote_node_id);
+    if (disco != null)
+    {
+      logger.fine("Using disco: " + disco);
+      return ConnectInfo.newBuilder()
+        .setHost(disco.getIpAddresses(0)) // The local peer finder trims the list to just the one we got this from
+        .setPort(disco.getPort())
+        .setProtocol("mcast_disco")
+       .build();
+    }
+
     if (net_ex.hasIpv6())
     {
       ConnectInfo conn_info = info.getConnectInfosMap().get("ipv6");

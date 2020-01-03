@@ -63,18 +63,10 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
   {
     try
     {
-      SignedMessagePayload payload = ChannelSigUtil.validateSignedMessage(peer_signed_message);
+      ChannelPeerInfo peer_info = ChannelSigUtil.validatePeerInfo(peer_signed_message);
 
-      if (payload.getPeerInfo() == null) throw new ValidationException("Signed peer info has no peer info");
-
-      ChannelPeerInfo peer_info = payload.getPeerInfo();
-      
-      AddressSpecHash signed_address = AddressUtil.getHashForSpec(payload.getClaim());
       AddressSpecHash node_id = new AddressSpecHash(peer_info.getAddressSpecHash());
-      if (!signed_address.equals(node_id))
-      {
-        throw new ValidationException("Signed address does not match node id");
-      }
+      SignedMessagePayload payload = ChannelSigUtil.quickPayload(peer_signed_message);
 
       LocalPeerInfo.Builder new_local_info = LocalPeerInfo.newBuilder();
       
@@ -105,8 +97,8 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
   {
     SignedMessagePayload.Builder p = SignedMessagePayload.newBuilder();
     p.setPeerInfo( node.getNetworkExaminer().createPeerInfo() );
-
-    return node.signMessage(p.build());
+    SignedMessage spi = node.signMessage(p.build());
+    return spi;
   }
 
   @Override
