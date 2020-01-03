@@ -92,13 +92,16 @@ public class PeerLink implements StreamObserver<PeerList>
   {
     NetworkExaminer net_ex = node.getNetworkExaminer();
     LocalPeerDisco disco = node.getLocalPeerFinder().getDiscoCache(remote_node_id);
+
+    // If we have local discovery information for this node, prefer that over whatever
+    // is in the PeerInfo.
     if (disco != null)
     {
       logger.fine("Using disco: " + disco);
       return ConnectInfo.newBuilder()
         .setHost(disco.getIpAddresses(0)) // The local peer finder trims the list to just the one we got this from
         .setPort(disco.getPort())
-        .setProtocol("mcast_disco")
+        .setProtocol("mcast_disco") // If something reads this proto, something has gone wrong.  But setting it just in case.
        .build();
     }
 

@@ -202,6 +202,9 @@ public class LocalPeerFinder
 
   }
 
+  /**
+   * Get the local discovery information for this node, if it exists
+   */
   public LocalPeerDisco getDiscoCache(AddressSpecHash node_id)
   {
     synchronized(disco_cache)
