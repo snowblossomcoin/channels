@@ -155,6 +155,10 @@ public class LocalPeerFinder
           }
 
           InetAddress from = ((InetSocketAddress) p.getSocketAddress()).getAddress();
+
+          // Strip out weird interface notation that gets added on sometimes
+          from = InetAddress.getByAddress(from.getAddress());
+
           HashSet<String> allowed_ips = new HashSet<>();
           for(String ip : disco.getIpAddressesList())
           {
