@@ -15,6 +15,7 @@ import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.lib.Globals;
 
 public class BlockGenUtils
 {
@@ -167,10 +168,20 @@ public class BlockGenUtils
 
   }
 
+  public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin)
+    throws ValidationException, java.io.IOException
+  {
+    while(true)
+    {
+      if (createSingleBlockForFiles(ctx, base_path, admin)) return;
+    }
+
+  }
   /**
    * Creates a block for the files in the directory and broadcasts it to the channel
+   * @return true if all files fit in one block, false if there are blocks to write
    */ 
-  public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin)
+  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin)
     throws ValidationException, java.io.IOException
   {
     ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
@@ -190,7 +201,7 @@ public class BlockGenUtils
     ContentInfo.Builder file_map_ci = ContentInfo.newBuilder();
     file_map_ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(new byte[0])) );
 
-    addFiles(ctx, base_path, "", blk, file_map_ci, admin);
+    boolean all_fit = addFiles(ctx, base_path, "", blk, file_map_ci, admin);
 
     blk.addContent(
       ChannelSigUtil.signMessage( admin.getAddresses(0),admin.getKeys(0),
@@ -209,17 +220,25 @@ public class BlockGenUtils
 
     ctx.block_ingestor.ingestBlock(blk.build());
 
+    return all_fit;
   }
 
-  private static void addFiles(ChannelContext ctx, File path, 
+  
+  /**
+   * @return true iff we were able to add all files
+   */
+  private static boolean addFiles(ChannelContext ctx, File path, 
     String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig)
     throws ValidationException, java.io.IOException
   {
+    if (blk.build().toByteString().size() + file_map_ci.build().toByteString().size() > Globals.MAX_BLOCK_SIZE*3/4) return false;
+
     if (path.isDirectory())
     {
       for(File f : path.listFiles())
       {
-        addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig);
+        boolean res = addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig);
+        if (!res) return false;
       }
     }
     else
@@ -266,10 +285,9 @@ public class BlockGenUtils
           ContentInfo old_ci = ChannelSigUtil.quickPayload(old_content_msg).getContentInfo();
           if(ci.getContentHash().equals(old_ci.getContentHash()))
           {
-            return; 
+            return true; 
           }
         }
-
       }
 
 
@@ -305,6 +323,8 @@ public class BlockGenUtils
       }
       din.close();
     }
+
+    return true;
   }
 
   protected static AddressSpecHash getAddr(WalletDatabase db)
