@@ -216,6 +216,7 @@ message ChannelBlock {
   repeated SignedMessage content = 10;
 
 }
+      
 
 message ContentReference {
   bytes channel_id = 1;

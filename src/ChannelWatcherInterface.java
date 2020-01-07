@@ -9,6 +9,4 @@ public interface ChannelWatcherInterface
 
   public void onContent(ChannelID cid, SignedMessage sm);
 
-
-
 }

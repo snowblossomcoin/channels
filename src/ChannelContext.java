@@ -58,7 +58,7 @@ public class ChannelContext
   }
 
   public ImmutableList<ChannelLink> getLinks() {return links; }
-  
+
 }
 
 

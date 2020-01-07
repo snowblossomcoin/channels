@@ -72,7 +72,9 @@ public class ChannelNode
 
     LogSetup.setup(config);
 
-		new ChannelNode(config);
+    ChannelNode node = new ChannelNode(config);
+
+    
   }
 
   public ChannelNode(Config config)
@@ -135,6 +137,8 @@ public class ChannelNode
     channel_chunk_getter = new ChannelChunkGetter(this);
     channel_outsider_sender = new ChannelOutsiderSender(this);
     local_peer_finder = new LocalPeerFinder(this);
+
+    WardenSetup.setupFromConfig(this);
    
     startServer();
 

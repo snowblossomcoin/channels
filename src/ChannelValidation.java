@@ -130,7 +130,8 @@ public class ChannelValidation
 
   }
 
-  public static void validateOutsiderContent(SignedMessage sm, ChannelBlockSummary head)
+  // if ctx is null, don't check against saved messages in other blocks
+  public static void validateOutsiderContent(SignedMessage sm, ChannelBlockSummary head, ChannelContext ctx)
     throws ValidationException
   {
     validateContent(sm);
@@ -163,6 +164,15 @@ public class ChannelValidation
     {
       throw new ValidationException("Outsider not broadcast to this channel");
     }
+
+    if (ctx != null)
+    {
+      if (ctx.db.getContentMap().get(sm.getMessageId()) != null)
+      {
+        throw new ValidationException("Outsider already in block");
+      }
+    }
+
 
   }
 

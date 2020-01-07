@@ -18,8 +18,6 @@ public class ChannelOutsiderSender extends PeriodicThread
 
   private long earliest_time = 0L;
 
-
-
   public ChannelOutsiderSender(ChannelNode node)
   {
     super(500L);
@@ -94,7 +92,7 @@ public class ChannelOutsiderSender extends PeriodicThread
 
       try
       {
-        ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead());
+        ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
 
         ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
           .setChannelId(cid.getBytes())

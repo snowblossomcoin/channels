@@ -8,8 +8,6 @@ public class ChannelGlobals
   public static final String NODE_ADDRESS_STRING="node";
   public static final String CHANNEL_ADDRESS_STRING="chan";
 
-
-
   public static final int NETWORK_PORT=4862;
 
   public static final String MULTICAST_IPV4_ADDRESS="224.48.62.1";
@@ -20,14 +18,12 @@ public class ChannelGlobals
   public static final long ALLOWED_CLOCK_SKEW=45000; //ms
 
   public static final String NODE_TAG = "node";
-
   
   // Always connect to this many near points
   public static final int NEAR_POINTS=6;
 
   // Number of divisions around the ring to connect to, halving each time
   public static final int RING_DIVISONS=8;
-
 
   public static final int DHT_ELEMENT_SIZE = snowblossom.lib.Globals.BLOCKCHAIN_HASH_LEN;
 
@@ -43,7 +39,6 @@ public class ChannelGlobals
 
   public static final long MULTICAST_BROADCAST_PERIOD=60000L;
   public static final long MULTICAST_CACHE_EXPIRE=MULTICAST_BROADCAST_PERIOD*2L;
-
 
   // 2500 channels, 100 elements each
   public static final int DHT_CACHE_ELEMENTS = 2500 * 100;

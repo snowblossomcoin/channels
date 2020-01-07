@@ -239,7 +239,7 @@ public class ChannelBlockIngestor
   public void ingestContent(SignedMessage sm)
 		throws ValidationException
   {
-			ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead());
+			ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
 
 			if (ctx.db.getOutsiderMap().get(sm.getMessageId()) == null)
 			{

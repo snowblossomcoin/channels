@@ -53,15 +53,10 @@ public class ApiUtils
       block_lst.add(getPrettyJsonForBlock(blk, node));
 
       next_block_hash = new ChainHash(header.getPrevBlockHash());
-
-
-
     }
-
 
     JSONObject reply = new JSONObject();
     reply.put("blocks", block_lst);
-
 
     return reply;
 
@@ -78,7 +73,7 @@ public class ApiUtils
     {
       try
       {
-        ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead());
+        ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
         SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
 
         double v = payload.getTimestamp();
@@ -338,14 +333,12 @@ public class ApiUtils
       else
       {
         reply.put("result", false);
-
       }
     }
     else
     {
       reply.put("result", false);
     }
-
     return reply;
 
   }

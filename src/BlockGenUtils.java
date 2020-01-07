@@ -93,6 +93,35 @@ public class BlockGenUtils
 
   }
 
+  public static void createBlockForSettings(ChannelContext ctx, ChannelSettings settings, WalletDatabase admin)
+    throws ValidationException
+  {
+    ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
+    if (prev_sum == null)
+    {
+      throw new ValidationException("Unknown previous block");
+    }
+    ChannelBlockHeader.Builder header = ChannelBlockHeader.newBuilder();
+    header.setBlockHeight(1L + prev_sum.getHeader().getBlockHeight());
+
+    header.setVersion(1);
+    header.setChannelId( ctx.cid.getBytes() );
+    header.setPrevBlockHash( prev_sum.getBlockId());
+
+    header.setSettings(settings);
+
+    ChannelBlock.Builder blk = ChannelBlock.newBuilder();
+
+		header.setContentMerkle( ChainHash.ZERO_HASH.getBytes() );
+    
+    blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
+      SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
+
+    ctx.block_ingestor.ingestBlock(blk.build());
+
+  }
+
+
   /**
    * @param base_content_info merge this into all the created content info objects
    */
