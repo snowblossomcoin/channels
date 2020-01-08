@@ -342,7 +342,6 @@ public class WebServer
         if (bs.cardinality() < total_chunks)
         {
           code=404;
-          t.sendResponseHeaders(code, ci.getContentLength());
 
           ByteArrayOutputStream b_out = new ByteArrayOutputStream();
           PrintStream print_out = new PrintStream(b_out);
