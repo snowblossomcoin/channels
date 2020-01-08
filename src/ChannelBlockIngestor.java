@@ -315,8 +315,6 @@ public class ChannelBlockIngestor
       logger.info(String.format("Saved channel %s file complete %s", cid, content_id));
     }
 
-    node.getChannelChunkGetter().wakeFor(cid);
-
   }
 
 }

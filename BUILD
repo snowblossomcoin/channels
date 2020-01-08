@@ -114,6 +114,22 @@ java_test(
 )
 
 java_test(
+    name = "sync_test",
+    srcs = ["test/SyncTest.java"],
+    test_class = "channels.SyncTest",
+    size="medium",
+    deps = [
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
+
+
+java_test(
     name = "channel_peer_test",
     srcs = ["test/ChannelPeerTest.java", "test/TestUtil.java"],
     test_class = "channels.ChannelPeerTest",

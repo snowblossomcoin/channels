@@ -340,12 +340,16 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       {
         ContentChunk chunk = msg.getChunk();
 
+        boolean wake=false;
         if (chunk_hold_sem.tryAcquire())
         {
           chunk_sem.release();
+          wake=true;
         }
 
         ctx.block_ingestor.ingestChunk(chunk);
+        if (wake) node.getChannelChunkGetter().wakeFor(cid);
+
         if (chunk.getChunkHaveBitmap().size() > 0)
         {
           BitSet bs = BitSet.valueOf(chunk.getChunkHaveBitmap().asReadOnlyByteBuffer());

@@ -19,8 +19,6 @@ public class DHTTest
   @Rule
   public TemporaryFolder test_folder = new TemporaryFolder();
 
-  private ChannelNode node_a;
-  private ChannelNode node_b;
 
   @BeforeClass
   public static void loadProvider()

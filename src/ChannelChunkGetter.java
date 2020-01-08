@@ -17,15 +17,17 @@ public class ChannelChunkGetter extends PeriodicThread
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
+  // Map of when each channel should be processed next
   private HashMap<ChannelID, Long> get_time_map = new HashMap<>(16,0.5f);
   private ChannelNode node;
+
+  // Semaphore of requests for each channel
   private HashMap<ChannelID, Semaphore> request_sem_map;
 
   private long earliest_time = 0L;
 
   private static final int SIMULTANTIOUS_REQUESTS_PER_CHANNEL = 32;
   private static final int SIMULTANTIOUS_REQUESTS_PER_LINK = 4;
-
 
   public ChannelChunkGetter(ChannelNode node)
   {
