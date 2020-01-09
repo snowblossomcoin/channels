@@ -115,7 +115,7 @@ public class ChunkMapUtils
 
   public static List<ChainHash> getWantList(ChannelContext ctx)
   {
-    Map<ByteString, ByteString> store_map = ctx.db.getChunkMap().getByPrefix( want_prefix, 100000);
+    Map<ByteString, ByteString> store_map = ctx.db.getChunkMap().getByPrefix( want_prefix, 200000);
 
     ArrayList<ChainHash> lst = new ArrayList<>();
 

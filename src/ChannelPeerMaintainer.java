@@ -88,10 +88,18 @@ public class ChannelPeerMaintainer extends PeriodicThread
           ChannelPeerInfo ci = possible_peers.poll();
           if (ci != null)
           {
-            PeerLink pl = node.getPeerManager().connectNode(ci, chan_str);
-            ChannelLink cl = new ChannelLink(node, pl, cid, ctx);
-            ctx.addLink(cl);
-            node.getChannelTipSender().sendTip(cid, cl);
+            try
+            {
+              PeerLink pl = node.getPeerManager().connectNode(ci, chan_str);
+              ChannelLink cl = new ChannelLink(node, pl, cid, ctx);
+              ctx.addLink(cl);
+              node.getChannelTipSender().sendTip(cid, cl);
+            }
+            catch(Throwable t)
+            {
+              logger.fine(String.format("Error trying to link to peer: %s", ci.toString()));
+
+            }
           }
         }
       }

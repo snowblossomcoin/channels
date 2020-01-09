@@ -121,9 +121,16 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     if (closed) return;
     closed = true;
 
-    if (sink != null)
+    try
     {
-      sink.onCompleted();
+      if (sink != null)
+      {
+        sink.onCompleted();
+      }
+    }
+    catch(Throwable t)
+    {
+      logger.fine("Error on close: " + t);
     }
     int drain = (chunk_hold_sem.drainPermits());
     if (drain > 0)
@@ -168,7 +175,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       }
       else
       {
-        logger.log(Level.INFO, String.format("Client asked to scribe to channel %s", cid.asString()));
+        logger.log(Level.FINE, String.format("Client asked to scribe to channel %s", cid.asString()));
         ctx.addLink(this);
         node.getChannelTipSender().sendTip(cid, this);
       }
