@@ -22,12 +22,13 @@ public class ChannelChunkGetter extends PeriodicThread
   private ChannelNode node;
 
   // Semaphore of requests for each channel
-  private HashMap<ChannelID, Semaphore> request_sem_map;
+  private HashMap<ChannelID, TimeSem> request_sem_map;
 
   private long earliest_time = 0L;
 
   private static final int SIMULTANTIOUS_REQUESTS_PER_CHANNEL = 32;
   private static final int SIMULTANTIOUS_REQUESTS_PER_LINK = 4;
+  public static final long SEMAPHORE_EXPIRATION = 30000L;
 
   public ChannelChunkGetter(ChannelNode node)
   {
@@ -40,14 +41,15 @@ public class ChannelChunkGetter extends PeriodicThread
 
   }
 
-  protected Semaphore getChanSem(ChannelID cid)
+  protected TimeSem getChanSem(ChannelID cid)
   {
     synchronized(request_sem_map)
     {
-      Semaphore sem = request_sem_map.get(cid);
+      TimeSem sem = request_sem_map.get(cid);
       if (sem == null)
       {
-        sem = new Semaphore(SIMULTANTIOUS_REQUESTS_PER_CHANNEL);
+        sem = new TimeSem(SIMULTANTIOUS_REQUESTS_PER_CHANNEL, SEMAPHORE_EXPIRATION);
+
         request_sem_map.put(cid, sem);
       }
       return sem;
@@ -63,7 +65,6 @@ public class ChannelChunkGetter extends PeriodicThread
     {
       if (now < earliest_time) return;
     }
-
     
     Set<ChannelID> chan_set = node.getChannelSubscriber().getChannelSet();
 
@@ -72,6 +73,7 @@ public class ChannelChunkGetter extends PeriodicThread
 
     synchronized(get_time_map)
     {
+    
       for(ChannelID cid : chan_set)
       {
         long tm = 0L;
@@ -113,9 +115,12 @@ public class ChannelChunkGetter extends PeriodicThread
     LinkedList<ChannelLink> good_links = new LinkedList<>();
     for(ChannelLink link : links)
     {
-      if (link.getChunkHoldSem().availablePermits() < SIMULTANTIOUS_REQUESTS_PER_LINK)
+      if (link.isGood())
       {
-        good_links.add(link);
+        if (link.getChunkHoldSem().availablePermits() < SIMULTANTIOUS_REQUESTS_PER_LINK)
+        {
+          good_links.add(link);
+        }
       }
     }
     return good_links;
@@ -134,6 +139,9 @@ public class ChannelChunkGetter extends PeriodicThread
       LinkedList<ChannelLink> links = new LinkedList<>(ctx.getLinks());
 
       links = shuffleAndFilter(links);
+      if (want_list.size() ==0) return;
+      logger.info(String.format("Want chunks %s: links:%d, wants:%d, sem:%d", 
+        cid, links.size(), want_list.size(), to_send ));
       if (links.size() == 0) return;
 
       // TODO - do something smarter about link selection
@@ -166,6 +174,7 @@ public class ChannelChunkGetter extends PeriodicThread
    
           if ( getChanSem(cid).tryAcquire())
           {
+            logger.fine("Reserving sem, requesting chunk: " + link);
             link.setChunkSem(getChanSem(cid));
             link.getChunkHoldSem().release();
             link.writeMessage( 

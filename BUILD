@@ -70,6 +70,16 @@ java_test(
 )
 
 java_test(
+    name = "time_sem_test",
+    srcs = ["test/TimeSemTest.java"],
+    test_class = "channels.TimeSemTest",
+    size="small",
+    deps = [
+      ":channelslib",
+    ],
+)
+
+java_test(
     name = "cert_gen_test",
     srcs = ["test/CertGenTest.java"],
     test_class = "channels.CertGenTest",

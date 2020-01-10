@@ -40,7 +40,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   /**
    * Semaphore for chunk data requests on this channel
    */
-  private Semaphore chunk_sem;
+  private TimeSem chunk_sem;
 
   /**
    * Semaphore for reseverations from the above channel wide semaphore that
@@ -80,7 +80,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
   }
 
-  public void setChunkSem(Semaphore sem)
+  public void setChunkSem(TimeSem sem)
   {
     this.chunk_sem = sem;
   }
@@ -348,8 +348,10 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         ContentChunk chunk = msg.getChunk();
 
         boolean wake=false;
+        logger.fine("got chunk");
         if (chunk_hold_sem.tryAcquire())
         {
+          logger.fine("Releaseing sem");
           chunk_sem.release();
           wake=true;
         }

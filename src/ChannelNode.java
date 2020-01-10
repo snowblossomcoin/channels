@@ -97,6 +97,8 @@ public class ChannelNode
 
     params = NetworkParams.loadFromConfig(config);
 
+    logger.info("Starting: " + ChannelGlobals.VERSION);
+
     wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
     if (wallet_db == null)
     { 

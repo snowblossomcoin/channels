@@ -158,7 +158,7 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
       else
       {
         ByteString key = target.concat( AddressUtil.getHashForSpec( payload.getClaim()) .getBytes() );
-        logger.info(String.format("Saving DHT data for %s", HexUtil.getHexString(key)));
+        logger.fine(String.format("Saving DHT data for %s", HexUtil.getHexString(key)));
         node.getDB().getDHTDataMap().put(key, req.getSignedDhtData());
 
         return getDHTLocal(target,  req.getDesiredResultCount());
