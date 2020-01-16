@@ -93,6 +93,13 @@ public class PeerLink implements StreamObserver<PeerList>
     NetworkExaminer net_ex = node.getNetworkExaminer();
     LocalPeerDisco disco = node.getLocalPeerFinder().getDiscoCache(remote_node_id);
 
+    //We have a lot of options here, since we have a potential for a triple stack
+    // ipv4, ipv6 and tor in addition to ipv6(4/6) via tor.
+    // For example, if you are on ipv4 only, you can reach ipv6 nodes via tor
+    // or if a node is advertising ipv4 and ipv6 addresses but is actually blocked,
+    // it might be better to reach that particular node via tor.
+    // basically, we might want to monte carlo epsilon soft this.
+
     // If we have local discovery information for this node, prefer that over whatever
     // is in the PeerInfo.
     if (disco != null)

@@ -19,6 +19,7 @@ public class NetworkExaminer
 
 	private String ipv4_host;
 	private String ipv6_host;
+  private String onion_host;
   private ChannelNode node;
 
 	public NetworkExaminer(ChannelNode node)
@@ -34,6 +35,7 @@ public class NetworkExaminer
   // Any non-private ipv4 address is also probably good.
   private void updateHosts()
   {
+
 		try{
 			ipv4_host = NetUtil.getUrlLine("http://ipv4-lookup.snowblossom.org/myip");
 		}
@@ -46,6 +48,20 @@ public class NetworkExaminer
 
     logger.info("IPV4: " + ipv4_host);
     logger.info("IPV6: " + ipv6_host);
+
+    if (node.getConfig().isSet("tor_advertise"))
+    {
+      if (node.getConfig().get("tor_advertise").endsWith(".onion"))
+      {
+        onion_host = node.getConfig().get("tor_advertise");
+        logger.info("Onion: " + onion_host);
+      }
+      else
+      {
+        logger.warning("tor_advertise does not seem to end with .onion - not using");        
+      }
+    }
+
 
     try
     {
@@ -146,6 +162,15 @@ public class NetworkExaminer
       info.putConnectInfos( "ipv4", ConnectInfo.newBuilder()
         .setProtocol("ipv4")
         .setHost(ipv4_host)
+        .setPort( node.getPort() )
+        .build() );
+    }
+
+    if (onion_host != null)
+    {
+      info.putConnectInfos( "onion", ConnectInfo.newBuilder()
+        .setProtocol("onion")
+        .setHost(onion_host)
         .setPort( node.getPort() )
         .build() );
     }

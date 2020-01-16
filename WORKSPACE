@@ -1,32 +1,32 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-RULES_JVM_EXTERNAL_TAG = "3.0"
-RULES_JVM_EXTERNAL_SHA = "62133c125bf4109dfd9d2af64830208356ce4ef8b165a6ef15bbff7460b35c3a"
-
-http_archive(
+git_repository(
     name = "rules_jvm_external",
-    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    sha256 = RULES_JVM_EXTERNAL_SHA,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+    remote = "https://github.com/bazelbuild/rules_jvm_external",
+    commit = "9aec21a7eff032dfbdcf728bb608fe1a02c54124",
+    shallow_since = "1577467222 -0500"
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
-http_archive(
-    name = "build_stack_rules_proto",
-    urls = ["https://github.com/stackb/rules_proto/archive/78d64b7317a332ee884ad7fcd0506d78f2a402cb.tar.gz"],
-    sha256 = "7f7fc55f1cfe8b28f95f1feb8ea42f21310cbbf3c1ee5015dfc15c604f6593f1",
-    strip_prefix = "rules_proto-78d64b7317a332ee884ad7fcd0506d78f2a402cb",
+git_repository(
+  name = "build_stack_rules_proto",
+  remote = "https://github.com/fireduck64/rules_proto",
+	commit = "a545baf1de1220fd97edd1c870295542be622252", 
+  shallow_since = "1579204983 -0800"
 )
 
 load("@build_stack_rules_proto//:deps.bzl", "io_grpc_grpc_java")
+load("@build_stack_rules_proto//java:deps.bzl", "java_proto_compile")
 
 io_grpc_grpc_java()
+java_proto_compile()
 
 load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 
-grpc_java_repositories(omit_com_google_protobuf = True)
+#grpc_java_repositories(omit_com_google_protobuf = True)
+grpc_java_repositories()
 
 load("@build_stack_rules_proto//java:deps.bzl", "java_grpc_library")
 
@@ -39,7 +39,7 @@ maven_install(
         "junit:junit:4.12",
         "commons-codec:commons-codec:1.11",
         "org.apache.commons:commons-math3:3.6.1",
-        "io.netty:netty-tcnative-boringssl-static:2.0.25.Final",
+        "io.netty:netty-tcnative-boringssl-static:2.0.28.Final",
         "org.bouncycastle:bcprov-jdk15on:1.64",
         "org.bouncycastle:bcpkix-jdk15on:1.64",
         "com.madgag.spongycastle:prov:1.58.0.0",
@@ -50,6 +50,7 @@ maven_install(
         "org.slf4j:slf4j-nop:1.7.25",
         "org.bitcoinj:bitcoinj-core:0.14.7",
   			"org.bitlet:weupnp:0.1.4",
+        "io.netty:netty-handler:4.1.34.Final",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -59,17 +60,18 @@ maven_install(
 )
 # After updating run:
 # 
+# bazel run @unpinned_maven//:pin
+#
 # See: https://github.com/bazelbuild/rules_jvm_external
 
 load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
 
-
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-	commit = "dbefa041f19a2e3aed2108da9131c2e519ec7fa5", 
-  shallow_since = "1578077101 -0800"
+	commit = "413cfa6863986f219f55325d18242c95e1540a4b", 
+  shallow_since = "1579208444 -0800"
 )
 
 git_repository(

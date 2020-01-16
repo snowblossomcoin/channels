@@ -4,6 +4,8 @@ import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
 import java.io.File;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletDatabase;
+import java.net.HttpURLConnection;
 
 public class WebServerTest
 {
@@ -120,8 +123,22 @@ public class WebServerTest
         if (ci.getContentLength() > 0)
         {
           System.out.println(String.format("Downloading %s - expecting %d ",  new ChainHash(sm.getMessageId()), ci.getContentLength()));
-          ChainHash hash = downloadAndDigest("http://localhost:" + webport + "/channel/" + chan_id + "/" + new ChainHash(sm.getMessageId()));
+
+          ByteArrayOutputStream bout = new ByteArrayOutputStream();
+          String url = "http://localhost:" + webport + "/channel/" + chan_id + "/" + new ChainHash(sm.getMessageId());
+
+          ChainHash hash = downloadAndDigest(url, bout);
           ChainHash expected_hash = new ChainHash(ci.getContentHash());
+
+          
+
+          if (!expected_hash.equals(hash))
+          {
+            byte[] d = bout.toByteArray();
+            System.out.println("Mismatch.  Found data size: " + d.length + " expected: " + ci.getContentLength());
+            Thread.sleep(2500);
+          }
+
           Assert.assertEquals(expected_hash, hash);
         }
       }
@@ -239,12 +256,18 @@ public class WebServerTest
 
   }
 
-  protected ChainHash downloadAndDigest(String url)
+  protected ChainHash downloadAndDigest(String url, OutputStream save_out)
     throws Exception
   {
+
+    long start_t = System.currentTimeMillis();
     System.out.println(url);
     URL u = new URL(url);
-    InputStream in = u.openStream();
+    HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+
+
+
+    InputStream in = conn.getInputStream();
 
     MessageDigest md = DigestUtil.getMD();
     byte[] b = new byte[8192];
@@ -257,11 +280,15 @@ public class WebServerTest
       if (r > 0)
       {
         md.update(b,0,r);
+        save_out.write(b,0,r);
         sz+=r;
       }
     }
     in.close();
-    System.out.println("Read " + url + " - " + sz);
+    long delta_t = System.currentTimeMillis() - start_t;
+    System.out.println("Read " + url + " - " + sz + " code: " + conn. getResponseCode() + " in ms:" + delta_t);
+    System.out.println("Timeout: " + conn.getReadTimeout());
+
 
     return new ChainHash(md.digest());
 

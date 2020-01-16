@@ -275,6 +275,11 @@ public class DHTMaintainer extends PeriodicThread
         .setHost("snowblossom.1209k.com")
         .setPort(ChannelGlobals.NETWORK_PORT)
         .build())
+      .putConnectInfos("onion", ConnectInfo.newBuilder()
+        .setProtocol("onion")
+        .setHost("gmx5yma43ym6jxqwkaknhat3n3gvyyux6od5wfhsbb4dxtd6cfp7tnid.onion")
+        .setPort(ChannelGlobals.NETWORK_PORT)
+        .build())
       .build());
 
     seed_list.add( ChannelPeerInfo.newBuilder()

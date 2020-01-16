@@ -46,7 +46,7 @@ public class WebServer
       listen = new InetSocketAddress(web_host, port);
     }
     logger.info("Starting web server on " + listen);
-    http_server = HttpServer.create(listen, 0);
+    http_server = HttpServer.create(listen, 16);
     http_server.createContext("/", new RootHandler());
     http_server.setExecutor(TaskMaster.getBasicExecutor(64,"web_server"));
     http_server.start();
@@ -368,6 +368,11 @@ public class WebServer
         for(int i=0; i<total_chunks; i++)
         {
           ByteString chunk_data = ChunkMapUtils.getChunk(ctx, content_id, i);
+          logger.finer("Get chunk data: " + content_id + " " + i + " sz:" + chunk_data.size());
+          if ((chunk_data == null) || (chunk_data.size() == 0)) 
+          {
+            logger.warning("Missing chunk data: " + content_id + "/" + i);
+          }
           out.write(chunk_data.toByteArray());
         }
 
