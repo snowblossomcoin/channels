@@ -152,7 +152,11 @@ public class ChannelNode
     channel_outsider_sender.start();
 
     channel_subscriber.loadFromDB();
-    local_peer_finder.start();
+
+    if (!net_ex.isTorOnly())
+    {
+      local_peer_finder.start();
+    }
 
     if (config.isSet("web_port"))
     {

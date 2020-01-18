@@ -1,10 +1,16 @@
 package snowblossom.channels;
 
+import io.grpc.HttpConnectProxiedSocketAddress;
 import io.grpc.ManagedChannel;
+import io.grpc.ProxiedSocketAddress;
+import io.grpc.ProxyDetector;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import io.netty.handler.ssl.SslContext;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,11 +64,17 @@ public class PeerLink implements StreamObserver<PeerList>
       .trustManager(SnowTrustManagerFactorySpi.getFactory(remote_node_id))
     .build();
 
-    channel = NettyChannelBuilder
+    NettyChannelBuilder chan_builder = NettyChannelBuilder
       .forAddress(conn_info.getHost(), conn_info.getPort())
 			.useTransportSecurity()
-			.sslContext(ssl_ctx)
-      .build();
+			.sslContext(ssl_ctx);
+
+    if (conn_info.getProtocol().equals("onion"))
+    {
+      chan_builder = chan_builder.proxyDetector(new OnionProxyDetector());
+    }
+
+    channel = chan_builder.build();
 
     stargate_stub = StargateServiceGrpc.newStub(channel);
     stargate_blocking_stub = StargateServiceGrpc.newBlockingStub(channel);
@@ -112,7 +124,7 @@ public class PeerLink implements StreamObserver<PeerList>
        .build();
     }
 
-    if (net_ex.hasIpv6())
+    if (net_ex.canConnectToIpv6())
     {
       ConnectInfo conn_info = info.getConnectInfosMap().get("ipv6");
       if (conn_info != null)
@@ -121,13 +133,25 @@ public class PeerLink implements StreamObserver<PeerList>
       }
     }
 
-    if (net_ex.hasIpv4())
+    if (net_ex.canConnectToIpv4())
     {
       ConnectInfo conn_info = info.getConnectInfosMap().get("ipv4");
       if (conn_info != null)
       {
         return conn_info;
       }
+    }
+    if (net_ex.canConnectToTor())
+    {
+      ConnectInfo conn_info = info.getConnectInfosMap().get("onion");
+      if (conn_info != null) { return conn_info; }
+
+      // We can do anything via tor
+      conn_info = info.getConnectInfosMap().get("ipv6");
+      if (conn_info != null) { return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); }
+
+      conn_info = info.getConnectInfosMap().get("ipv4");
+      if (conn_info != null) { return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); }
     }
 
     return null;
@@ -184,6 +208,23 @@ public class PeerLink implements StreamObserver<PeerList>
     {
       node.getDHTServer().importPeer(sm);
     }
+  }
+
+  /**
+   * Doesn't detect so much as just uses the proxy
+   */
+  public class OnionProxyDetector implements ProxyDetector
+  {
+    @Override
+    public ProxiedSocketAddress proxyFor(SocketAddress targetServerAddress) 
+      throws IOException
+    {
+      return HttpConnectProxiedSocketAddress.newBuilder()
+        .setProxyAddress(node.getNetworkExaminer().getTorHttpRelay())
+        .setTargetAddress((InetSocketAddress) targetServerAddress)
+        .build();
+    }
+
   }
 
 }

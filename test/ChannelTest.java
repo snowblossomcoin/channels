@@ -40,6 +40,9 @@ public class ChannelTest
       node_a.getChannelDB(cid);
     }
 
+    // Give the DB a few seconds to settle
+    Thread.sleep(5000);
+
   }
 
 

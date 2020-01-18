@@ -3,7 +3,9 @@ package snowblossom.channels;
 import duckutil.NetUtil;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
+import java.net.SocketAddress;
 import java.net.NetworkInterface;
+import java.net.InetSocketAddress;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,32 +24,40 @@ public class NetworkExaminer
   private String onion_host;
   private ChannelNode node;
 
+  private InetSocketAddress tor_http_relay;
+
+  private final boolean tor_only;
+
 	public NetworkExaminer(ChannelNode node)
 	{
     this.node = node;
+
+    tor_only = node.getConfig().getBoolean("tor_only");
+
 		updateHosts();
 	}
-
-  
 
   // TODO - on failure of this, might want to use getAllAddresses().
   // Any non-link-local ipv6 address is a good bet for IPV6.
   // Any non-private ipv4 address is also probably good.
   private void updateHosts()
   {
+    
+    if(!isTorOnly())
+    {
+      try{
+        ipv4_host = NetUtil.getUrlLine("http://ipv4-lookup.snowblossom.org/myip");
+      }
+      catch(Throwable t){ipv4_host=null;}
 
-		try{
-			ipv4_host = NetUtil.getUrlLine("http://ipv4-lookup.snowblossom.org/myip");
-		}
-		catch(Throwable t){ipv4_host=null;}
+      try{
+        ipv6_host = NetUtil.getUrlLine("http://ipv6-lookup.snowblossom.org/myip");
+      }
+      catch(Throwable t){ipv6_host=null;}
 
-		try{
-			ipv6_host = NetUtil.getUrlLine("http://ipv6-lookup.snowblossom.org/myip");
-		}
-		catch(Throwable t){ipv6_host=null;}
-
-    logger.info("IPV4: " + ipv4_host);
-    logger.info("IPV6: " + ipv6_host);
+      logger.info("IPV4: " + ipv4_host);
+      logger.info("IPV6: " + ipv6_host);
+    }
 
     if (node.getConfig().isSet("tor_advertise"))
     {
@@ -62,14 +72,26 @@ public class NetworkExaminer
       }
     }
 
+    if (node.getConfig().isSet("tor_http_relay"))
+    {
+      String[] split = node.getConfig().get("tor_http_relay").split(":");
+      int port = Integer.parseInt(split[1]);
+      String host = split[0];
 
-    try
-    {
-      tryUpnp();
+      tor_http_relay = new InetSocketAddress(host, port);
+      logger.info("Tor HTTP relay: " + tor_http_relay);
     }
-    catch(Exception e)
+
+    if (!isTorOnly())
     {
-      logger.info("UPNP failure: " + e);
+      try
+      {
+        tryUpnp();
+      }
+      catch(Exception e)
+      {
+        logger.info("UPNP failure: " + e);
+      }
     }
   }
 
@@ -140,6 +162,18 @@ public class NetworkExaminer
 
   public boolean hasIpv4() { return ipv4_host != null; }
   public boolean hasIpv6() { return ipv6_host != null; }
+
+  public boolean canConnectToIpv4() {return hasIpv4();}
+  public boolean canConnectToIpv6() {return hasIpv6();}
+  public boolean canConnectToTor() { return tor_http_relay!=null;}
+
+  public InetSocketAddress getTorHttpRelay(){return tor_http_relay;}
+
+  public boolean isTorOnly()
+  {
+    return tor_only;
+  }
+
 
   public ChannelPeerInfo createPeerInfo()
   {
