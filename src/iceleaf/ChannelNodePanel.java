@@ -4,7 +4,6 @@ import duckutil.ConfigMem;
 import duckutil.PeriodicThread;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.TreeMap;
 import javax.swing.JButton;
@@ -16,15 +15,19 @@ import snowblossom.channels.BlockGenUtils;
 import snowblossom.channels.ChannelContext;
 import snowblossom.channels.ChannelGlobals;
 import snowblossom.channels.ChannelID;
+import snowblossom.channels.ChannelLink;
 import snowblossom.channels.ChannelNode;
 import snowblossom.channels.ChunkMapUtils;
 import snowblossom.channels.MiscUtils;
+import snowblossom.channels.PeerLink;
 import snowblossom.channels.SocksServer;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
+import snowblossom.iceleaf.ThreadActionListener;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.SystemUtil;
+import snowblossom.node.StatusInterface;
 
 public class ChannelNodePanel extends BasePanel
 {
@@ -132,7 +135,7 @@ public class ChannelNodePanel extends BasePanel
         sb.append("Local node ID: " + AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING,  node.getNodeID()));
         sb.append("\n");
 
-        sb.append("DHT peers: " + node.getPeerManager().getPeersWithReason("DHT").size());
+        sb.append("DHT peers: " + PeerLink.countActuallyOpen(node.getPeerManager().getPeersWithReason("DHT")));
         sb.append("\n");
         sb.append("Channels: " + node.getChannelSubscriber().getChannelSet().size());
         sb.append("\n");
@@ -151,7 +154,7 @@ public class ChannelNodePanel extends BasePanel
               sb.append("}");
               sb.append(String.format(" blocks:%d ", ctx.block_ingestor.getHead().getHeader().getBlockHeight()));
             }
-            sb.append(String.format("peers:%d ", ctx.getLinks().size()));
+            sb.append(String.format("peers:%d ", ChannelLink.countActuallyOpen(ctx.getLinks())));
             sb.append(String.format("missing_chunks:%d", ChunkMapUtils.getWantList(ctx).size()));
           }
           sb.append("\n");
@@ -201,6 +204,8 @@ public class ChannelNodePanel extends BasePanel
     config_map.put("wallet_path", ice_leaf_prefs.get("channel_wallet_path", null));
     config_map.put("db_separate","true");
     config_map.put("key_count", "1");
+    //config_map.put("tor_http_relay","localhost:9080");
+    //config_map.put("tor_only", "true");
 
     boolean autojoin = ice_leaf_prefs.getBoolean("auto_join", false);
 
@@ -226,9 +231,9 @@ public class ChannelNodePanel extends BasePanel
 
   }
 
-  public class CreateAction implements ActionListener
+  public class CreateAction extends ThreadActionListener
   {
-    public void actionPerformed(ActionEvent e)
+    public void threadActionPerformed(ActionEvent e)
     {
       try
       {
@@ -248,9 +253,9 @@ public class ChannelNodePanel extends BasePanel
     }
   }
 
-  public class ImportAction implements ActionListener
+  public class ImportAction extends ThreadActionListener implements StatusInterface
   {
-    public void actionPerformed(ActionEvent e)
+    public void threadActionPerformed(ActionEvent e)
     {
       try
       {
@@ -259,7 +264,7 @@ public class ChannelNodePanel extends BasePanel
         String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
         File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
 
-        BlockGenUtils.createBlockForFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, node.getWalletDB());
+        BlockGenUtils.createBlockForFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, node.getWalletDB(), this);
 
         setMessageBox("Channel files imported: " + cid);
       }
@@ -269,13 +274,18 @@ public class ChannelNodePanel extends BasePanel
       } 
 
     }
+    @Override
+    public void setStatus(String msg)
+    {
+      setMessageBox(msg);
+    }
   }
 
 
 
-  public class SubscribeAction implements ActionListener
+  public class SubscribeAction extends ThreadActionListener
   {
-    public void actionPerformed(ActionEvent e)
+    public void threadActionPerformed(ActionEvent e)
     {
       try
       {

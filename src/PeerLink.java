@@ -11,6 +11,7 @@ import io.netty.handler.ssl.SslContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,12 +44,14 @@ public class PeerLink implements StreamObserver<PeerList>
   
   private volatile boolean closed;
   private volatile long last_recv;
+  private final long open_time;
+  private String link_type;
 
   // We are the client
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
 		throws Exception
   {
-    last_recv = System.currentTimeMillis();
+    open_time = System.currentTimeMillis();
     this.node = node;
     this.info = info;
 
@@ -117,6 +120,7 @@ public class PeerLink implements StreamObserver<PeerList>
     if (disco != null)
     {
       logger.fine("Using disco: " + disco);
+      link_type = "mcast_disco";
       return ConnectInfo.newBuilder()
         .setHost(disco.getIpAddresses(0)) // The local peer finder trims the list to just the one we got this from
         .setPort(disco.getPort())
@@ -129,6 +133,7 @@ public class PeerLink implements StreamObserver<PeerList>
       ConnectInfo conn_info = info.getConnectInfosMap().get("ipv6");
       if (conn_info != null)
       {
+        link_type = "ipv6";
         return conn_info;
       }
     }
@@ -138,29 +143,63 @@ public class PeerLink implements StreamObserver<PeerList>
       ConnectInfo conn_info = info.getConnectInfosMap().get("ipv4");
       if (conn_info != null)
       {
+        link_type = "ipv4";
         return conn_info;
       }
     }
     if (net_ex.canConnectToTor())
     {
       ConnectInfo conn_info = info.getConnectInfosMap().get("onion");
-      if (conn_info != null) { return conn_info; }
+      if (conn_info != null) { link_type="onion"; return conn_info; }
 
       // We can do anything via tor
       conn_info = info.getConnectInfosMap().get("ipv6");
-      if (conn_info != null) { return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); }
+      if (conn_info != null) 
+      { 
+        link_type="ipv6/tor";
+        return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); 
+      }
 
       conn_info = info.getConnectInfosMap().get("ipv4");
-      if (conn_info != null) { return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); }
+      if (conn_info != null) 
+      { 
+        link_type="ipv4/tor";
+        return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); 
+      }
     }
 
     return null;
   }
 
+  /**
+   * Actually got messages from the remote side
+   */
+  public boolean isActuallyOpen()
+  {
+    return isGood() && (last_recv > 0L);
+  }
+
+  public static int countActuallyOpen(Collection<PeerLink> links)
+  {
+    int n = 0;
+    for(PeerLink link : links)
+    {
+      if (link.isActuallyOpen()) n++;
+    }
+    return n;
+
+  }
+
+  /**
+   * true if the link is good or at least hasn't expired yet.
+   * might not have actually gotten any messsages, might not be a real link
+   */
   public boolean isGood()
   {
 		if (closed) return false;
-		if (last_recv + ChannelGlobals.PEER_LINK_TIMEOUT < System.currentTimeMillis())
+    long tm = Math.max(last_recv, open_time);
+
+		if (tm + ChannelGlobals.PEER_LINK_TIMEOUT < System.currentTimeMillis())
 		{
 			return false;
 		}

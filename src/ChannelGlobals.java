@@ -3,7 +3,7 @@ package snowblossom.channels;
 
 public class ChannelGlobals
 {
-  public static final String VERSION = "dev.2020.01.16.03";
+  public static final String VERSION = "dev.2020.01.20.04";
 
   public static final String NODE_ADDRESS_STRING="node";
   public static final String CHANNEL_ADDRESS_STRING="chan";
@@ -13,7 +13,7 @@ public class ChannelGlobals
   public static final String MULTICAST_IPV4_ADDRESS="224.48.62.1";
 
   // Subject to change after I understand WTF https://tools.ietf.org/html/rfc7371 is on about
-  public static final String MULTICAST_IPV6_ADDRESS="FFFF::e030:3e01";
+  public static final String MULTICAST_IPV6_ADDRESS="FFFF::E030:3E01";
 
   public static final long ALLOWED_CLOCK_SKEW=45000; //ms
 
@@ -54,6 +54,7 @@ public class ChannelGlobals
   public static final long CONTENT_DATA_BLOCK_SIZE = 1048576L;
 
 }
+
 
 
 

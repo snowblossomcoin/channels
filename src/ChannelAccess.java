@@ -113,7 +113,7 @@ public class ChannelAccess
   public void createBlockForFiles(File base_path)
     throws ValidationException, java.io.IOException
   {
-    BlockGenUtils.createBlockForFiles(ctx, base_path, node.getWalletDB());
+    BlockGenUtils.createBlockForFiles(ctx, base_path, node.getWalletDB(), null);
   }
 
 

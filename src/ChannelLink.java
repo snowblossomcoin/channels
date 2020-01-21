@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import duckutil.ExpiringLRUCache;
 import io.grpc.stub.StreamObserver;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
@@ -30,6 +31,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
   private ChannelContext ctx;
   private ChannelID cid;
+  private final long open_time;
   private volatile long last_recv;
   private volatile boolean closed;
   private volatile ChannelTip last_tip;
@@ -54,7 +56,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 	public ChannelLink(ChannelNode node, StreamObserver<ChannelPeerMessage> sink)
 	{
     this.node = node;
-    last_recv = System.currentTimeMillis();
+    open_time = System.currentTimeMillis();
 		this.sink = sink;
     server_side = true;
     client_side = false;
@@ -67,7 +69,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   public ChannelLink(ChannelNode node, PeerLink peer_link, ChannelID cid, ChannelContext ctx)
   {
     this.node = node;
-    last_recv = System.currentTimeMillis();
+    open_time = System.currentTimeMillis();
     server_side = false;
     client_side = true;
     this.peer_link = peer_link;
@@ -98,6 +100,22 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     return peer_link.getNodeID();
   }
 
+  public boolean isActuallyOpen()
+  {
+    return isGood() && (last_recv > 0L);
+  }
+
+  public static int countActuallyOpen(Collection<ChannelLink> links)
+  {
+    int n = 0;
+    for(ChannelLink link : links)
+    {
+      if (link.isActuallyOpen()) n++;
+    }
+    return n;
+  }
+
+
   public boolean isGood()
   { 
     if (closed) return false;
@@ -105,7 +123,9 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 		{
 			if (!peer_link.isGood()) return false;
 		}
-    if (last_recv + ChannelGlobals.CHANNEL_LINK_TIMEOUT < System.currentTimeMillis())
+    long tm = Math.max(open_time, last_recv);
+
+    if (tm + ChannelGlobals.CHANNEL_LINK_TIMEOUT < System.currentTimeMillis())
     { 
       return false;
     }

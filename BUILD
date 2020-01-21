@@ -6,6 +6,7 @@ java_library(
   deps = [
     "@snowblossom//client:client",
     "@snowblossom//lib:lib",
+    "@snowblossom//node",
     "@snowblossom//iceleaf-ui:iceleaf",
     "@duckutil//:duckutil_lib",
     "@duckutil//:duckutil_jsonrpc_lib",

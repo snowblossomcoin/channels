@@ -13,9 +13,10 @@ import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
-import snowblossom.lib.ValidationException;
-import snowblossom.proto.WalletDatabase;
 import snowblossom.lib.Globals;
+import snowblossom.lib.ValidationException;
+import snowblossom.node.StatusInterface;
+import snowblossom.proto.WalletDatabase;
 
 public class BlockGenUtils
 {
@@ -197,12 +198,13 @@ public class BlockGenUtils
 
   }
 
-  public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin)
+  public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status)
     throws ValidationException, java.io.IOException
   {
+    
     while(true)
     {
-      if (createSingleBlockForFiles(ctx, base_path, admin)) return;
+      if (createSingleBlockForFiles(ctx, base_path, admin, status)) return;
     }
 
   }
@@ -210,7 +212,7 @@ public class BlockGenUtils
    * Creates a block for the files in the directory and broadcasts it to the channel
    * @return true if all files fit in one block, false if there are blocks to write
    */ 
-  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin)
+  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status)
     throws ValidationException, java.io.IOException
   {
     ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
@@ -230,8 +232,10 @@ public class BlockGenUtils
     ContentInfo.Builder file_map_ci = ContentInfo.newBuilder();
     file_map_ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(new byte[0])) );
 
+    if (status != null) status.setStatus("Adding files to block: " + header.getBlockHeight());
     boolean all_fit = addFiles(ctx, base_path, "", blk, file_map_ci, admin);
 
+    if (status != null) status.setStatus("Building block:" + header.getBlockHeight() );
     blk.addContent(
       ChannelSigUtil.signMessage( admin.getAddresses(0),admin.getKeys(0),
           SignedMessagePayload.newBuilder().setContentInfo(file_map_ci.build()).build()));
@@ -247,6 +251,7 @@ public class BlockGenUtils
     blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
+    if (status != null) status.setStatus("Ingesting block:" + header.getBlockHeight() );
     ctx.block_ingestor.ingestBlock(blk.build());
 
     return all_fit;
