@@ -204,8 +204,15 @@ public class ChannelNodePanel extends BasePanel
     config_map.put("wallet_path", ice_leaf_prefs.get("channel_wallet_path", null));
     config_map.put("db_separate","true");
     config_map.put("key_count", "1");
-    //config_map.put("tor_http_relay","localhost:9080");
-    //config_map.put("tor_only", "true");
+
+    if (ice_leaf_prefs.getBoolean("channel_tor_only", false))
+    {
+      config_map.put("tor_only", "true");
+    }
+    if (ice_leaf_prefs.getBoolean("channel_tor_http_proxy_enable", false))
+    {
+      config_map.put("tor_http_relay",ice_leaf_prefs.get("channel_tor_http_proxy", null));
+    }
 
     boolean autojoin = ice_leaf_prefs.getBoolean("auto_join", false);
 

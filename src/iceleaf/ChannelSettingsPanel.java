@@ -70,6 +70,21 @@ public class ChannelSettingsPanel extends BasePanel
       panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_socks5_port", "1080",8),c);
 
 
+      c.gridwidth = GridBagConstraints.REMAINDER;
+      panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Use Tor HTTP proxy", "channel_tor_http_proxy_enable", false), c);
+
+      c.gridwidth = 1;
+      panel.add(new JLabel("Tor HTTP Proxy"), c);
+      c.gridwidth = GridBagConstraints.REMAINDER;
+      panel.add(new PersistentComponentTextField(ice_leaf_prefs, "Tor HTTP Proxy", "channel_tor_http_proxy", "localhost:9080",70),c);
+
+      c.gridwidth = 1;
+      panel.add(new JLabel("Tor Hidden Service"), c);
+      c.gridwidth = GridBagConstraints.REMAINDER;
+      panel.add(new PersistentComponentTextField(ice_leaf_prefs, "Tor Hidden Service Host", "channel_tor_advertise", "",70),c);
+
+      c.gridwidth = GridBagConstraints.REMAINDER;
+      panel.add(new PersistentComponentCheckBox(ice_leaf_prefs, "Use only tor", "channel_tor_only", false), c);
 
 
       panel.add(new JLabel("NOTE: almost all changes here will require a restart to take effect.\n"),c);
