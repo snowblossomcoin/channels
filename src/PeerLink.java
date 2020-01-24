@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -187,6 +188,26 @@ public class PeerLink implements StreamObserver<PeerList>
       if (link.isActuallyOpen()) n++;
     }
     return n;
+  }
+
+  public static String getTypeSummary(Collection<PeerLink> links)
+  {
+    TreeMap<String, Integer> m = new TreeMap<>();
+
+    for(PeerLink link : links)
+    {
+      if (link.isActuallyOpen())
+      {
+        String t = link.link_type;
+        if (!m.containsKey(t))
+        {
+          m.put(t, 0);
+        }
+        m.put(t, m.get(t) + 1);
+      }
+    }
+
+    return m.toString();
 
   }
 

@@ -135,7 +135,11 @@ public class ChannelNodePanel extends BasePanel
         sb.append("Local node ID: " + AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING,  node.getNodeID()));
         sb.append("\n");
 
-        sb.append("DHT peers: " + PeerLink.countActuallyOpen(node.getPeerManager().getPeersWithReason("DHT")));
+        sb.append("DHT peers: " + 
+          PeerLink.countActuallyOpen(node.getPeerManager().getPeersWithReason("DHT"))
+          + " "
+          + PeerLink.getTypeSummary(node.getPeerManager().getPeersWithReason("DHT"))
+          );
         sb.append("\n");
         sb.append("Channels: " + node.getChannelSubscriber().getChannelSet().size());
         sb.append("\n");
