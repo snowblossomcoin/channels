@@ -11,6 +11,8 @@ import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
+import java.util.LinkedList;
+import java.util.Collections;
 
 /**
  * GRPC DHT server.  Some methods can also be called directly.  Whatever.
@@ -108,12 +110,12 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
     {
       DHTDataSet ds = storeDHTData(req);
       o.onNext(ds);
+      o.onCompleted();
     }
     catch(Throwable t)
     {
       o.onError(t);
     }
-    o.onCompleted();
   }
 
   
@@ -172,12 +174,12 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
     {
       DHTDataSet ds = getDHTData(req);
       o.onNext(ds);
+      o.onCompleted();
     }
     catch(Throwable t)
     {
       o.onError(t);
     }
-    o.onCompleted();
   }
 
 
@@ -216,14 +218,22 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
 
   }
 
-  // TODO - make return random results rather than first n
   public DHTDataSet getDHTLocal(ByteString target, int desired)
   {
     DHTDataSet.Builder set = DHTDataSet.newBuilder();
     if (desired > 0)
     {
-      Map<ByteString, SignedMessage> m = node.getDB().getDHTDataMap().getByPrefix(target, desired);
-      set.addAllDhtData(m.values());
+      Map<ByteString, SignedMessage> m = node.getDB().getDHTDataMap().getByPrefix(target, 100000);
+      LinkedList<SignedMessage> lst = new LinkedList<>();
+      lst.addAll(m.values());
+      Collections.shuffle(lst);
+
+      while(lst.size() > desired)
+      {
+        lst.pop();
+      }
+
+      set.addAllDhtData(lst);
     }
 
     return set.build();
