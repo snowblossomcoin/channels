@@ -296,6 +296,11 @@ public class DHTMaintainer extends PeriodicThread
         .setHost("snow-chan-tx1.snowblossom.org")
         .setPort(ChannelGlobals.NETWORK_PORT)
         .build())
+      .putConnectInfos("onion", ConnectInfo.newBuilder()
+        .setProtocol("onion")
+        .setHost("yfl3f6kjsgszmiy2yblc36dmd7djotzy2wcfv4tnzb732taf2awxs5id.onion")
+        .setPort(ChannelGlobals.NETWORK_PORT)
+        .build())
       .build());
 
     seed_list.add( ChannelPeerInfo.newBuilder()

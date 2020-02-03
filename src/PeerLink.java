@@ -22,6 +22,8 @@ import snowblossom.channels.proto.ChannelServiceGrpc.ChannelServiceStub;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
 import snowblossom.lib.AddressSpecHash;
+import duckutil.WeightedRandomSelector;
+
 
 /**
  * Mostly for DHT peering.  However, this peer link is also used for outbound
@@ -47,7 +49,7 @@ public class PeerLink implements StreamObserver<PeerList>
   private volatile long last_recv;
   private final long open_time;
   private String link_type;
-  private String link_remote;
+  private final String link_remote;
 
   // We are the client
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
@@ -64,6 +66,13 @@ public class PeerLink implements StreamObserver<PeerList>
     {
       throw new Exception("Unable to connect - no protocols in common");
     }
+    link_type = conn_info.getProtocol();
+    if (conn_info.getProtocol().equals("onion"))
+    if (!conn_info.getHost().endsWith(".onion"))
+    {
+      link_type = "onion/ip";
+    }
+
     link_remote = conn_info.toString().replaceAll("\n"," ");
 
     SslContext ssl_ctx = GrpcSslContexts.forClient()
@@ -104,10 +113,13 @@ public class PeerLink implements StreamObserver<PeerList>
 
   public ChannelServiceBlockingStub getChannelBlockingStub() {return channel_blocking_stub; }
   public ChannelServiceStub getChannelAsyncStub() {return channel_stub; }
+ 
   
 
   private ConnectInfo findConnectInfo()
   {
+    WeightedRandomSelector<ConnectInfo> selector = new WeightedRandomSelector();
+
     NetworkExaminer net_ex = node.getNetworkExaminer();
     LocalPeerDisco disco = node.getLocalPeerFinder().getDiscoCache(remote_node_id);
 
@@ -123,12 +135,12 @@ public class PeerLink implements StreamObserver<PeerList>
     if (disco != null)
     {
       logger.fine("Using disco: " + disco);
-      link_type = "mcast_disco";
-      return ConnectInfo.newBuilder()
+
+      selector.addItem(ConnectInfo.newBuilder()
         .setHost(disco.getIpAddresses(0)) // The local peer finder trims the list to just the one we got this from
         .setPort(disco.getPort())
         .setProtocol("mcast_disco") // If something reads this proto, something has gone wrong.  But setting it just in case.
-       .build();
+       .build(), 100);
     }
 
     if (net_ex.canConnectToIpv6())
@@ -136,8 +148,7 @@ public class PeerLink implements StreamObserver<PeerList>
       ConnectInfo conn_info = info.getConnectInfosMap().get("ipv6");
       if (conn_info != null)
       {
-        link_type = "ipv6";
-        return conn_info;
+        selector.addItem(conn_info, 25);
       }
     }
 
@@ -146,32 +157,32 @@ public class PeerLink implements StreamObserver<PeerList>
       ConnectInfo conn_info = info.getConnectInfosMap().get("ipv4");
       if (conn_info != null)
       {
-        link_type = "ipv4";
-        return conn_info;
+        selector.addItem(conn_info, 5);
       }
     }
     if (net_ex.canConnectToTor())
     {
       ConnectInfo conn_info = info.getConnectInfosMap().get("onion");
-      if (conn_info != null) { link_type="onion"; return conn_info; }
+      if (conn_info != null) 
+      { 
+        selector.addItem(conn_info, 5);
+      }
 
       // We can do anything via tor
       conn_info = info.getConnectInfosMap().get("ipv6");
       if (conn_info != null) 
       { 
-        link_type="ipv6/tor";
-        return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); 
+        selector.addItem(ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(), 5); 
       }
 
       conn_info = info.getConnectInfosMap().get("ipv4");
       if (conn_info != null) 
       { 
-        link_type="ipv4/tor";
-        return ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(); 
+        selector.addItem(ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(), 2); 
       }
     }
 
-    return null;
+    return selector.selectItem();
   }
 
   /**

@@ -132,6 +132,42 @@ message SignedMessagePayload {
   TxOutPoint fbo_utxo = 50;
 }
 
+
+message EncryptedMessage {
+  bytes payload = 1;
+  bytes key_id = 2; // Content id of message containing the encrypted_key_set
+}
+
+message EncryptedMessagePayload {
+  oneof z {
+    ContentInfo content_info = 1;
+  }
+  bytes padding = 50; // Optional extra padding data to obfuscate actual content size
+}
+
+// For each reader, this contains one key_info which maps the
+// address spec hash to the payload the private key for that spec hash will open
+// which will result in the symetric key
+message EncryptedKeySet {
+  repeated EncryptedKeyInfo key_infos = 1;
+  string algo = 2; 
+
+  // Optional - key of last encrypted key set encrypted
+  // encrypted with this new key so a reader just now given access can go back and read old data
+  bytes last_key_payload = 3; 
+}
+
+message EncryptedKeyInfo {
+  // Address hash to use for the private key to decrypt this
+  bytes address_hash = 1;
+
+  // SymmetricKey encrypted with this public-key
+  // expected to be a snowblossom.util.proto.SymmetricKey encrypted
+  // with the key pair for this address
+  bytes key_payload = 2;
+}
+
+
 message ChannelPeerInfo {
   map<string, ConnectInfo> connect_infos = 1;
   string version = 2;
@@ -220,8 +256,7 @@ message ChannelBlock {
 
 message ContentReference {
   bytes channel_id = 1;
-  bytes message_id = 2;
-
+  bytes message_id = 2; // Without a channel id, a reference is a refernce to the channel itself
 
   // These modes give nodes a clue about if the data referenced should be included
   // when mirroring the channel
@@ -270,6 +305,9 @@ message ContentInfo {
   // Any prefixes can be used, but it is recommented to use "chandata/" for channel specific
   // data as other prefixes with special handling may be added.
   map<string, bytes> chan_map_updates = 20;
+
+  EncryptedKeySet encrypted_key_set = 21;
+  EncryptedMessage encrypted_message = 22;
 }
 
 
