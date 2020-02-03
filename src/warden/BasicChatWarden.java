@@ -34,7 +34,6 @@ public class BasicChatWarden extends BaseWarden
       first_run=false;
       return;
     }
-    logger.info("Meow");    
     List<SignedMessage> content_list = channel_access.getOutsiderByTime(100, true);
 
     LinkedList<SignedMessage> to_include = new LinkedList<>();

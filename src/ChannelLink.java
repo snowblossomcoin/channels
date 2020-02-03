@@ -35,6 +35,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   private volatile long last_recv;
   private volatile boolean closed;
   private volatile ChannelTip last_tip;
+  private volatile ChannelBlockHeader last_header;
 
   private TreeMap<Long, ChainHash> peer_block_map = new TreeMap<Long, ChainHash>();
   private ExpiringLRUCache<ChainHash, BitSet> peer_chunks = new ExpiringLRUCache<>(10000, 30000L);
@@ -221,11 +222,12 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
         if (tip.getBlockHeader().getMessageId().size() > 0)
         {
-          this.last_tip = tip;
           
           ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, tip.getBlockHeader());
           ChainHash hash = new ChainHash(tip.getBlockHeader().getMessageId());
           logger.fine(String.format("Channel %s got tip from remote %d %s ", cid.asString(), header.getBlockHeight(), hash.toString()));
+          this.last_tip = tip;
+          this.last_header = header;
           considerChannelHeader(hash, header);
         }
       }
@@ -491,6 +493,30 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       return peer_chunks.get(content_id);
 
     }
+  }
+
+
+  @Override
+  public String toString()
+  {
+    StringBuilder sb = new StringBuilder();
+    if (peer_link == null)
+    {
+      sb.append( "server");
+    }
+    else
+    {
+      sb.append("client:" + peer_link.toString());
+    }
+    sb.append(" open:" + isActuallyOpen());
+
+    if (last_header != null)
+    {
+      sb.append( " height: " + last_header.getBlockHeight());
+    }
+
+    return sb.toString();
+
   }
 
 

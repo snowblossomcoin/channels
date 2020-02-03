@@ -47,6 +47,7 @@ public class PeerLink implements StreamObserver<PeerList>
   private volatile long last_recv;
   private final long open_time;
   private String link_type;
+  private String link_remote;
 
   // We are the client
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
@@ -63,6 +64,7 @@ public class PeerLink implements StreamObserver<PeerList>
     {
       throw new Exception("Unable to connect - no protocols in common");
     }
+    link_remote = conn_info.toString().replaceAll("\n"," ");
 
     SslContext ssl_ctx = GrpcSslContexts.forClient()
       .trustManager(SnowTrustManagerFactorySpi.getFactory(remote_node_id))
@@ -287,5 +289,11 @@ public class PeerLink implements StreamObserver<PeerList>
 
   }
 
+
+  @Override
+  public String toString()
+  {
+    return link_type + "/" + link_remote;
+  }
 }
 

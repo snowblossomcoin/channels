@@ -44,6 +44,9 @@ public class ChannelNodePanel extends BasePanel
   protected ChannelComboBox channel_import_box;
   protected JButton import_button;
 
+  protected ChannelComboBox channel_info_box;
+  protected JButton info_button;
+
   public ChannelNodePanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
@@ -96,6 +99,17 @@ public class ChannelNodePanel extends BasePanel
     import_button = new JButton("Import");
     import_button.addActionListener( new ImportAction());
     panel.add(import_button, c);
+
+    c.gridwidth = 1;
+    panel.add(new JLabel("Get channel info: "), c);
+    channel_info_box = new ChannelComboBox(this);
+    panel.add(channel_info_box, c);
+
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    info_button = new JButton("Info");
+    info_button.addActionListener( new InfoAction());
+    panel.add(info_button, c);
+
 
   }
 
@@ -278,6 +292,55 @@ public class ChannelNodePanel extends BasePanel
         BlockGenUtils.createBlockForFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, node.getWalletDB(), this);
 
         setMessageBox("Channel files imported: " + cid);
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(MiscUtils.printStackTrace(t));
+      } 
+
+    }
+    @Override
+    public void setStatus(String msg)
+    {
+      setMessageBox(msg);
+    }
+  }
+
+  public class InfoAction extends ThreadActionListener implements StatusInterface
+  {
+    public void threadActionPerformed(ActionEvent e)
+    {
+      try
+      {
+        ChannelID cid = ChannelID.fromString((String)channel_info_box.getSelectedItem());
+        ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Channel info: " + cid); sb.append('\n');
+
+        if (ctx != null)
+        {
+          if (ctx.block_ingestor.getHead() != null)
+          {
+            sb.append("{");
+            sb.append( HexUtil.getSafeString(ctx.block_ingestor.getHead().getEffectiveSettings().getDisplayName()));
+            sb.append("}");
+            sb.append(String.format(" blocks:%d ", ctx.block_ingestor.getHead().getHeader().getBlockHeight()));
+          }
+          sb.append(String.format("peers:%d ", ChannelLink.countActuallyOpen(ctx.getLinks())));
+          sb.append(String.format("missing_chunks:%d", ChunkMapUtils.getWantList(ctx).size()));
+          sb.append("\n");
+
+          sb.append("Peers:\n");
+          for(ChannelLink link : ctx.getLinks())
+          {
+            sb.append("  " + link);
+            sb.append("\n");
+          }
+        }
+
+
+        setMessageBox(sb.toString());
       }
       catch(Throwable t)
       {
