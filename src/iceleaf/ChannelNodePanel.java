@@ -234,6 +234,10 @@ public class ChannelNodePanel extends BasePanel
     {
       config_map.put("tor_http_relay",ice_leaf_prefs.get("channel_tor_http_proxy", null));
     }
+    if (ice_leaf_prefs.get("channel_tor_advertise", "").trim().length() > 0)
+    {
+      config_map.put("tor_advertise", ice_leaf_prefs.get("channel_tor_advertise", "").trim());
+    }
 
     boolean autojoin = ice_leaf_prefs.getBoolean("auto_join", false);
 
@@ -250,8 +254,6 @@ public class ChannelNodePanel extends BasePanel
       int socks_port = Integer.parseInt(ice_leaf_prefs.get("channel_socks5_port", null));
       int web_port = Integer.parseInt(ice_leaf_prefs.get("channel_web_port", null));
       new SocksServer(socks_port, "127.0.0.1", web_port);
-
-
     }
 
     setStatusBox("Node started");
