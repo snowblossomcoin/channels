@@ -5,6 +5,7 @@ import duckutil.PeriodicThread;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.util.LinkedList;
 import java.util.TreeMap;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -20,7 +21,9 @@ import snowblossom.channels.ChannelNode;
 import snowblossom.channels.ChunkMapUtils;
 import snowblossom.channels.MiscUtils;
 import snowblossom.channels.PeerLink;
+import snowblossom.channels.PrintUtil;
 import snowblossom.channels.SocksServer;
+import snowblossom.channels.proto.ChannelPeerInfo;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
 import snowblossom.iceleaf.ThreadActionListener;
@@ -336,6 +339,13 @@ public class ChannelNodePanel extends BasePanel
           {
             sb.append("  " + link);
             sb.append("\n");
+          }
+          sb.append("DHT Peers:\n");
+          LinkedList<ChannelPeerInfo> peer_infos = node.getChannelPeerMaintainer().getAllDHTPeers(cid);
+          for(ChannelPeerInfo info : peer_infos)
+          {
+            sb.append("  ");
+            sb.append(PrintUtil.print(info));
           }
         }
 

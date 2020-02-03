@@ -147,7 +147,21 @@ public class ChannelPeerMaintainer extends PeriodicThread
 
   }
 
-  private LinkedList<ChannelPeerInfo> getAllDHTPeers(ChannelID cid, List<ByteString> dht_element_lst, Set<AddressSpecHash> connected_set)
+  public LinkedList<ChannelPeerInfo> getAllDHTPeers(ChannelID cid)
+  {
+    return getAllDHTPeers(cid, new HashSet<AddressSpecHash>());
+  }
+  public LinkedList<ChannelPeerInfo> getAllDHTPeers(ChannelID cid, Set<AddressSpecHash> connected_set)
+  {
+    
+    // TODO - actually get head settings
+    ChannelSettings settings = null;
+    List<ByteString> dht_element_lst = node.getDHTStratUtil().getDHTLocations(cid, settings);
+
+    return getAllDHTPeers(cid, dht_element_lst, connected_set); 
+  }
+
+  public LinkedList<ChannelPeerInfo> getAllDHTPeers(ChannelID cid, List<ByteString> dht_element_lst, Set<AddressSpecHash> connected_set)
   {
     HashMap<ByteString, SignedMessagePayload> peer_map = new HashMap<>();
 
