@@ -163,7 +163,7 @@ public class NetworkExaminer
   public boolean hasIpv4() { return ipv4_host != null; }
   public boolean hasIpv6() { return ipv6_host != null; }
 
-  public boolean canConnectToIpv4() {return hasIpv4();}
+  public boolean canConnectToIpv4() {return !tor_only;}
   public boolean canConnectToIpv6() {return hasIpv6();}
   public boolean canConnectToTor() { return tor_http_relay!=null;}
 
