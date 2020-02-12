@@ -94,11 +94,6 @@ public class WebServer
             handleRoot(t);
             return;
           }
-          else
-          {
-            tokens.add("index.html");
-          }
-
         }
         if (cid != null)
         {
@@ -287,6 +282,10 @@ public class WebServer
         for(int i=0; i<tokens.size(); i++)
         {
           path += "/" + tokens.get(i);
+        }
+        if (t.getRequestURI().getPath().endsWith("/"))
+        {
+          path+= "/index.html";
         }
 
         ByteString content_id = ChanDataUtils.getData(ctx, path);
