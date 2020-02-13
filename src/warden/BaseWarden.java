@@ -54,6 +54,7 @@ public abstract class BaseWarden implements ChannelWatcherInterface
 
   public void onContent(ChannelID cid, SignedMessage sm)
   {
+    
 
   }
   

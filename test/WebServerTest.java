@@ -165,6 +165,7 @@ public class WebServerTest
     
     webport = rnd.nextInt(30000) + 10240;
     map.put("web_port", "" + webport);
+    map.put("use_need_peers", "false");
 
     return new ChannelNode(new ConfigMem(map));
 

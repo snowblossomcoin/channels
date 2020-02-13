@@ -331,6 +331,7 @@ public class ChannelNodePanel extends BasePanel
             sb.append( HexUtil.getSafeString(ctx.block_ingestor.getHead().getEffectiveSettings().getDisplayName()));
             sb.append("}");
             sb.append(String.format(" blocks:%d ", ctx.block_ingestor.getHead().getHeader().getBlockHeight()));
+            sb.append("Settings: " + ctx.block_ingestor.getHead().getEffectiveSettings());
           }
           sb.append(String.format("peers:%d ", ChannelLink.countActuallyOpen(ctx.getLinks())));
           sb.append(String.format("missing_chunks:%d", ChunkMapUtils.getWantList(ctx).size()));

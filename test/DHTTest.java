@@ -146,6 +146,7 @@ public class DHTTest
     Random rnd = new Random();
     int port = rnd.nextInt(30000) + 10240;
     map.put("port", "" + port);
+    map.put("use_need_peers", "false");
 
 
     return new ChannelNode(new ConfigMem(map));

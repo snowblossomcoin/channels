@@ -23,6 +23,11 @@ public class WardenSetup
       loadWarden(node, warden, cid);
 
     }
+    if (node.getConfig().getBoolean("support_need_peers"))
+    {
+      ChannelID cid = ChannelID.fromStringWithNames(ChannelGlobals.CHAN_NEED_PEERS, node);
+      loadWarden(node, ChannelGlobals.CHAN_NEED_PEERS_WARDEN, cid);
+    }
 
   }
 

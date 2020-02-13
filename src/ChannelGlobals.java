@@ -3,7 +3,7 @@ package snowblossom.channels;
 
 public class ChannelGlobals
 {
-  public static final String VERSION = "dev.2020.02.12.02";
+  public static final String VERSION = "dev.2020.02.13.02";
 
   public static final String NODE_ADDRESS_STRING="node";
   public static final String CHANNEL_ADDRESS_STRING="chan";
@@ -53,25 +53,12 @@ public class ChannelGlobals
 
   public static final long CONTENT_DATA_BLOCK_SIZE = 1048576L;
 
+  // Wait this long before requesting peers on a channel with no peers
+  public static final long NEED_PEERS_REQUEST_MS = 60000L;
+
+  // Special Channels
+
+  public static final String CHAN_NEED_PEERS = "chan:ej08g32tltwx56ayzceuq3afyv2qrs2qhkg4fnn9";
+  public static final String CHAN_NEED_PEERS_WARDEN = "snowblossom.channels.warden.NeedPeersWarden";
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -248,7 +248,8 @@ public class ChannelValidation
     {
       throw new ValidationException("Invalid channel id in reference");
     }
-    if (ref.getMessageId().size() != Globals.BLOCKCHAIN_HASH_LEN)
+
+    if ((ref.getMessageId().size() != Globals.BLOCKCHAIN_HASH_LEN) && (ref.getMessageId().size() != 0))
     {
       throw new ValidationException("Invalid message id in reference");
     }

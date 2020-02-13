@@ -3,6 +3,7 @@ package snowblossom.channels;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import duckutil.PeriodicThread;
+import duckutil.ExpiringLRUCache;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,10 +14,13 @@ import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
+import snowblossom.lib.DigestUtil;
 import snowblossom.lib.ValidationException;
+import snowblossom.proto.WalletDatabase;
 
 /**
- * For each channel we are subscribed to, maintains links, updated dht data
+ * For each channel we are subscribed to, maintains links, updated dht data,
+ * request more peers
  */
 public class ChannelPeerMaintainer extends PeriodicThread
 {
@@ -29,7 +33,12 @@ public class ChannelPeerMaintainer extends PeriodicThread
   private static final int DESIRED_CHANNEL_PEERS = 7;
   private static final int CONNECT_CHANNEL_PEERS_PER_PASS = 2;
 
+  private ExpiringLRUCache<ChannelID, Boolean> need_peer_req_cache = new ExpiringLRUCache<>(2000, ChannelGlobals.NEED_PEERS_REQUEST_MS);
+
   private boolean first_pass_done;
+
+  private final long peering_start_time;
+  private final boolean use_need_peers;
 
   public ChannelPeerMaintainer(ChannelNode node)
   {
@@ -37,7 +46,19 @@ public class ChannelPeerMaintainer extends PeriodicThread
     setName("ChannelPeerMaintainer");
     setDaemon(false);
 
+    peering_start_time = System.currentTimeMillis();
+
     this.node = node;
+
+    if (node.getConfig().isSet("use_need_peers"))
+    {
+      use_need_peers = node.getConfig().getBoolean("use_need_peers");
+    }
+    else
+    {
+      use_need_peers = true;
+    }
+
   }
 
   // Things to do for each channel:
@@ -64,8 +85,26 @@ public class ChannelPeerMaintainer extends PeriodicThread
       ctx.prune();
       List<ChannelLink> links = ctx.getLinks();
 
-      // TODO - actually get head settings
+      int good_link_count = ChannelLink.countActuallyOpen(links);
+
+      if (use_need_peers)
+      if (good_link_count == 0) // There are no good links
+      if (ctx.block_ingestor.getHead() != null) // We have at least one block
+      if (System.currentTimeMillis() > peering_start_time + ChannelGlobals.NEED_PEERS_REQUEST_MS) // It has been a little while
+      {
+        // Then ask for more peers
+        if (need_peer_req_cache.get(cid) == null)
+        {
+          requestNeedPeers(cid, ctx);
+          need_peer_req_cache.put(cid, true);
+        }
+      }
+
       ChannelSettings settings = null;
+      if (ctx.block_ingestor.getHead() != null)
+      {
+        settings = ctx.block_ingestor.getHead().getEffectiveSettings();
+      }
       List<ByteString> dht_element_lst = node.getDHTStratUtil().getDHTLocations(cid, settings);
 
       // TODO - only bother doing the save once the DHT peering is up and running reasonably
@@ -195,6 +234,32 @@ public class ChannelPeerMaintainer extends PeriodicThread
     return lst;
   }
 
+  private void requestNeedPeers(ChannelID cid, ChannelContext ctx)
+    throws ValidationException
+  {
+    logger.info("Requesitng more peers for: " + cid);
+
+    ChannelID cid_need_peers = ChannelID.fromStringWithNames(ChannelGlobals.CHAN_NEED_PEERS, node);
+    ChannelContext ctx_need_peers = node.getChannelSubscriber().openChannel(cid_need_peers);
+
+    ContentInfo.Builder ci = ContentInfo.newBuilder();
+    ci.addBroadcastChannelIds(cid_need_peers.getBytes());
+    ci.setParentRef( 
+      ContentReference.newBuilder()
+        .setChannelId(cid.getBytes())
+        .setRefMode( ContentReference.ReferenceMode.DIRECT).build());
+
+    ci.setContentHash( ByteString.copyFrom( DigestUtil.getMD().digest( ci.getContent().toByteArray() ) ) );
+
+    WalletDatabase wdb = node.getWalletDB();
+    SignedMessagePayload.Builder payload = SignedMessagePayload.newBuilder();
+    payload.setContentInfo(ci.build());
+
+    SignedMessage sm = ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),
+          payload.build());
+    ctx_need_peers.block_ingestor.ingestContent(sm);
+
+  }
 
 }
 

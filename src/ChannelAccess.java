@@ -124,6 +124,11 @@ public class ChannelAccess
     throws ValidationException
   {
     BlockGenUtils.createBlockForSettings(ctx, new_settings, node.getWalletDB());
+  }
+
+  public ChannelAccess openOtherChannel(ChannelID cid)
+  {
+    return new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid));
 
   }
 
