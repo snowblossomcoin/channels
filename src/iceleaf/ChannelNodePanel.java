@@ -13,6 +13,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import snowblossom.channels.BlockGenUtils;
+import snowblossom.channels.BlockReadUtils;
 import snowblossom.channels.ChannelContext;
 import snowblossom.channels.ChannelGlobals;
 import snowblossom.channels.ChannelID;
@@ -46,6 +47,9 @@ public class ChannelNodePanel extends BasePanel
 
   protected ChannelComboBox channel_import_box;
   protected JButton import_button;
+
+  protected ChannelComboBox channel_export_box;
+  protected JButton export_button;
 
   protected ChannelComboBox channel_info_box;
   protected JButton info_button;
@@ -102,6 +106,17 @@ public class ChannelNodePanel extends BasePanel
     import_button = new JButton("Import");
     import_button.addActionListener( new ImportAction());
     panel.add(import_button, c);
+
+    c.gridwidth = 1;
+    panel.add(new JLabel("Export files from channel: "), c);
+    channel_export_box = new ChannelComboBox(this);
+    panel.add(channel_export_box, c);
+
+    c.gridwidth = GridBagConstraints.REMAINDER;
+    export_button = new JButton("Export");
+    export_button.addActionListener( new ExportAction());
+    panel.add(export_button, c);
+
 
     c.gridwidth = 1;
     panel.add(new JLabel("Get channel info: "), c);
@@ -295,8 +310,6 @@ public class ChannelNodePanel extends BasePanel
         File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
 
         BlockGenUtils.createBlockForFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, node.getWalletDB(), this);
-
-        setMessageBox("Channel files imported: " + cid);
       }
       catch(Throwable t)
       {
@@ -310,6 +323,33 @@ public class ChannelNodePanel extends BasePanel
       setMessageBox(msg);
     }
   }
+
+  public class ExportAction extends ThreadActionListener implements StatusInterface
+  {
+    public void threadActionPerformed(ActionEvent e)
+    {
+      try
+      {
+        ChannelID cid = ChannelID.fromString((String)channel_export_box.getSelectedItem());
+
+        String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
+        File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
+
+        BlockReadUtils.extractFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, this);
+      }
+      catch(Throwable t)
+      {
+        setMessageBox(MiscUtils.printStackTrace(t));
+      } 
+
+    }
+    @Override
+    public void setStatus(String msg)
+    {
+      setMessageBox(msg);
+    }
+  }
+
 
   public class InfoAction extends ThreadActionListener implements StatusInterface
   {

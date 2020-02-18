@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
@@ -20,6 +21,8 @@ import snowblossom.proto.WalletDatabase;
 
 public class BlockGenUtils
 {
+  private static final Logger logger = Logger.getLogger("snowblossom.channels");
+
   /** Creates a new channel and publishes block 0 for it */
   public static ChannelID createChannel(ChannelNode node, WalletDatabase admin, String display_name)
 		throws ValidationException
@@ -201,18 +204,24 @@ public class BlockGenUtils
   public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status)
     throws ValidationException, java.io.IOException
   {
-    
+    if (status == null) status = new DummyStatusInterface();
+
+    ProcessStatus ps = new ProcessStatus();
+    ps.set("cid", ctx.cid.toString());
+    ps.set("path", base_path.toString());
     while(true)
     {
-      if (createSingleBlockForFiles(ctx, base_path, admin, status)) return;
+      status.setStatus("Importing files: " + ps.getStatusLine());
+      if (createSingleBlockForFiles(ctx, base_path, admin, status, ps)) break;
     }
-
+    status.setStatus("Import complete: " + ps.getStatusLine());
   }
+
   /**
    * Creates a block for the files in the directory and broadcasts it to the channel
    * @return true if all files fit in one block, false if there are blocks to write
    */ 
-  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status)
+  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status, ProcessStatus ps)
     throws ValidationException, java.io.IOException
   {
     ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
@@ -232,10 +241,8 @@ public class BlockGenUtils
     ContentInfo.Builder file_map_ci = ContentInfo.newBuilder();
     file_map_ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(new byte[0])) );
 
-    if (status != null) status.setStatus("Adding files to block: " + header.getBlockHeight());
-    boolean all_fit = addFiles(ctx, base_path, "", blk, file_map_ci, admin);
+    boolean all_fit = addFiles(ctx, base_path, "", blk, file_map_ci, admin, status, ps);
 
-    if (status != null) status.setStatus("Building block:" + header.getBlockHeight() );
     blk.addContent(
       ChannelSigUtil.signMessage( admin.getAddresses(0),admin.getKeys(0),
           SignedMessagePayload.newBuilder().setContentInfo(file_map_ci.build()).build()));
@@ -251,7 +258,7 @@ public class BlockGenUtils
     blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-    if (status != null) status.setStatus("Ingesting block:" + header.getBlockHeight() );
+    ps.add("blocks_added");
     ctx.block_ingestor.ingestBlock(blk.build());
 
     return all_fit;
@@ -262,7 +269,8 @@ public class BlockGenUtils
    * @return true iff we were able to add all files
    */
   private static boolean addFiles(ChannelContext ctx, File path, 
-    String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig)
+    String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig,
+    StatusInterface status, ProcessStatus ps)
     throws ValidationException, java.io.IOException
   {
     if (blk.build().toByteString().size() + file_map_ci.build().toByteString().size() > Globals.MAX_BLOCK_SIZE*3/4) return false;
@@ -271,7 +279,7 @@ public class BlockGenUtils
     {
       for(File f : path.listFiles())
       {
-        boolean res = addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig);
+        boolean res = addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig, status, ps);
         if (!res) return false;
       }
     }
@@ -280,6 +288,7 @@ public class BlockGenUtils
       long len = path.length();
       ContentInfo.Builder ci = ContentInfo.newBuilder();
       ci.setContentLength(len);
+
 
       String mime = Mimer.guessContentType(path.getName());
       if (mime != null)
@@ -332,6 +341,7 @@ public class BlockGenUtils
           SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
 
       blk.addContent(sm);
+      ps.add("files_saved");
       file_map_ci.putChanMapUpdates("/web" + prefix, sm.getMessageId());
 
       din = new DataInputStream(new FileInputStream(path));
@@ -352,6 +362,9 @@ public class BlockGenUtils
             .setChunkData(ByteString.copyFrom(b))
             .build()
           ,true, ci.build());
+        ps.add("chunks_saved");
+        ps.add("total_bytes_saved", read_len);
+        status.setStatus("Importing files: " + ps.getStatusLine());
 
         chunk_count++;
       }

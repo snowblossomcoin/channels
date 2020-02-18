@@ -360,26 +360,7 @@ public class WebServer
 
       t.sendResponseHeaders(code, ci.getContentLength());
       OutputStream out = t.getResponseBody();
-      if (using_chunks)
-      {
-        int total_chunks = MiscUtils.getNumberOfChunks(ci);
-
-        for(int i=0; i<total_chunks; i++)
-        {
-          ByteString chunk_data = ChunkMapUtils.getChunk(ctx, content_id, i);
-          logger.finer("Get chunk data: " + content_id + " " + i + " sz:" + chunk_data.size());
-          if ((chunk_data == null) || (chunk_data.size() == 0)) 
-          {
-            logger.warning("Missing chunk data: " + content_id + "/" + i);
-          }
-          out.write(chunk_data.toByteArray());
-        }
-
-      }
-      else
-      {
-        out.write(ci.getContent().toByteArray());
-      }
+      BlockReadUtils.streamContentOut(ctx, content_id, ci, out);
       out.close();
 
     }

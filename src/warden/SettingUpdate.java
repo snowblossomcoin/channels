@@ -31,13 +31,15 @@ public class SettingUpdate extends BaseWarden
       admins.add(new AddressSpecHash(a));
     }
 
-    AddressSpecHash node = new AddressSpecHash("node:nrv6sye630dmf0zlcnj3958nzkr8w988duk0x6n6", "node");
+    // Fireduck key
+    AddressSpecHash node = new AddressSpecHash("node:3usv5u30e0wt7q4r69upxz0z3dc6x7fl0ktncc5c", "node");
 
     if (!admins.contains(node))
     {
+      logger.info("Updating channel settings");
       channel_access.updateSettings( ChannelSettings.newBuilder().mergeFrom(current_settings).addAdminSignerSpecHashes(node.getBytes()).build() );
-
     }
+
 
 
 
