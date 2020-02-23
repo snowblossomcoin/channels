@@ -2,8 +2,8 @@ package snowblossom.channels;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
-import duckutil.PeriodicThread;
 import duckutil.ExpiringLRUCache;
+import duckutil.PeriodicThread;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,7 +16,6 @@ import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.ValidationException;
-import snowblossom.proto.WalletDatabase;
 
 /**
  * For each channel we are subscribed to, maintains links, updated dht data,
@@ -169,7 +168,7 @@ public class ChannelPeerMaintainer extends PeriodicThread
     {
       if (!node.getDHTCache().haveWritten(element_id))
       {
-      	SignedMessage sm = node.signMessage(SignedMessagePayload.newBuilder()
+      	SignedMessage sm = node.signMessageNode(SignedMessagePayload.newBuilder()
         	.setDhtData( DHTData.newBuilder().setElementId(element_id).setPeerInfo(my_info).build() )
         	.build());
 
@@ -251,12 +250,10 @@ public class ChannelPeerMaintainer extends PeriodicThread
 
     ci.setContentHash( ByteString.copyFrom( DigestUtil.getMD().digest( ci.getContent().toByteArray() ) ) );
 
-    WalletDatabase wdb = node.getWalletDB();
     SignedMessagePayload.Builder payload = SignedMessagePayload.newBuilder();
     payload.setContentInfo(ci.build());
 
-    SignedMessage sm = ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),
-          payload.build());
+    SignedMessage sm = node.signMessageNode( payload.build() );
     ctx_need_peers.block_ingestor.ingestContent(sm);
 
   }

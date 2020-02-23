@@ -166,7 +166,7 @@ public class ApiUtils
   }
 
   /**
-   * Take a JSON object and convert it into a ContentInfo and sign it with this node's key
+   * Take a JSON object and convert it into a ContentInfo and sign it with this user's key
    */
   public static SignedMessage getContentFromJson(JSONObject input, ChannelNode node, ChannelContext ctx)
 		throws Exception
@@ -202,7 +202,7 @@ public class ApiUtils
 
 		ci.setContentHash( ByteString.copyFrom( DigestUtil.getMD().digest( ci.getContent().toByteArray() ) ) );
    
-		WalletDatabase wdb = node.getWalletDB();
+		WalletDatabase wdb = node.getUserWalletDB();
 
     TxOutPoint fbo_out = getFboOutpoint(node, wdb.getAddresses(0));
     //System.out.println("FBO OUT: " + fbo_out);
@@ -245,7 +245,7 @@ public class ApiUtils
 
     }
 
-    BlockGenUtils.createBlockForContent(ctx, content,  node.getWalletDB());
+    BlockGenUtils.createBlockForContent(ctx, content,  node.getUserWalletDB());
   }
 
   public static void submitFileBlock(InputStream in, ChannelNode node, ChannelContext ctx)
@@ -257,7 +257,7 @@ public class ApiUtils
 
     ci_proto.putContentDataMap("blog_entry", ByteString.copyFrom("true".getBytes()));
 
-    BlockGenUtils.createBlockForFilesMultipart(ctx, ms, node.getWalletDB(), ci_proto.build()); 
+    BlockGenUtils.createBlockForFilesMultipart(ctx, ms, node.getUserWalletDB(), ci_proto.build()); 
 
   }
 
@@ -321,7 +321,7 @@ public class ApiUtils
       allowed_signers.addAll(settings.getBlockSignerSpecHashesList());
       allowed_signers.addAll(settings.getAdminSignerSpecHashesList());
 
-		  WalletDatabase wdb = node.getWalletDB();
+		  WalletDatabase wdb = node.getUserWalletDB();
 
       AddressSpec addr = wdb.getAddresses(0);
 

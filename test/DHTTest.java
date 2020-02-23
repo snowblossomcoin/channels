@@ -77,7 +77,7 @@ public class DHTTest
       ByteString id = ByteString.copyFrom(id_bytes);
 
 
-      SignedMessage sm = node_a.signMessage(SignedMessagePayload.newBuilder()
+      SignedMessage sm = node_a.signMessageNode(SignedMessagePayload.newBuilder()
         .setDhtData( DHTData.newBuilder().setElementId(id).setPeerInfo(my_info).build() )
         .build());
 

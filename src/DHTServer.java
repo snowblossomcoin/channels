@@ -99,7 +99,7 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
   {
     SignedMessagePayload.Builder p = SignedMessagePayload.newBuilder();
     p.setPeerInfo( node.getNetworkExaminer().createPeerInfo() );
-    SignedMessage spi = node.signMessage(p.build());
+    SignedMessage spi = node.signMessageNode(p.build());
     return spi;
   }
 

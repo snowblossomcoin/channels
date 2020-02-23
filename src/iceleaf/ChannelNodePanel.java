@@ -166,6 +166,8 @@ public class ChannelNodePanel extends BasePanel
 
         sb.append("Local node ID: " + AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING,  node.getNodeID()));
         sb.append("\n");
+        sb.append("Local user ID: " + AddressUtil.getAddressString( ChannelGlobals.NODE_ADDRESS_STRING,  node.getUserID()));
+        sb.append("\n");
 
         sb.append("DHT peers: " + 
           PeerLink.countActuallyOpen(node.getPeerManager().getPeersWithReason("DHT"))
@@ -237,7 +239,8 @@ public class ChannelNodePanel extends BasePanel
     config_map.put("web_port", ice_leaf_prefs.get("channel_web_port", null));
 
     config_map.put("db_path", ice_leaf_prefs.get("channel_db_path", null));
-    config_map.put("wallet_path", ice_leaf_prefs.get("channel_wallet_path", null));
+    config_map.put("node_wallet_path", ice_leaf_prefs.get("channel_node_wallet_path", null));
+    config_map.put("user_wallet_path", ice_leaf_prefs.get("channel_user_wallet_path", null));
     config_map.put("db_separate","true");
     config_map.put("key_count", "1");
 
@@ -282,7 +285,7 @@ public class ChannelNodePanel extends BasePanel
     {
       try
       {
-        ChannelID cid = BlockGenUtils.createChannel(node, node.getWalletDB(), create_chan_field.getText().trim());
+        ChannelID cid = BlockGenUtils.createChannel(node, node.getUserWalletDB(), create_chan_field.getText().trim());
 
         String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
         File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
@@ -309,7 +312,11 @@ public class ChannelNodePanel extends BasePanel
         String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
         File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
 
-        BlockGenUtils.createBlockForFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, node.getWalletDB(), this);
+        BlockGenUtils.createBlockForFiles( 
+          node.getChannelSubscriber().openChannel(cid), 
+          channel_upload_path, 
+          node.getUserWalletDB(), 
+          this);
       }
       catch(Throwable t)
       {

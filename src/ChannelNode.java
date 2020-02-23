@@ -32,7 +32,8 @@ public class ChannelNode
 
   private Config config;
   private StubHolder stub_holder;
-  private WalletDatabase wallet_db;
+  private WalletDatabase node_wallet_db;
+  private WalletDatabase user_wallet_db;
   private NetworkParams params;
   private ChannelsDB db;
   private NetworkExaminer net_ex;
@@ -91,22 +92,10 @@ public class ChannelNode
 
     this.autojoin = config.getBoolean("autojoin");
 
-    config.require("wallet_path");
-
-    File wallet_path = new File(config.get("wallet_path"));
-
     params = NetworkParams.loadFromConfig(config);
-
     logger.info("Starting: " + ChannelGlobals.VERSION);
 
-    wallet_db = WalletUtil.loadWallet(wallet_path, true, params);
-    if (wallet_db == null)
-    { 
-      logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", wallet_path.getPath()));
-      wallet_db = WalletUtil.makeNewDatabase(config, params);
-      WalletUtil.saveWallet(wallet_db, wallet_path);
-    }
-
+    loadWallets();
 		String db_type = config.get("db_type");
 
     if((db_type==null) || (db_type.equals("rocksdb")))
@@ -178,6 +167,57 @@ public class ChannelNode
         getChannelSubscriber().openChannel(ChannelID.fromStringWithNames(s, this));
       }
     }
+  }
+
+
+  /**
+   * The objective after this block is that both node_wallet_db and user_wallet_db
+   * are set to something.
+   */
+  private void loadWallets()
+    throws Exception
+  {
+    File wallet_path = null;
+    File node_wallet_path = null;
+    File user_wallet_path = null;
+
+    if (config.isSet("wallet_path")) { wallet_path = new File(config.get("wallet_path")); }
+    if (config.isSet("node_wallet_path")) { node_wallet_path = new File(config.get("node_wallet_path")); }
+    if (config.isSet("user_wallet_path")) { user_wallet_path = new File(config.get("user_wallet_path")); }
+  
+    if (node_wallet_path == null)
+    {
+      node_wallet_path = wallet_path;
+    }
+    if (user_wallet_path == null)
+    {
+      user_wallet_path = wallet_path;
+    }
+
+    if (user_wallet_path == null)
+    {
+      throw new RuntimeException("Must specify 'user_wallet_path' or 'wallet_path'");
+    }
+    if (node_wallet_path == null)
+    {
+      throw new RuntimeException("Must specify 'node_wallet_path' or 'wallet_path'");
+    }
+
+    user_wallet_db = WalletUtil.loadWallet(user_wallet_path, true, params);
+    if (user_wallet_db == null)
+    { 
+      logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", user_wallet_path.getPath()));
+      user_wallet_db = WalletUtil.makeNewDatabase(config, params);
+      WalletUtil.saveWallet(user_wallet_db, user_wallet_path);
+    }
+
+    node_wallet_db = WalletUtil.loadWallet(node_wallet_path, true, params);
+    if (node_wallet_db == null)
+    { 
+      logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", node_wallet_path.getPath()));
+      node_wallet_db = WalletUtil.makeNewDatabase(config, params);
+      WalletUtil.saveWallet(node_wallet_db, node_wallet_path);
+    }
 
   }
   public int getPort()
@@ -214,7 +254,7 @@ public class ChannelNode
       .forPort(port)
       .addService(dht_server)
       .addService(channel_peer_server)
-      .sslContext(CertGen.getServerSSLContext(wallet_db))
+      .sslContext(CertGen.getServerSSLContext(node_wallet_db))
       .build();
     s.start();
 
@@ -231,21 +271,27 @@ public class ChannelNode
   public ChannelTipSender getChannelTipSender(){ return channel_tip_sender;}
   public ChannelChunkGetter getChannelChunkGetter(){ return channel_chunk_getter;}
   public Config getConfig(){ return config;}
-  public WalletDatabase getWalletDB() {return wallet_db; }
+  public WalletDatabase getNodeWalletDB() {return node_wallet_db; }
+  public WalletDatabase getUserWalletDB() {return user_wallet_db; }
   public StubHolder getStubHolder() {return stub_holder; }
   public LocalPeerFinder getLocalPeerFinder() {return local_peer_finder;}
   public boolean getAutoJoin(){ return autojoin;}
 
   public AddressSpecHash getNodeID()
   {
-    AddressSpec spec = wallet_db.getAddresses(0);
+    AddressSpec spec = node_wallet_db.getAddresses(0);
+    return AddressUtil.getHashForSpec(spec); 
+  }
+  public AddressSpecHash getUserID()
+  {
+    AddressSpec spec = user_wallet_db.getAddresses(0);
     return AddressUtil.getHashForSpec(spec); 
   }
 
-  public SignedMessage signMessage(SignedMessagePayload starting_payload)
+  public SignedMessage signMessageNode(SignedMessagePayload starting_payload)
     throws ValidationException
   {
-    return ChannelSigUtil.signMessage( wallet_db.getAddresses(0), wallet_db.getKeys(0), starting_payload);
+    return ChannelSigUtil.signMessage( node_wallet_db.getAddresses(0), node_wallet_db.getKeys(0), starting_payload);
 
   }
 

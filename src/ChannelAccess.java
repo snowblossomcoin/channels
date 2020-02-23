@@ -86,7 +86,7 @@ public class ChannelAccess
 	public void createBlockWithContent(List<SignedMessage> content)
     throws ValidationException
   {
-    BlockGenUtils.createBlockForContent(ctx, content, node.getWalletDB());
+    BlockGenUtils.createBlockForContent(ctx, content, node.getUserWalletDB());
   }
 
   /**
@@ -101,8 +101,8 @@ public class ChannelAccess
     {
       SignedMessage sm = 
         ChannelSigUtil.signMessage(
-          node.getWalletDB().getAddresses(0), 
-          node.getWalletDB().getKeys(0), 
+          node.getUserWalletDB().getAddresses(0), 
+          node.getUserWalletDB().getKeys(0), 
           SignedMessagePayload.newBuilder().setContentInfo(ci).build());
       lst.add(sm);
     }
@@ -113,7 +113,7 @@ public class ChannelAccess
   public void createBlockForFiles(File base_path)
     throws ValidationException, java.io.IOException
   {
-    BlockGenUtils.createBlockForFiles(ctx, base_path, node.getWalletDB(), null);
+    BlockGenUtils.createBlockForFiles(ctx, base_path, node.getUserWalletDB(), null);
   }
 
 
@@ -123,7 +123,7 @@ public class ChannelAccess
   public void updateSettings(ChannelSettings new_settings)
     throws ValidationException
   {
-    BlockGenUtils.createBlockForSettings(ctx, new_settings, node.getWalletDB());
+    BlockGenUtils.createBlockForSettings(ctx, new_settings, node.getUserWalletDB());
   }
 
   public ChannelAccess openOtherChannel(ChannelID cid)

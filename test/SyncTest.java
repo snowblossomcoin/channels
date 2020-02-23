@@ -42,7 +42,7 @@ public class SyncTest
     
     Thread.sleep(500);
 
-    ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getWalletDB(), "sync-test");
+    ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getUserWalletDB(), "sync-test");
 
     ChannelAccess a_a = new ChannelAccess(node_a, node_a.getChannelSubscriber().openChannel(cid));
     ChannelAccess a_b = new ChannelAccess(node_b, node_b.getChannelSubscriber().openChannel(cid));

@@ -76,7 +76,7 @@ public class LocalPeerFinder
       String msg = "hello";
      	SignedMessagePayload.Builder p = SignedMessagePayload.newBuilder();
      	p.setPeerInfo( node.getNetworkExaminer().createPeerInfo() );
-	    SignedMessage signed_peer_info = node.signMessage(p.build());
+	    SignedMessage signed_peer_info = node.signMessageNode(p.build());
 
       LocalPeerDisco.Builder lpd = LocalPeerDisco.newBuilder();
       lpd.setSignedPeerInfo(signed_peer_info);
@@ -87,7 +87,7 @@ public class LocalPeerFinder
         lpd.addIpAddresses(ia.getHostAddress());
       }
 
-      SignedMessage signed_local = node.signMessage(
+      SignedMessage signed_local = node.signMessageNode(
         SignedMessagePayload.newBuilder().setLocalPeerDisco(lpd.build()).build()
         );
 

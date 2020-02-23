@@ -34,11 +34,25 @@ public class ChannelSettingsPanel extends BasePanel
 			File default_channel_db_path = new File(SystemUtil.getNodeDataDirectory(params), "channel_db");
 			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_db_path", default_channel_db_path.toString(),70),c);
 
+
+      String existing_wallet_path = ice_leaf_prefs.get("channel_wallet_path", null);
+      String default_channel_node_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "channel_node_wallet").toString();
+      String default_channel_user_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "channel_user_wallet").toString();
+      if (existing_wallet_path!=null)
+      {
+        default_channel_node_wallet_path = existing_wallet_path;
+        default_channel_user_wallet_path = existing_wallet_path;
+      }
+
 			c.gridwidth = 1;
 			panel.add(new JLabel("Channel Node Key Directory"), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
-			File default_channel_wallet_path = new File(SystemUtil.getImportantDataDirectory(params), "channel_wallet");
-			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_wallet_path", default_channel_wallet_path.toString(),70),c);
+			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_node_wallet_path", default_channel_node_wallet_path, 70),c);
+
+			c.gridwidth = 1;
+			panel.add(new JLabel("Channel User Key Directory"), c);
+			c.gridwidth = GridBagConstraints.REMAINDER;
+			panel.add(new PersistentComponentTextField(ice_leaf_prefs, "", "channel_user_wallet_path", default_channel_user_wallet_path, 70),c);
 
 			c.gridwidth = 1;
 			panel.add(new JLabel("Channel Upload Directory"), c);
