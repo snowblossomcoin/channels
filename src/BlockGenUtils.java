@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
@@ -209,11 +210,15 @@ public class BlockGenUtils
     ProcessStatus ps = new ProcessStatus();
     ps.set("cid", ctx.cid.toString());
     ps.set("path", base_path.toString());
+
+    TreeSet<String> done_set = new TreeSet<>();
     while(true)
     {
       status.setStatus("Importing files: " + ps.getStatusLine());
-      if (createSingleBlockForFiles(ctx, base_path, admin, status, ps)) break;
+      if (createSingleBlockForFiles(ctx, base_path, admin, status, ps, done_set)) break;
     }
+    // TODO - prune any existing files that not in the done_set
+
     status.setStatus("Import complete: " + ps.getStatusLine());
   }
 
@@ -221,7 +226,7 @@ public class BlockGenUtils
    * Creates a block for the files in the directory and broadcasts it to the channel
    * @return true if all files fit in one block, false if there are blocks to write
    */ 
-  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status, ProcessStatus ps)
+  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status, ProcessStatus ps, TreeSet<String> done_set)
     throws ValidationException, java.io.IOException
   {
     ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
@@ -241,7 +246,7 @@ public class BlockGenUtils
     ContentInfo.Builder file_map_ci = ContentInfo.newBuilder();
     file_map_ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(new byte[0])) );
 
-    boolean all_fit = addFiles(ctx, base_path, "", blk, file_map_ci, admin, status, ps);
+    boolean all_fit = addFiles(ctx, base_path, "", blk, file_map_ci, admin, status, ps, done_set);
 
     blk.addContent(
       ChannelSigUtil.signMessage( admin.getAddresses(0),admin.getKeys(0),
@@ -270,16 +275,20 @@ public class BlockGenUtils
    */
   private static boolean addFiles(ChannelContext ctx, File path, 
     String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig,
-    StatusInterface status, ProcessStatus ps)
+    StatusInterface status, ProcessStatus ps, TreeSet<String> done_set)
     throws ValidationException, java.io.IOException
   {
+    if (done_set.contains(prefix)) return true;
+
     if (blk.build().toByteString().size() + file_map_ci.build().toByteString().size() > Globals.MAX_BLOCK_SIZE*3/4) return false;
 
     if (path.isDirectory())
     {
+      status.setStatus("Importing files: " + ps.getStatusLine());
       for(File f : path.listFiles())
       {
-        boolean res = addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig, status, ps);
+        // TODO - if we really want to murder some drives make this multithreaded
+        boolean res = addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig, status, ps, done_set);
         if (!res) return false;
       }
     }
@@ -328,6 +337,9 @@ public class BlockGenUtils
           ContentInfo old_ci = ChannelSigUtil.quickPayload(old_content_msg).getContentInfo();
           if(ci.getContentHash().equals(old_ci.getContentHash()))
           {
+            done_set.add(prefix);
+            ps.add("files_preexisting");
+
             return true; 
           }
         }
@@ -371,6 +383,7 @@ public class BlockGenUtils
       din.close();
     }
 
+    done_set.add(prefix);
     return true;
   }
 
