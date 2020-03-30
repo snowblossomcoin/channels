@@ -103,6 +103,11 @@ public class BlockReadUtils
     }
 
     ContentInfo ci = ChannelSigUtil.quickPayload(sm).getContentInfo();
+    if (ci.getContentDataMap().containsKey("auto_gen_index"))
+    {
+      ps.add("skipped_auto_index");
+      return;
+    }
 
     AtomicFileOutputStream out = new AtomicFileOutputStream(curr_path);
     try

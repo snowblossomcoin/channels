@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
@@ -285,12 +286,23 @@ public class BlockGenUtils
     if (path.isDirectory())
     {
       status.setStatus("Importing files: " + ps.getStatusLine());
+
+      boolean has_index=false;
       for(File f : path.listFiles())
       {
         // TODO - if we really want to murder some drives make this multithreaded
         boolean res = addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig, status, ps, done_set);
+
+        if (f.getName().equals("index.html")) has_index=true;
+
         if (!res) return false;
       }
+      // Make index maybe
+      if (!has_index)
+      {
+        addIndexFile(ctx, path, prefix + "/index.html" , blk, file_map_ci, sig, status, ps);
+      }
+
     }
     else
     {
@@ -387,6 +399,101 @@ public class BlockGenUtils
     return true;
   }
 
+  private static void addIndexFile(ChannelContext ctx, File path, 
+    String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig,
+    StatusInterface status, ProcessStatus ps)
+    throws ValidationException, java.io.IOException
+  {
+    
+    // TODO - do things
+    String content = HtmlUtils.getIndex(path);
+    byte[] content_bytes = content.getBytes();
+
+    long len = content_bytes.length;
+
+    ContentInfo.Builder ci = ContentInfo.newBuilder();
+    ci.setContentLength(len);
+
+    ci.setMimeType("text/html");
+
+    MessageDigest md_whole = DigestUtil.getMD();
+    MessageDigest md_part = DigestUtil.getMD();
+    DataInputStream din = new DataInputStream(new ByteArrayInputStream(content_bytes));
+    long loc = 0;
+    while (loc < len)
+    {
+      int read_len = (int) Math.min( len-loc, ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+
+      byte[] b = new byte[read_len];
+      din.readFully(b);
+      loc += read_len;
+
+      ByteString part_hash = ByteString.copyFrom(md_part.digest(b));
+      ci.addChunkHash(part_hash);
+      md_whole.update(b);
+    }
+    din.close();
+
+    ci.setContentHash(ByteString.copyFrom(md_whole.digest()));
+    ci.putContentDataMap("auto_gen_index",ByteString.copyFrom("true".getBytes()));
+
+
+    //check existing data
+    //
+    ByteString old_content_id = ChanDataUtils.getData(ctx, "/web" + prefix);
+    if (old_content_id != null)
+    {
+      SignedMessage old_content_msg = ctx.db.getContentMap().get(old_content_id);
+      if (old_content_msg != null)
+      {
+        ContentInfo old_ci = ChannelSigUtil.quickPayload(old_content_msg).getContentInfo();
+        if(ci.getContentHash().equals(old_ci.getContentHash()))
+        {
+          ps.add("index_preexisting");
+
+          return; 
+        }
+      }
+    }
+
+
+    ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
+
+    SignedMessage sm = 
+      ChannelSigUtil.signMessage( sig.getAddresses(0), sig.getKeys(0),
+        SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
+
+    blk.addContent(sm);
+    ps.add("index_saved");
+    file_map_ci.putChanMapUpdates("/web" + prefix, sm.getMessageId());
+
+    din = new DataInputStream(new ByteArrayInputStream(content_bytes));
+    loc = 0;
+    int chunk_count =0;
+    while (loc < len)
+    {
+      int read_len = (int) Math.min( len-loc, ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
+
+      byte[] b = new byte[read_len];
+      din.readFully(b);
+      loc += read_len;
+
+      ctx.block_ingestor.ingestChunk(
+        ContentChunk.newBuilder()
+          .setMessageId(sm.getMessageId())
+          .setChunk(chunk_count) 
+          .setChunkData(ByteString.copyFrom(b))
+          .build()
+        ,true, ci.build());
+      ps.add("chunks_saved");
+      ps.add("total_bytes_saved", read_len);
+      status.setStatus("Importing files: " + ps.getStatusLine());
+
+      chunk_count++;
+    }
+    din.close();
+    
+  }
   protected static AddressSpecHash getAddr(WalletDatabase db)
   {
     return AddressUtil.getHashForSpec(db.getAddresses(0));
