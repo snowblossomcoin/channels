@@ -70,7 +70,7 @@ pinned_maven_install()
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-	commit = "1ca08c235a19869bc787544901b13c3c63b6689b",
+	commit = "520afb54c3dc696884198f113ef231d3a0c5b5ee",
   shallow_since = "1579895888 -0800"
 )
 
