@@ -69,14 +69,14 @@ pinned_maven_install()
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-	commit = "29f911f557ee25f421b0f16da1166843c42398f4",
+	commit = "c634cd4b21f33588e2df08eb80c6987769b1ad04",
   shallow_since = "1579895888 -0800"
 )
 
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "e022564cedb0d241c8e9a297eca74f6d064f7aa8",
+  commit = "0dd4f3aff5bab1f9ce9f4ac326c120c47b7e71e0",
   shallow_since = "1576867546 -0800",
 )
 
