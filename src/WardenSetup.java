@@ -39,7 +39,7 @@ public class WardenSetup
     Class clazz = Class.forName(warden);
     Constructor<?> constructor = clazz.getConstructor(ChannelAccess.class);
 
-    ChannelAccess ca = new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid));
+    ChannelAccess ca = new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid), node.getStubHolder());
 
     BaseWarden ward = (BaseWarden) constructor.newInstance(ca);
 

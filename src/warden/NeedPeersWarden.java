@@ -9,7 +9,6 @@ import snowblossom.channels.proto.SignedMessage;
 
 public class NeedPeersWarden extends BaseWarden
 {
-  
 
   public NeedPeersWarden(ChannelAccess channel_access)
   {
@@ -32,8 +31,6 @@ public class NeedPeersWarden extends BaseWarden
 
     channel_access.openOtherChannel(new_cid);
 
-
   }
-
 
 }

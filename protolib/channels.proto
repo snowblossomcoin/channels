@@ -132,9 +132,9 @@ message SignedMessagePayload {
   TxOutPoint fbo_utxo = 50;
 }
 
-
 message EncryptedMessage {
-  bytes payload = 1;
+  bytes payload = 1; // Do we want this or should we encrypt the payload data in the containing content info?
+                     // which complicates the chunk replication
   bytes key_id = 2; // Content id of message containing the encrypted_key_set
 }
 

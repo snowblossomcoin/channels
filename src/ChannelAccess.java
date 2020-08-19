@@ -11,6 +11,7 @@ import snowblossom.channels.proto.ChannelSettings;
 import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.channels.proto.SignedMessagePayload;
+import snowblossom.client.StubHolder;
 import snowblossom.lib.ValidationException;
 
 /**
@@ -21,11 +22,13 @@ public class ChannelAccess
 {
   private final ChannelContext ctx;
   private final ChannelNode node;
+  private final StubHolder snow_stub;
 
-  public ChannelAccess(ChannelNode node, ChannelContext ctx)
+  public ChannelAccess(ChannelNode node, ChannelContext ctx, StubHolder stub_holder)
   {
     this.node = node;
     this.ctx = ctx;
+    this.snow_stub = stub_holder;
   }
 
   public void watch(ChannelWatcherInterface watcher)
@@ -46,6 +49,11 @@ public class ChannelAccess
   public int getMissingChunks()
   {
     return ChunkMapUtils.getWantList(ctx).size();
+  }
+
+  public StubHolder getSnowStub()
+  {
+    return snow_stub;
   }
 
   public List<SignedMessage> getOutsiderByTime(int max_return, boolean oldest_first)
@@ -128,7 +136,7 @@ public class ChannelAccess
 
   public ChannelAccess openOtherChannel(ChannelID cid)
   {
-    return new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid));
+    return new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid), snow_stub);
 
   }
 

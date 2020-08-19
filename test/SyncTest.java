@@ -44,9 +44,9 @@ public class SyncTest
 
     ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getUserWalletDB(), "sync-test");
 
-    ChannelAccess a_a = new ChannelAccess(node_a, node_a.getChannelSubscriber().openChannel(cid));
-    ChannelAccess a_b = new ChannelAccess(node_b, node_b.getChannelSubscriber().openChannel(cid));
-    ChannelAccess a_c = new ChannelAccess(node_c, node_c.getChannelSubscriber().openChannel(cid));
+    ChannelAccess a_a = new ChannelAccess(node_a, node_a.getChannelSubscriber().openChannel(cid), node_a.getStubHolder());
+    ChannelAccess a_b = new ChannelAccess(node_b, node_b.getChannelSubscriber().openChannel(cid), node_b.getStubHolder());
+    ChannelAccess a_c = new ChannelAccess(node_c, node_c.getChannelSubscriber().openChannel(cid), node_c.getStubHolder());
 
     File file_dir = test_folder.newFolder();
     Random rnd = new Random();
