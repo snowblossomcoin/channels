@@ -20,12 +20,6 @@ public class BasicChatWarden extends BaseWarden
 
   }
 
-  /*@Override
-  public long getPeriod()
-  {
-    return 20L * 1000L;
-  }*/
-
   @Override
   public void periodicRun() throws Exception
   {

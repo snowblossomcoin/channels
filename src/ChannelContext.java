@@ -18,7 +18,6 @@ public class ChannelContext
 
   private ImmutableList<ChannelLink> links=ImmutableList.of();
 
-
   /** This BitSets must only be messed with inside a sync on the cache */
   public LRUCache<ChainHash, BitSet> chunk_set_cache = new LRUCache<>(10000);
 

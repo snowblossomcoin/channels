@@ -149,12 +149,10 @@ message EncryptedMessagePayload {
 // address spec hash to the payload the private key for that spec hash will open
 // which will result in the symetric key
 message EncryptedKeySet {
-  repeated EncryptedKeyInfo key_infos = 1;
-  string algo = 2; 
+  bytes key_id = 1;
+  repeated EncryptedKeyInfo key_infos = 2;
+  string algo = 3; 
 
-  // Optional - key of last encrypted key set encrypted
-  // encrypted with this new key so a reader just now given access can go back and read old data
-  bytes last_key_payload = 3; 
 }
 
 message EncryptedKeyInfo {
@@ -306,8 +304,12 @@ message ContentInfo {
   // data as other prefixes with special handling may be added.
   map<string, bytes> chan_map_updates = 20;
 
-  EncryptedKeySet encrypted_key_set = 21;
-  EncryptedMessage encrypted_message = 22;
+  //EncryptedKeySet encrypted_key_set = 21;
+  //EncryptedMessage encrypted_message = 22;
+
+  // In the simple case, the keys can be found in block data
+  // as /keys/<key_id>/<reader_address>
+  bytes encrypted_key_id = 23;
 }
 
 
