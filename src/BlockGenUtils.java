@@ -20,6 +20,7 @@ import snowblossom.lib.Globals;
 import snowblossom.lib.ValidationException;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.lib.CipherUtil;
 
 public class BlockGenUtils
 {
@@ -203,34 +204,34 @@ public class BlockGenUtils
 
   }
 
-  public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status)
+  //public static void createBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status)
+  //  throws ValidationException, java.io.IOException
+  public static void createBlockForFiles(FileBlockImportSettings settings)
     throws ValidationException, java.io.IOException
   {
-    if (status == null) status = new DummyStatusInterface();
-
     ProcessStatus ps = new ProcessStatus();
-    ps.set("cid", ctx.cid.toString());
-    ps.set("path", base_path.toString());
+    ps.set("cid", settings.ctx.cid.toString());
+    ps.set("path", settings.base_path.toString());
 
     TreeSet<String> done_set = new TreeSet<>();
     while(true)
     {
-      status.setStatus("Importing files: " + ps.getStatusLine());
-      if (createSingleBlockForFiles(ctx, base_path, admin, status, ps, done_set)) break;
+      settings.status.setStatus("Importing files: " + ps.getStatusLine());
+      if (createSingleBlockForFiles(settings, ps, done_set)) break;
     }
     // TODO - prune any existing files that not in the done_set
 
-    status.setStatus("Import complete: " + ps.getStatusLine());
+    settings.status.setStatus("Import complete: " + ps.getStatusLine());
   }
 
   /**
    * Creates a block for the files in the directory and broadcasts it to the channel
    * @return true if all files fit in one block, false if there are blocks to write
    */ 
-  public static boolean createSingleBlockForFiles(ChannelContext ctx, File base_path, WalletDatabase admin, StatusInterface status, ProcessStatus ps, TreeSet<String> done_set)
+  public static boolean createSingleBlockForFiles(FileBlockImportSettings settings, ProcessStatus ps, TreeSet<String> done_set)
     throws ValidationException, java.io.IOException
   {
-    ChannelBlockSummary prev_sum = ctx.block_ingestor.getHead();
+    ChannelBlockSummary prev_sum = settings.ctx.block_ingestor.getHead();
     if (prev_sum == null)
     {
       throw new ValidationException("Unknown previous block");
@@ -239,18 +240,18 @@ public class BlockGenUtils
     header.setBlockHeight(1L + prev_sum.getHeader().getBlockHeight());
 
     header.setVersion(1);
-    header.setChannelId( ctx.cid.getBytes() );
+    header.setChannelId( settings.ctx.cid.getBytes() );
     header.setPrevBlockHash( prev_sum.getBlockId());
 
     ChannelBlock.Builder blk = ChannelBlock.newBuilder();
 
     ContentInfo.Builder file_map_ci = ContentInfo.newBuilder();
-    file_map_ci.setContentHash( ByteString.copyFrom(DigestUtil.getMD().digest(new byte[0])) );
+    file_map_ci.setContentHash( DigestUtil.hash(ByteString.EMPTY) );
 
-    boolean all_fit = addFiles(ctx, base_path, "", blk, file_map_ci, admin, status, ps, done_set);
+    boolean all_fit = addFiles(settings, settings.base_path, "", blk, file_map_ci, ps, done_set);
 
     blk.addContent(
-      ChannelSigUtil.signMessage( admin.getAddresses(0),admin.getKeys(0),
+      ChannelSigUtil.signMessage( settings.signer.getAddresses(0), settings.signer.getKeys(0),
           SignedMessagePayload.newBuilder().setContentInfo(file_map_ci.build()).build()));
 
     LinkedList<ChainHash> merkle_list = new LinkedList<>();
@@ -261,11 +262,11 @@ public class BlockGenUtils
 
     header.setContentMerkle( DigestUtil.getMerkleRootForTxList(merkle_list).getBytes());
     
-    blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
+    blk.setSignedHeader( ChannelSigUtil.signMessage(settings.signer.getAddresses(0), settings.signer.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
     ps.add("blocks_added");
-    ctx.block_ingestor.ingestBlock(blk.build());
+    settings.ctx.block_ingestor.ingestBlock(blk.build());
 
     return all_fit;
   }
@@ -274,9 +275,9 @@ public class BlockGenUtils
   /**
    * @return true iff we were able to add all files
    */
-  private static boolean addFiles(ChannelContext ctx, File path, 
-    String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig,
-    StatusInterface status, ProcessStatus ps, TreeSet<String> done_set)
+  private static boolean addFiles(FileBlockImportSettings settings, File path,
+    String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci,
+    ProcessStatus ps, TreeSet<String> done_set)
     throws ValidationException, java.io.IOException
   {
     if (done_set.contains(prefix)) return true;
@@ -285,13 +286,13 @@ public class BlockGenUtils
 
     if (path.isDirectory())
     {
-      status.setStatus("Importing files: " + ps.getStatusLine());
+      settings.status.setStatus("Importing files: " + ps.getStatusLine());
 
       boolean has_index=false;
       for(File f : path.listFiles())
       {
         // TODO - if we really want to murder some drives make this multithreaded
-        boolean res = addFiles(ctx, f, prefix + "/" + f.getName(), blk, file_map_ci, sig, status, ps, done_set);
+        boolean res = addFiles(settings, f, prefix + "/" + f.getName(), blk, file_map_ci, ps, done_set);
 
         if (f.getName().equals("index.html")) has_index=true;
 
@@ -300,7 +301,7 @@ public class BlockGenUtils
       // Make index maybe
       if (!has_index)
       {
-        addIndexFile(ctx, path, prefix + "/index.html" , blk, file_map_ci, sig, status, ps);
+        addIndexFile(settings, path, prefix + "/index.html" , blk, file_map_ci, ps);
       }
 
     }
@@ -310,6 +311,12 @@ public class BlockGenUtils
       ContentInfo.Builder ci = ContentInfo.newBuilder();
       ci.setContentLength(len);
 
+      if (settings.encrypt(prefix))
+      {
+        ci.setEncryptionIvBase( ChannelCipherUtils.randomIv());
+        ci.setEncryptedKeyId( settings.getSymmetricKey().getKeyId() );
+
+      }
 
       String mime = Mimer.guessContentType(path.getName());
       if (mime != null)
@@ -321,7 +328,10 @@ public class BlockGenUtils
       MessageDigest md_whole = DigestUtil.getMD();
       MessageDigest md_part = DigestUtil.getMD();
       DataInputStream din = new DataInputStream(new FileInputStream(path));
+
       long loc = 0;
+      int chunk_no = 0;
+      long output_len = 0;
       while (loc < len)
       {
         int read_len = (int) Math.min( len-loc, ChannelGlobals.CONTENT_DATA_BLOCK_SIZE);
@@ -330,20 +340,40 @@ public class BlockGenUtils
         din.readFully(b);
         loc += read_len;
 
-        ByteString part_hash = ByteString.copyFrom(md_part.digest(b));
-        ci.addChunkHash(part_hash);
-        md_whole.update(b);
+        if (settings.encrypt(prefix))
+        {
+          
+          ByteString iv = ChannelCipherUtils.getIv( ci.getEncryptionIvBase(), chunk_no );
+          ByteString encrypted_data = CipherUtil.encryptSymmetric(settings.getSymmetricKey(), ByteString.copyFrom(b) , iv);
+
+          ByteString part_hash = ByteString.copyFrom(md_part.digest(encrypted_data.toByteArray()));
+          ci.addChunkHash(part_hash);
+          md_whole.update(b);
+
+          output_len += encrypted_data.size();
+
+        }
+        else
+        {
+
+          ByteString part_hash = ByteString.copyFrom(md_part.digest(b));
+          ci.addChunkHash(part_hash);
+          md_whole.update(b);
+          output_len += read_len;
+        }
+        chunk_no++;
       }
       din.close();
 
       ci.setContentHash(ByteString.copyFrom(md_whole.digest()));
+      ci.setContentLength(output_len);
 
       //check existing data
       //
-      ByteString old_content_id = ChanDataUtils.getData(ctx, "/web" + prefix);
+      ByteString old_content_id = ChanDataUtils.getData(settings.ctx, "/web" + prefix);
       if (old_content_id != null)
       {
-        SignedMessage old_content_msg = ctx.db.getContentMap().get(old_content_id);
+        SignedMessage old_content_msg = settings.ctx.db.getContentMap().get(old_content_id);
         if (old_content_msg != null)
         {
           ContentInfo old_ci = ChannelSigUtil.quickPayload(old_content_msg).getContentInfo();
@@ -361,7 +391,7 @@ public class BlockGenUtils
       ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
 
       SignedMessage sm = 
-        ChannelSigUtil.signMessage( sig.getAddresses(0), sig.getKeys(0),
+        ChannelSigUtil.signMessage( settings.signer.getAddresses(0), settings.signer.getKeys(0),
           SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
 
       blk.addContent(sm);
@@ -379,16 +409,27 @@ public class BlockGenUtils
         din.readFully(b);
         loc += read_len;
 
-        ctx.block_ingestor.ingestChunk(
+        ByteString chunk_data = ByteString.copyFrom(b);
+
+        if (settings.encrypt(prefix))
+        {
+          ByteString iv = ChannelCipherUtils.getIv( ci.getEncryptionIvBase(), chunk_count );
+          ByteString encrypted_data = CipherUtil.encryptSymmetric(settings.getSymmetricKey(), chunk_data , iv);
+
+          chunk_data = encrypted_data;
+        }
+
+
+        settings.ctx.block_ingestor.ingestChunk(
           ContentChunk.newBuilder()
             .setMessageId(sm.getMessageId())
             .setChunk(chunk_count) 
-            .setChunkData(ByteString.copyFrom(b))
+            .setChunkData(chunk_data)
             .build()
           ,true, ci.build());
         ps.add("chunks_saved");
         ps.add("total_bytes_saved", read_len);
-        status.setStatus("Importing files: " + ps.getStatusLine());
+        settings.status.setStatus("Importing files: " + ps.getStatusLine());
 
         chunk_count++;
       }
@@ -399,9 +440,8 @@ public class BlockGenUtils
     return true;
   }
 
-  private static void addIndexFile(ChannelContext ctx, File path, 
-    String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, WalletDatabase sig,
-    StatusInterface status, ProcessStatus ps)
+  private static void addIndexFile(FileBlockImportSettings settings, File path, 
+    String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, ProcessStatus ps)
     throws ValidationException, java.io.IOException
   {
     
@@ -440,10 +480,10 @@ public class BlockGenUtils
 
     //check existing data
     //
-    ByteString old_content_id = ChanDataUtils.getData(ctx, "/web" + prefix);
+    ByteString old_content_id = ChanDataUtils.getData(settings.ctx, "/web" + prefix);
     if (old_content_id != null)
     {
-      SignedMessage old_content_msg = ctx.db.getContentMap().get(old_content_id);
+      SignedMessage old_content_msg = settings.ctx.db.getContentMap().get(old_content_id);
       if (old_content_msg != null)
       {
         ContentInfo old_ci = ChannelSigUtil.quickPayload(old_content_msg).getContentInfo();
@@ -460,7 +500,7 @@ public class BlockGenUtils
     ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
 
     SignedMessage sm = 
-      ChannelSigUtil.signMessage( sig.getAddresses(0), sig.getKeys(0),
+      ChannelSigUtil.signMessage( settings.signer.getAddresses(0), settings.signer.getKeys(0),
         SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
 
     blk.addContent(sm);
@@ -478,7 +518,7 @@ public class BlockGenUtils
       din.readFully(b);
       loc += read_len;
 
-      ctx.block_ingestor.ingestChunk(
+      settings.ctx.block_ingestor.ingestChunk(
         ContentChunk.newBuilder()
           .setMessageId(sm.getMessageId())
           .setChunk(chunk_count) 
@@ -487,7 +527,7 @@ public class BlockGenUtils
         ,true, ci.build());
       ps.add("chunks_saved");
       ps.add("total_bytes_saved", read_len);
-      status.setStatus("Importing files: " + ps.getStatusLine());
+      settings.status.setStatus("Importing files: " + ps.getStatusLine());
 
       chunk_count++;
     }

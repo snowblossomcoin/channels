@@ -24,11 +24,11 @@ public class ChannelAccess
   private final ChannelNode node;
   private final StubHolder snow_stub;
 
-  public ChannelAccess(ChannelNode node, ChannelContext ctx, StubHolder stub_holder)
+  public ChannelAccess(ChannelNode node, ChannelContext ctx)
   {
     this.node = node;
     this.ctx = ctx;
-    this.snow_stub = stub_holder;
+    this.snow_stub = node.getStubHolder();
   }
 
   public void watch(ChannelWatcherInterface watcher)
@@ -121,7 +121,7 @@ public class ChannelAccess
   public void createBlockForFiles(File base_path)
     throws ValidationException, java.io.IOException
   {
-    BlockGenUtils.createBlockForFiles(ctx, base_path, node.getUserWalletDB(), null);
+    BlockGenUtils.createBlockForFiles(new FileBlockImportSettings(ctx, base_path, node.getUserWalletDB(), null));
   }
 
 
@@ -136,7 +136,7 @@ public class ChannelAccess
 
   public ChannelAccess openOtherChannel(ChannelID cid)
   {
-    return new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid), snow_stub);
+    return new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid));
 
   }
 

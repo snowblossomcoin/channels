@@ -276,6 +276,7 @@ public class ChannelNode
   public StubHolder getStubHolder() {return stub_holder; }
   public LocalPeerFinder getLocalPeerFinder() {return local_peer_finder;}
   public boolean getAutoJoin(){ return autojoin;}
+  public NetworkParams getNetworkParams() {return params;}
 
   public AddressSpecHash getNodeID()
   {

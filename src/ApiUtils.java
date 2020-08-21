@@ -200,7 +200,7 @@ public class ApiUtils
       ci.addBroadcastChannelIds(ctx.cid.getBytes());
     }
 
-		ci.setContentHash( ByteString.copyFrom( DigestUtil.getMD().digest( ci.getContent().toByteArray() ) ) );
+    ci.setContentHash( DigestUtil.hash(ci.getContent()) );
    
 		WalletDatabase wdb = node.getUserWalletDB();
 

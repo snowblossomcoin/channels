@@ -1,5 +1,6 @@
 package channels;
 
+
 import duckutil.ConfigMem;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,17 +14,14 @@ import org.junit.rules.TemporaryFolder;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.*;
+import com.google.common.collect.ImmutableList;
 
-public class SyncTest
+
+public class CipherChannelTest
 {
   @Rule
   public TemporaryFolder test_folder = new TemporaryFolder();
 
-  private ChannelNode node_a;
-  private ChannelNode node_b;
-  
-  public static final int FILES_TO_SYNC=1000;
-  public static final int MAX_WAIT_SEC=25; // Problem partly fixes self at 30s mark sometimes
 
   @BeforeClass
   public static void loadProvider()
@@ -31,38 +29,38 @@ public class SyncTest
     Globals.addCryptoProvider();
   }
 
+  public static final int MAX_WAIT_SEC=25; 
+
+
   @Test
-  public void testLargeSync()
+  public void testCipherChannel()
     throws Exception
   {
 
     ChannelNode node_a = startNode("rocksdb", false);
     ChannelNode node_b = startNode("rocksdb", false);
     ChannelNode node_c = startNode("rocksdb", false);
-    
-    Thread.sleep(500);
 
-    ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getUserWalletDB(), "sync-test");
+		ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getUserWalletDB(), "cipher-test");
 
     ChannelAccess a_a = new ChannelAccess(node_a, node_a.getChannelSubscriber().openChannel(cid));
     ChannelAccess a_b = new ChannelAccess(node_b, node_b.getChannelSubscriber().openChannel(cid));
     ChannelAccess a_c = new ChannelAccess(node_c, node_c.getChannelSubscriber().openChannel(cid));
 
-    File file_dir = test_folder.newFolder();
-    Random rnd = new Random();
+		ChannelContext ctx_a = node_a.getChannelSubscriber().openChannel(cid);
+		ChannelContext ctx_b = node_b.getChannelSubscriber().openChannel(cid);
+		ChannelContext ctx_c = node_c.getChannelSubscriber().openChannel(cid);
 
-    for(int i=0; i<FILES_TO_SYNC; i++)
-    {
-      byte[] buff = new byte[16];
-      rnd.nextBytes(buff);
+		Assert.assertNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
 
-      File data_file = new File(file_dir, "v" + rnd.nextInt());
-      FileOutputStream out = new FileOutputStream(data_file);
-      out.write(buff);
-      out.flush(); out.close();
-    }
+		ChannelCipherUtils.establishCommonKey(node_a, ctx_a);
 
-    a_a.createBlockForFiles(file_dir);
+		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
+
+		ChannelCipherUtils.addKeys(node_a, ctx_a, ImmutableList.of(node_b.getUserWalletDB().getAddresses(0)));
+
+		String key_id = ChannelCipherUtils.getCommonKeyID(ctx_a);
+
 
     for(int i=0; i<MAX_WAIT_SEC; i++)
     {
@@ -76,8 +74,8 @@ public class SyncTest
 
       if (a_a.getHeight() == a_b.getHeight())
       if (a_a.getHeight() == a_c.getHeight())
-      if (a_b.getMissingChunks() == 0) 
-      if (a_c.getMissingChunks() == 0) 
+      if (a_b.getMissingChunks() == 0)
+      if (a_c.getMissingChunks() == 0)
       {
         break;
       }
@@ -85,18 +83,20 @@ public class SyncTest
 
     }
 
+		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
+		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_b));
+		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_c));
 
-    Assert.assertEquals(a_c.getHeight(), a_a.getHeight());
-    Assert.assertEquals(a_b.getHeight(), a_a.getHeight());
-    Assert.assertEquals(0, a_a.getMissingChunks());
-    Assert.assertEquals(0, a_b.getMissingChunks());
-    Assert.assertEquals(0, a_c.getMissingChunks());
+		Assert.assertNotNull(ChannelCipherUtils.getKeyFromChannel(ctx_a, key_id, node_a.getUserWalletDB().getKeys(0)));
+		Assert.assertNotNull(ChannelCipherUtils.getKeyFromChannel(ctx_b, key_id, node_b.getUserWalletDB().getKeys(0)));
+		Assert.assertNull(ChannelCipherUtils.getKeyFromChannel(ctx_c, key_id, node_c.getUserWalletDB().getKeys(0)));
 
-  }
 
-	private ChannelNode startNode(String db_type, boolean skip_seeds)
+	}
+
+  private ChannelNode startNode(String db_type, boolean skip_seeds)
     throws Exception
-	{
+  {
     File base_dir = test_folder.newFolder();
     TreeMap<String,String> map = new TreeMap<>();
     map.put("key_count", "1");
@@ -116,6 +116,11 @@ public class SyncTest
 
     return new ChannelNode(new ConfigMem(map));
 
-	}
+  }
+
+  
+
+
 
 }
+

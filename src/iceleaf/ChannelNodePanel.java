@@ -24,6 +24,7 @@ import snowblossom.channels.MiscUtils;
 import snowblossom.channels.PeerLink;
 import snowblossom.channels.PrintUtil;
 import snowblossom.channels.SocksServer;
+import snowblossom.channels.FileBlockImportSettings;
 import snowblossom.channels.proto.ChannelPeerInfo;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
@@ -312,11 +313,11 @@ public class ChannelNodePanel extends BasePanel
         String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
         File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
 
-        BlockGenUtils.createBlockForFiles( 
+        BlockGenUtils.createBlockForFiles( new FileBlockImportSettings( 
           node.getChannelSubscriber().openChannel(cid), 
           channel_upload_path, 
           node.getUserWalletDB(), 
-          this);
+          this));
       }
       catch(Throwable t)
       {

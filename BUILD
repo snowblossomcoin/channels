@@ -138,6 +138,22 @@ java_test(
     ],
 )
 
+java_test(
+    name = "cipher_channel_test",
+    srcs = ["test/CipherChannelTest.java"],
+    test_class = "channels.CipherChannelTest",
+    size="medium",
+    deps = [
+      "@snowblossom//lib:lib",
+      "@snowblossom//client:client",
+      "@duckutil//:duckutil_lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
+
+
 
 
 java_test(

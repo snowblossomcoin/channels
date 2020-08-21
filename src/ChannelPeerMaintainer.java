@@ -248,7 +248,8 @@ public class ChannelPeerMaintainer extends PeriodicThread
         .setChannelId(cid.getBytes())
         .setRefMode( ContentReference.ReferenceMode.DIRECT).build());
 
-    ci.setContentHash( ByteString.copyFrom( DigestUtil.getMD().digest( ci.getContent().toByteArray() ) ) );
+
+    ci.setContentHash( DigestUtil.hash(ci.getContent()) );
 
     SignedMessagePayload.Builder payload = SignedMessagePayload.newBuilder();
     payload.setContentInfo(ci.build());

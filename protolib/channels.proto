@@ -310,6 +310,7 @@ message ContentInfo {
   // In the simple case, the keys can be found in block data
   // as /keys/<key_id>/<reader_address>
   bytes encrypted_key_id = 23;
+  bytes encryption_iv_base = 24;
 }
 
 
