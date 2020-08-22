@@ -170,10 +170,12 @@ public class WebServerTest
     return new ChannelNode(new ConfigMem(map));
 
 	}
+
   protected AddressSpecHash getAddr(WalletDatabase db)
   {
     return AddressUtil.getHashForSpec(db.getAddresses(0));
   }
+
   protected SignedMessage randomContent(WalletDatabase wdb, List<ContentChunk> large_chunks, boolean large)
     throws Exception
   {

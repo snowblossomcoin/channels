@@ -311,6 +311,7 @@ message ContentInfo {
   // as /keys/<key_id>/<reader_address>
   bytes encrypted_key_id = 23;
   bytes encryption_iv_base = 24;
+  int64 plain_content_length = 25;
 }
 
 

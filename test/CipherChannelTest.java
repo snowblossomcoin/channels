@@ -30,16 +30,22 @@ public class CipherChannelTest
   }
 
   public static final int MAX_WAIT_SEC=25; 
+  public static final int FILES_TO_SYNC=25;
+  public static final int MAX_FILE_SIZE=4000000;
 
 
   @Test
   public void testCipherChannel()
     throws Exception
   {
+    Random rnd = new Random();
+    int webport_a = 20000+rnd.nextInt(10000);
+    int webport_b = 20000+rnd.nextInt(10000);
+    int webport_c = 20000+rnd.nextInt(10000);
 
-    ChannelNode node_a = startNode("rocksdb", false);
-    ChannelNode node_b = startNode("rocksdb", false);
-    ChannelNode node_c = startNode("rocksdb", false);
+    ChannelNode node_a = startNode("rocksdb", false, webport_a);
+    ChannelNode node_b = startNode("rocksdb", false, webport_b);
+    ChannelNode node_c = startNode("rocksdb", false, webport_c);
 
 		ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getUserWalletDB(), "cipher-test");
 
@@ -61,6 +67,39 @@ public class CipherChannelTest
 
 		String key_id = ChannelCipherUtils.getCommonKeyID(ctx_a);
 
+    File file_dir = test_folder.newFolder();
+
+
+    for(int i=0; i<FILES_TO_SYNC; i++)
+    {
+			int sz = rnd.nextInt(MAX_FILE_SIZE);
+      byte[] buff = new byte[sz];
+      rnd.nextBytes(buff);
+
+      File data_file = new File(file_dir, "r" + rnd.nextInt());
+      FileOutputStream out = new FileOutputStream(data_file);
+      out.write(buff);
+      out.flush(); 
+      out.close();
+    }
+
+    File enc_dir = new File(file_dir, "prot");
+    enc_dir.mkdirs();
+
+    for(int i=0; i<FILES_TO_SYNC; i++)
+    {
+			int sz = rnd.nextInt(MAX_FILE_SIZE);
+      byte[] buff = new byte[sz];
+      rnd.nextBytes(buff);
+
+      File data_file = new File(enc_dir, "e" + rnd.nextInt());
+      FileOutputStream out = new FileOutputStream(data_file);
+      out.write(buff);
+      out.flush();
+      out.close();
+    }
+
+    a_a.createBlockForFiles(file_dir);
 
     for(int i=0; i<MAX_WAIT_SEC; i++)
     {
@@ -71,7 +110,6 @@ public class CipherChannelTest
         a_c.getHeight(), a_c.getMissingChunks()
       ));
 
-
       if (a_a.getHeight() == a_b.getHeight())
       if (a_a.getHeight() == a_c.getHeight())
       if (a_b.getMissingChunks() == 0)
@@ -80,7 +118,6 @@ public class CipherChannelTest
         break;
       }
       Thread.sleep(1000);
-
     }
 
 		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
@@ -91,10 +128,9 @@ public class CipherChannelTest
 		Assert.assertNotNull(ChannelCipherUtils.getKeyFromChannel(ctx_b, key_id, node_b.getUserWalletDB().getKeys(0)));
 		Assert.assertNull(ChannelCipherUtils.getKeyFromChannel(ctx_c, key_id, node_c.getUserWalletDB().getKeys(0)));
 
-
 	}
 
-  private ChannelNode startNode(String db_type, boolean skip_seeds)
+  private ChannelNode startNode(String db_type, boolean skip_seeds, int webport)
     throws Exception
   {
     File base_dir = test_folder.newFolder();
@@ -113,14 +149,12 @@ public class CipherChannelTest
     int port = rnd.nextInt(50000) + 1024;
     map.put("port", "" + port);
     map.put("use_need_peers", "false");
+    map.put("web_port", "" + webport);
+
 
     return new ChannelNode(new ConfigMem(map));
 
   }
-
-  
-
-
 
 }
 

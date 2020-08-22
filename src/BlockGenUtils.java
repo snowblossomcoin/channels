@@ -17,6 +17,7 @@ import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.Globals;
+import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
@@ -313,9 +314,9 @@ public class BlockGenUtils
 
       if (settings.encrypt(prefix))
       {
-        ci.setEncryptionIvBase( ChannelCipherUtils.randomIv());
+        ci.setEncryptionIvBase( ChannelCipherUtils.randomIv() );
         ci.setEncryptedKeyId( settings.getSymmetricKey().getKeyId() );
-
+        ci.setPlainContentLength( len );
       }
 
       String mime = Mimer.guessContentType(path.getName());
@@ -348,7 +349,7 @@ public class BlockGenUtils
 
           ByteString part_hash = ByteString.copyFrom(md_part.digest(encrypted_data.toByteArray()));
           ci.addChunkHash(part_hash);
-          md_whole.update(b);
+          md_whole.update(encrypted_data.toByteArray());
 
           output_len += encrypted_data.size();
 
@@ -415,9 +416,12 @@ public class BlockGenUtils
         {
           ByteString iv = ChannelCipherUtils.getIv( ci.getEncryptionIvBase(), chunk_count );
           ByteString encrypted_data = CipherUtil.encryptSymmetric(settings.getSymmetricKey(), chunk_data , iv);
+          
+          ByteString part_hash = ByteString.copyFrom(md_part.digest(encrypted_data.toByteArray()));
 
           chunk_data = encrypted_data;
         }
+        
 
 
         settings.ctx.block_ingestor.ingestChunk(

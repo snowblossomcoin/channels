@@ -331,16 +331,16 @@ public class WebServer
       }
       int code = 200;
 
-      boolean using_chunks=false;
+      boolean using_chunks = false;
       if (ci.getContentLength() > ci.getContent().size())
       { // need to use chunks 
-        using_chunks=true;
+        using_chunks = true;
 
         int total_chunks = MiscUtils.getNumberOfChunks(ci);
         BitSet bs = ChunkMapUtils.getSavedChunksSet(ctx, content_id);
         if (bs.cardinality() < total_chunks)
         {
-          code=404;
+          code = 404;
 
           ByteArrayOutputStream b_out = new ByteArrayOutputStream();
           PrintStream print_out = new PrintStream(b_out);
@@ -358,7 +358,13 @@ public class WebServer
         }
       }
 
-      t.sendResponseHeaders(code, ci.getContentLength());
+      long len = ci.getContentLength();
+      if (ci.getEncryptedKeyId().size() > 0)
+      {
+        len = ci.getPlainContentLength();
+      }
+
+      t.sendResponseHeaders(code, len);
       OutputStream out = t.getResponseBody();
       BlockReadUtils.streamContentOut(ctx, content_id, ci, out);
       out.close();

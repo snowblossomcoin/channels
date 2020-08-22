@@ -135,6 +135,7 @@ public class BlockReadUtils
     // TODO - check hash of stream as we stream it
     if (ci.getContentLength() == ci.getContent().size()) 
     {
+      //TODO - support encrypted data direct in CI
       out.write(ci.getContent().toByteArray());
       return;
     }
@@ -143,6 +144,7 @@ public class BlockReadUtils
 
     for(int i=0; i<total_chunks; i++)
     { 
+      // TODO - decrypt as needed
       ByteString chunk_data = ChunkMapUtils.getChunk(ctx, msg_id, i);
       logger.finer("Get chunk data: " + msg_id + " " + i + " sz:" + chunk_data.size());
       if ((chunk_data == null) || (chunk_data.size() == 0))
