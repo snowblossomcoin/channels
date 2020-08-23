@@ -1,5 +1,6 @@
 package snowblossom.channels;
 
+import duckutil.WeightedRandomSelector;
 import io.grpc.HttpConnectProxiedSocketAddress;
 import io.grpc.ManagedChannel;
 import io.grpc.ProxiedSocketAddress;
@@ -22,8 +23,6 @@ import snowblossom.channels.proto.ChannelServiceGrpc.ChannelServiceStub;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceBlockingStub;
 import snowblossom.channels.proto.StargateServiceGrpc.StargateServiceStub;
 import snowblossom.lib.AddressSpecHash;
-import duckutil.WeightedRandomSelector;
-
 
 /**
  * Mostly for DHT peering.  However, this peer link is also used for outbound

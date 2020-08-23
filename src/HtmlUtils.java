@@ -1,9 +1,8 @@
 package snowblossom.channels;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.TreeMap;
-
-import java.io.File;
 
 public class HtmlUtils
 {

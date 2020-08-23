@@ -1,21 +1,24 @@
 package snowblossom.channels;
 
-import snowblossom.util.proto.SymmetricKey;
-import com.google.protobuf.ByteString;
-import snowblossom.lib.AddressSpecHash;
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.lib.CipherUtil;
-import snowblossom.lib.ValidationException;
-import snowblossom.lib.AddressUtil;
-import snowblossom.lib.HexUtil;
-import snowblossom.lib.DigestUtil;
-import snowblossom.channels.proto.ContentInfo;
-import snowblossom.proto.AddressSpec;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
+import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-import java.nio.ByteBuffer;
-
+import snowblossom.channels.proto.ContentInfo;
+import snowblossom.client.SeedUtil;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
+import snowblossom.lib.CipherUtil;
+import snowblossom.lib.DigestUtil;
+import snowblossom.lib.HexUtil;
+import snowblossom.lib.NetworkParamsProd;
+import snowblossom.lib.ValidationException;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.WalletKeyPair;
+import snowblossom.util.proto.SymmetricKey;
 
 /**
  * Stuff to do encrypted content on channels and key management
@@ -42,6 +45,23 @@ public class ChannelCipherUtils
 
     return false;
 
+  }
+
+  public static WalletKeyPair getKeyForChannel(ChannelID cid, WalletDatabase main)
+    throws ValidationException
+  {
+    Collection<String> seeds = main.getSeedsMap().keySet();
+
+    if (seeds.size() != 1)
+    {
+      throw new ValidationException("WalletKeyPair does not contain exactly one seed");
+    }
+
+    for(String seed : seeds)
+    {
+      return SeedUtil.getSiteKey( new NetworkParamsProd(), seed, "", cid.toString());
+    }
+    return null;
   }
 
   public static SymmetricKey getKeyFromChannel(ChannelContext ctx, String key_id, WalletKeyPair wkp)

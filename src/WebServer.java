@@ -21,6 +21,7 @@ import net.minidev.json.JSONObject;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.HexUtil;
+import snowblossom.lib.ValidationException;
 
 public class WebServer
 {
@@ -227,7 +228,7 @@ public class WebServer
     }
 
     private void processApiGet(HttpExchange t, ChannelContext ctx, String id)
-      throws IOException
+      throws IOException, ValidationException
     {
       ByteString content_id = HexUtil.hexStringToBytes(id);
       SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
@@ -256,7 +257,7 @@ public class WebServer
 
 
     private void handleChannelGet(ChannelID cid, List<String> tokens, HttpExchange t)
-      throws IOException
+      throws IOException, ValidationException
     {
       int code = 200;
       ByteArrayOutputStream b_out = new ByteArrayOutputStream();
@@ -323,7 +324,7 @@ public class WebServer
     }
 
     private void sendFile(HttpExchange t, ChannelContext ctx, ChainHash content_id, ContentInfo ci)
-      throws IOException
+      throws IOException, ValidationException
     {
       if (ci.getMimeType() != null)
       {
@@ -366,7 +367,7 @@ public class WebServer
 
       t.sendResponseHeaders(code, len);
       OutputStream out = t.getResponseBody();
-      BlockReadUtils.streamContentOut(ctx, content_id, ci, out);
+      BlockReadUtils.streamContentOut(ctx, content_id, ci, out, node.getUserWalletDB());
       out.close();
 
     }

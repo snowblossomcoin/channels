@@ -10,14 +10,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.ChainHash;
+import snowblossom.lib.CipherUtil;
+import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.node.StatusInterface;
+import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.WalletKeyPair;
+import snowblossom.util.proto.SymmetricKey;
 
 public class BlockReadUtils
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
-  public static void extractFiles(ChannelContext ctx, File base_path, StatusInterface status)
+  public static void extractFiles(ChannelContext ctx, File base_path, StatusInterface status, WalletDatabase wallet)
     throws ValidationException, java.io.IOException
   {
 
@@ -46,7 +51,7 @@ public class BlockReadUtils
 
       try
       {
-        extractFile(ctx, base_path, key, msg_id, ps);
+        extractFile(ctx, base_path, key, msg_id, ps, wallet);
       }
       catch(Throwable t)
       {
@@ -60,7 +65,7 @@ public class BlockReadUtils
 
   }
 
-  private static void extractFile(ChannelContext ctx, File base_path, String file_key, ChainHash msg_id, ProcessStatus ps)
+  private static void extractFile(ChannelContext ctx, File base_path, String file_key, ChainHash msg_id, ProcessStatus ps, WalletDatabase wallet)
     throws ValidationException, java.io.IOException
   {
     File curr_path = base_path;
@@ -112,7 +117,7 @@ public class BlockReadUtils
     AtomicFileOutputStream out = new AtomicFileOutputStream(curr_path);
     try
     {
-      streamContentOut(ctx, msg_id, ci, out);
+      streamContentOut(ctx, msg_id, ci, out, wallet);
 
       out.flush();
       out.close();
@@ -129,8 +134,8 @@ public class BlockReadUtils
   }
 
 
-  public static void streamContentOut(ChannelContext ctx, ChainHash msg_id, ContentInfo ci, OutputStream out)
-    throws java.io.IOException
+  public static void streamContentOut(ChannelContext ctx, ChainHash msg_id, ContentInfo ci, OutputStream out, WalletDatabase wallet)
+    throws java.io.IOException, ValidationException
   {
     // TODO - check hash of stream as we stream it
     if (ci.getContentLength() == ci.getContent().size()) 
@@ -142,6 +147,24 @@ public class BlockReadUtils
     
 		int total_chunks = MiscUtils.getNumberOfChunks(ci);
 
+    SymmetricKey sym_key = null;
+    if (ci.getEncryptedKeyId().size() > 0)
+    {
+      String key_id = HexUtil.getHexString(ci.getEncryptedKeyId());
+      sym_key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, wallet.getKeys(0));
+
+      if (sym_key == null)
+      {
+        WalletKeyPair wkp = ChannelCipherUtils.getKeyForChannel(ctx.cid, wallet);
+        sym_key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, wkp);
+      }
+      if (sym_key == null)
+      {
+        throw new ValidationException("Unable to load key: " + key_id);
+      }
+
+    }
+
     for(int i=0; i<total_chunks; i++)
     { 
       // TODO - decrypt as needed
@@ -151,6 +174,11 @@ public class BlockReadUtils
       {
         logger.warning("Missing chunk data: " + msg_id + "/" + i);
         throw new java.io.IOException("Missing chunk data: " + msg_id + "/" + i);
+      }
+
+      if (sym_key != null)
+      {
+        chunk_data = CipherUtil.decryptSymmetric(sym_key, chunk_data);
       }
       out.write(chunk_data.toByteArray());
     }

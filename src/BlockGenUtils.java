@@ -1,10 +1,10 @@
 package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.ByteArrayInputStream;
 import java.security.MessageDigest;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,13 +15,12 @@ import snowblossom.channels.proto.*;
 import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
+import snowblossom.lib.CipherUtil;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.Globals;
-import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
-import snowblossom.lib.CipherUtil;
 
 public class BlockGenUtils
 {

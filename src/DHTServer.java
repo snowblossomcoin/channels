@@ -3,6 +3,8 @@ package snowblossom.channels;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,8 +13,6 @@ import snowblossom.lib.AddressSpecHash;
 import snowblossom.lib.AddressUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
-import java.util.LinkedList;
-import java.util.Collections;
 
 /**
  * GRPC DHT server.  Some methods can also be called directly.  Whatever.

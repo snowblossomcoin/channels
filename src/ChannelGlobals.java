@@ -63,3 +63,4 @@ public class ChannelGlobals
   public static final String CHAN_NEED_PEERS_WARDEN = "snowblossom.channels.warden.NeedPeersWarden";
 
 }
+

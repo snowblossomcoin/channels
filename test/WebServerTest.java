@@ -2,10 +2,11 @@ package channels;
 
 import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -22,7 +23,6 @@ import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletDatabase;
-import java.net.HttpURLConnection;
 
 public class WebServerTest
 {

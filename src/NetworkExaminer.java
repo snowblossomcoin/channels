@@ -2,10 +2,9 @@ package snowblossom.channels;
 
 import duckutil.NetUtil;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.SocketAddress;
-import java.net.NetworkInterface;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;

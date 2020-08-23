@@ -343,7 +343,7 @@ public class ChannelNodePanel extends BasePanel
         String base_upload = ice_leaf_prefs.get("channel_upload_path", null);
         File channel_upload_path = new File(base_upload, cid.asStringWithoutColon());
 
-        BlockReadUtils.extractFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, this);
+        BlockReadUtils.extractFiles( node.getChannelSubscriber().openChannel(cid), channel_upload_path, this, node.getUserWalletDB());
       }
       catch(Throwable t)
       {

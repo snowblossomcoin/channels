@@ -1,10 +1,9 @@
 package snowblossom.channels;
 
+import java.io.File;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
-import java.io.File;
 import snowblossom.util.proto.SymmetricKey;
-
 
 public class FileBlockImportSettings
 {
