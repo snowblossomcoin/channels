@@ -343,3 +343,29 @@ message DHTStrategy
   int64 period = 3; // Might have meaning depending on mode
   int64 period_mod = 4; // might have meaning depending on mode
 }
+
+message EncryptedChannelConfig 
+{
+  string protected_path = 1;
+  Offer offer = 2;
+
+
+}
+message Offer
+{
+  enum OfferMode {
+    UNDEFINED = 0;
+    FOREVER_ACCESS = 1;
+  }
+  OfferMode offer_mode = 10;
+  string offer_id = 11;
+  map<string, OfferCurrency> offer_price = 12;
+
+}
+
+message OfferCurrency
+{
+  double price = 1;
+  string address = 2;
+}
+

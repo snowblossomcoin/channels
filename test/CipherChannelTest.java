@@ -21,6 +21,10 @@ import snowblossom.channels.proto.*;
 import snowblossom.lib.*;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.proto.AddressSpec;
+import java.io.PrintStream;
+
+import snowblossom.channels.proto.EncryptedChannelConfig;
+import com.google.protobuf.util.JsonFormat;
 
 public class CipherChannelTest
 {
@@ -37,6 +41,9 @@ public class CipherChannelTest
   public static final int MAX_WAIT_SEC=25; 
   public static final int FILES_TO_SYNC=25;
   public static final int MAX_FILE_SIZE=4000000;
+
+  
+
 
 
   @Test
@@ -65,10 +72,25 @@ public class CipherChannelTest
 		ChannelContext ctx_b = node_b.getChannelSubscriber().openChannel(cid);
 		ChannelContext ctx_c = node_c.getChannelSubscriber().openChannel(cid);
 		ChannelContext ctx_d = node_c.getChannelSubscriber().openChannel(cid);
+    
+    File file_dir = test_folder.newFolder();
+
+    {
+	    JsonFormat.Printer printer = JsonFormat.printer();
+  	  EncryptedChannelConfig.Builder conf = EncryptedChannelConfig.newBuilder();
+    	conf.setProtectedPath("/prot/");
+			
+			PrintStream file_out = new PrintStream(new FileOutputStream(new File(file_dir, "encryption.json")));
+
+			file_out.println(printer.print(conf.build()));
+			file_out.close();
+    }
+
 
 		Assert.assertNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
 
-		ChannelCipherUtils.establishCommonKey(node_a, ctx_a);
+    a_a.createBlockForFiles(file_dir);
+		//ChannelCipherUtils.establishCommonKey(node_a, ctx_a);
 
 		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
 
@@ -80,7 +102,6 @@ public class CipherChannelTest
 
 		String key_id = ChannelCipherUtils.getCommonKeyID(ctx_a);
 
-    File file_dir = test_folder.newFolder();
 
     TreeMap<String, ChainHash> plain_file_map = new TreeMap<>();
     TreeMap<String, ChainHash> prot_file_map = new TreeMap<>();
@@ -172,6 +193,7 @@ public class CipherChannelTest
       ChainHash hash = prot_file_map.get(name);
       Assert.assertEquals( hash, download(webport_a, cid, "prot/" + name));
       Assert.assertEquals( hash, download(webport_b, cid, "prot/" + name));
+      //Assert.assertEquals( hash, download(webport_c, cid, "prot/" + name));
       Assert.assertEquals( hash, download(webport_d, cid, "prot/" + name));
     }
 

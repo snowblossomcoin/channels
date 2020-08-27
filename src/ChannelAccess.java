@@ -124,20 +124,7 @@ public class ChannelAccess
   {
     FileBlockImportSettings settings = new FileBlockImportSettings(ctx, base_path, node.getUserWalletDB(), null);
 
-    String key_id = ChannelCipherUtils.getCommonKeyID(ctx);
-
-    if (key_id != null)
-    {
-
-      SymmetricKey key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, node.getUserWalletDB().getKeys(0));
-      settings.setSymmetricKey(key);
-
-      settings.setEncryptPrefix("/prot/");
-
-
-    }
-
-
+    settings.setupEncrypt(ctx, node);
 
     BlockGenUtils.createBlockForFiles(settings);
   }

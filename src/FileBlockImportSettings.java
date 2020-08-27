@@ -4,6 +4,16 @@ import java.io.File;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.util.proto.SymmetricKey;
+import snowblossom.lib.ValidationException;
+import snowblossom.channels.proto.EncryptedChannelConfig;
+
+
+import com.google.protobuf.util.JsonFormat;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.Reader;
+
 
 public class FileBlockImportSettings
 {
@@ -47,7 +57,40 @@ public class FileBlockImportSettings
 
     if (prefix.startsWith(encrypt_prefix)) return true;
     return false;
+  }
 
+  public void setupEncrypt(ChannelContext ctx, ChannelNode node)
+		throws ValidationException
+  {
+    File settings_file = new File(base_path, "encryption.json");
+
+    if (settings_file.exists())
+    {
+      try
+      {
+        EncryptedChannelConfig.Builder encrypted_config = EncryptedChannelConfig.newBuilder();
+
+        JsonFormat.Parser parser = JsonFormat.parser();
+        Reader input = new InputStreamReader(new FileInputStream(settings_file));
+        parser.merge(input, encrypted_config);
+
+        String key_id = ChannelCipherUtils.getCommonKeyID(ctx);
+        if (key_id == null)
+        {
+          ChannelCipherUtils.establishCommonKey(node, ctx);
+          key_id = ChannelCipherUtils.getCommonKeyID(ctx);
+        }
+
+        SymmetricKey key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, signer.getKeys(0));
+        setSymmetricKey(key);
+
+        setEncryptPrefix(encrypted_config.getProtectedPath());
+      }
+      catch(java.io.IOException e)
+      {
+        throw new ValidationException(e);
+      }
+    }
 
   }
 

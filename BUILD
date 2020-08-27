@@ -17,6 +17,7 @@ java_library(
     "@maven//:org_bouncycastle_bcprov_jdk15on",
     "@maven//:org_bitlet_weupnp",
     "@maven//:io_netty_netty_handler",
+    "@com_google_protobuf//:protobuf_java_util",
     ":protolib",
   ],
 )
@@ -28,6 +29,15 @@ java_binary(
     ":channelslib",
   ],
 )
+
+java_binary(
+  name = "JsonTest",
+  main_class = "snowblossom.channels.JsonTest",
+  runtime_deps = [
+    ":channelslib",
+  ],
+)
+
 
 java_binary(
   name = "ChannelIceLeaf",
@@ -147,6 +157,7 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@com_google_protobuf//:protobuf_java_util",
       ":channelslib",
       ":protolib",
     ],
