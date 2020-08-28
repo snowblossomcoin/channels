@@ -1,19 +1,16 @@
 package snowblossom.channels;
 
+import com.google.protobuf.util.JsonFormat;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import snowblossom.channels.proto.EncryptedChannelConfig;
+import snowblossom.lib.Globals;
+import snowblossom.lib.ValidationException;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.util.proto.SymmetricKey;
-import snowblossom.lib.ValidationException;
-import snowblossom.channels.proto.EncryptedChannelConfig;
-
-
-import com.google.protobuf.util.JsonFormat;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.Reader;
-
 
 public class FileBlockImportSettings
 {
@@ -62,6 +59,8 @@ public class FileBlockImportSettings
   public void setupEncrypt(ChannelContext ctx, ChannelNode node)
 		throws ValidationException
   {
+    Globals.addCryptoProvider();
+
     File settings_file = new File(base_path, "encryption.json");
 
     if (settings_file.exists())

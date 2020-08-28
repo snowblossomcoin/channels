@@ -82,31 +82,34 @@ public class ChannelOutsiderSender extends PeriodicThread
     {
       //TODO - use random rather than just getting everything
       ArrayList<SignedMessage> full_list = new ArrayList<>();
-      
-      full_list.addAll(ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 100000).values());
+      full_list.addAll(ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 100000, true).values());
       if (full_list.size() == 0) return;
 
-      Random rnd = new Random();
 
-      SignedMessage sm = full_list.get(rnd.nextInt(full_list.size()));
+      //Random rnd = new Random();
+      //SignedMessage sm = full_list.get(rnd.nextInt(full_list.size()));
 
-      try
+      for(SignedMessage sm : full_list)
       {
-        ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
-
-        ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
-          .setChannelId(cid.getBytes())
-          .setContent(sm)
-          .build();
-
-        for(ChannelLink link : ctx.getLinks())
+        try
         {
-          link.writeMessage(m_out);
+          ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
+
+          ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
+            .setChannelId(cid.getBytes())
+            .setContent(sm)
+            .build();
+
+          for(ChannelLink link : ctx.getLinks())
+          {
+            link.writeMessage(m_out);
+          }
         }
-      }
-      catch(ValidationException e)
-      {
-        ctx.db.getOutsiderMap().remove( sm.getMessageId() );
+        catch(ValidationException e)
+        {
+          ctx.db.getOutsiderMap().remove( sm.getMessageId() );
+        }
+
       }
 
 

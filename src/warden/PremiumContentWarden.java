@@ -7,6 +7,7 @@ import snowblossom.channels.ChannelID;
 import snowblossom.channels.proto.SignedMessage;
 
 import snowblossom.channels.proto.ChannelBlock;
+import com.google.protobuf.ByteString;
 
 public class PremiumContentWarden extends BaseWarden
 {
@@ -14,6 +15,9 @@ public class PremiumContentWarden extends BaseWarden
   {
     super(channel_access);
 
+
+
+    
   }
 
 	private SymmetricKey sym_key;
@@ -21,6 +25,14 @@ public class PremiumContentWarden extends BaseWarden
   @Override
   public void periodicRun() throws Exception
   {
+    // Read encryption settings file
+    ByteString encryption_json_data = channel_access.readFile("/web/encryption.json");
+
+    // if exists, load sym key
+    // watch snow address
+    // on payments to address, compare to required amount
+    // if so, addKey for recipient
+
 
   }
 

@@ -2,10 +2,12 @@ package channels;
 
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.util.JsonFormat;
 import duckutil.ConfigMem;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -18,13 +20,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import snowblossom.channels.*;
 import snowblossom.channels.proto.*;
-import snowblossom.lib.*;
-import snowblossom.proto.WalletKeyPair;
-import snowblossom.proto.AddressSpec;
-import java.io.PrintStream;
-
 import snowblossom.channels.proto.EncryptedChannelConfig;
-import com.google.protobuf.util.JsonFormat;
+import snowblossom.lib.*;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.WalletKeyPair;
 
 public class CipherChannelTest
 {

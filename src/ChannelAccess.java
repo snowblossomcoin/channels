@@ -13,7 +13,8 @@ import snowblossom.channels.proto.SignedMessage;
 import snowblossom.channels.proto.SignedMessagePayload;
 import snowblossom.client.StubHolder;
 import snowblossom.lib.ValidationException;
-import snowblossom.util.proto.SymmetricKey;
+import snowblossom.lib.ChainHash;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Main view and access to a channel for modules that shouldn't have full low level access
@@ -62,7 +63,7 @@ public class ChannelAccess
     TreeMap<Double, SignedMessage> message_map = new TreeMap<>();
 		Random rnd = new Random();
 
-    for(SignedMessage sm : ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 50000).values())
+    for(SignedMessage sm : ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 50000, true).values())
     {
       try
       { 
@@ -142,6 +143,28 @@ public class ChannelAccess
   public ChannelAccess openOtherChannel(ChannelID cid)
   {
     return new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid));
+
+  }
+
+  /**
+   * Reads file from channel or null if it isn't there
+   */
+  public ByteString readFile(String path)
+    throws java.io.IOException, ValidationException
+  {
+    ByteString content_id = ChanDataUtils.getData(ctx, path);
+    if (content_id == null) return null;
+    SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
+    if (content_msg == null) return null;
+
+    ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    BlockReadUtils.streamContentOut(ctx, new ChainHash(content_id), ci, out, node.getUserWalletDB());
+
+    return ByteString.copyFrom(out.toByteArray());
+
+
 
   }
 

@@ -568,5 +568,3 @@ public class Mimer
   }
 
 }
-
-

@@ -1,5 +1,6 @@
 package snowblossom.channels.iceleaf;
 
+import com.google.protobuf.ByteString;
 import duckutil.ConfigMem;
 import duckutil.PeriodicThread;
 import java.awt.GridBagConstraints;
@@ -20,11 +21,11 @@ import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelLink;
 import snowblossom.channels.ChannelNode;
 import snowblossom.channels.ChunkMapUtils;
+import snowblossom.channels.FileBlockImportSettings;
 import snowblossom.channels.MiscUtils;
 import snowblossom.channels.PeerLink;
 import snowblossom.channels.PrintUtil;
 import snowblossom.channels.SocksServer;
-import snowblossom.channels.FileBlockImportSettings;
 import snowblossom.channels.proto.ChannelPeerInfo;
 import snowblossom.iceleaf.BasePanel;
 import snowblossom.iceleaf.IceLeaf;
@@ -386,7 +387,10 @@ public class ChannelNodePanel extends BasePanel
             sb.append("Settings: " + ctx.block_ingestor.getHead().getEffectiveSettings());
           }
           sb.append(String.format("peers:%d ", ChannelLink.countActuallyOpen(ctx.getLinks())));
+          sb.append("\n");
           sb.append(String.format("missing_chunks:%d", ChunkMapUtils.getWantList(ctx).size()));
+          sb.append("\n");
+          sb.append(String.format("outsiders:%s", ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 500000, true).size()));
           sb.append("\n");
 
           sb.append("Peers:\n");
