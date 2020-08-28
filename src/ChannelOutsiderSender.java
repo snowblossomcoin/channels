@@ -86,9 +86,8 @@ public class ChannelOutsiderSender extends PeriodicThread
       if (full_list.size() == 0) return;
 
 
-      //Random rnd = new Random();
-      //SignedMessage sm = full_list.get(rnd.nextInt(full_list.size()));
 
+      // prune messages
       for(SignedMessage sm : full_list)
       {
         try
@@ -112,6 +111,18 @@ public class ChannelOutsiderSender extends PeriodicThread
 
       }
 
+      // pick a random one and send it
+      Random rnd = new Random();
+      SignedMessage sm = full_list.get(rnd.nextInt(full_list.size()));
+      ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
+        .setChannelId(cid.getBytes())
+        .setContent(sm)
+        .build();
+
+      for(ChannelLink link : ctx.getLinks())
+      {
+        link.writeMessage(m_out);
+      }
 
     }
   }

@@ -1,7 +1,9 @@
 package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -12,9 +14,12 @@ import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.channels.proto.SignedMessagePayload;
 import snowblossom.client.StubHolder;
-import snowblossom.lib.ValidationException;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
-import java.io.ByteArrayOutputStream;
+import snowblossom.lib.ValidationException;
+import snowblossom.proto.AddressSpec;
+import snowblossom.proto.WalletDatabase;
 
 /**
  * Main view and access to a channel for modules that shouldn't have full low level access
@@ -163,8 +168,39 @@ public class ChannelAccess
     BlockReadUtils.streamContentOut(ctx, new ChainHash(content_id), ci, out, node.getUserWalletDB());
 
     return ByteString.copyFrom(out.toByteArray());
+  }
 
+  public boolean amIBlockSigner()
+    throws Exception
+  {
 
+    ChannelBlockSummary head_summary = ctx.block_ingestor.getHead();
+    if (head_summary != null)
+    {
+      ChannelSettings settings = head_summary.getEffectiveSettings();
+
+      HashSet<ByteString> allowed_signers = new HashSet<>();
+      allowed_signers.addAll(settings.getBlockSignerSpecHashesList());
+      allowed_signers.addAll(settings.getAdminSignerSpecHashesList());
+
+      WalletDatabase wdb = node.getUserWalletDB();
+
+      AddressSpec addr = wdb.getAddresses(0);
+
+      AddressSpecHash hash = AddressUtil.getHashForSpec(addr);
+      if (allowed_signers.contains(hash.getBytes()))
+      {
+				return true;
+      }
+      else
+      {
+				return false;
+      }
+    }
+    else
+    {
+			return false;
+    }
 
   }
 

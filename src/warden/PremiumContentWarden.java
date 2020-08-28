@@ -1,23 +1,35 @@
 package snowblossom.channels.warden;
 
-import snowblossom.channels.ChannelAccess;
-
-import snowblossom.util.proto.SymmetricKey;
-import snowblossom.channels.ChannelID;
-import snowblossom.channels.proto.SignedMessage;
-
-import snowblossom.channels.proto.ChannelBlock;
 import com.google.protobuf.ByteString;
+import snowblossom.channels.ChannelAccess;
+import snowblossom.channels.ChannelID;
+import snowblossom.channels.proto.ChannelBlock;
+import snowblossom.channels.proto.SignedMessage;
+import snowblossom.util.proto.SymmetricKey;
 
 public class PremiumContentWarden extends BaseWarden
 {
   public PremiumContentWarden(ChannelAccess channel_access)
   {
     super(channel_access);
+  }
 
+  public static boolean wantsToRun(ChannelAccess channel_access)
+  {
+    try
+    {
+      ByteString encryption_json_data = channel_access.readFile("/web/encryption.json");
 
+      if (encryption_json_data == null) return false;
+      if (!channel_access.amIBlockSigner()) return false;
 
-    
+      return true;
+    }
+    catch(Exception e)
+    {
+      return false;
+    }
+
   }
 
 	private SymmetricKey sym_key;
