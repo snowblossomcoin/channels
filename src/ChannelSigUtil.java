@@ -136,20 +136,20 @@ public class ChannelSigUtil
   public static ChannelPeerInfo validatePeerInfo(SignedMessage peer_signed_message)
     throws ValidationException
   {
-		SignedMessagePayload payload = validateSignedMessage(peer_signed_message);
+    SignedMessagePayload payload = validateSignedMessage(peer_signed_message);
 
-		if (!payload.hasPeerInfo()) throw new ValidationException("Signed peer info has no peer info");
+    if (!payload.hasPeerInfo()) throw new ValidationException("Signed peer info has no peer info");
 
-		ChannelPeerInfo peer_info = payload.getPeerInfo();
+    ChannelPeerInfo peer_info = payload.getPeerInfo();
 
-		AddressSpecHash signed_address = AddressUtil.getHashForSpec(payload.getClaim());
-		AddressSpecHash node_id = new AddressSpecHash(peer_info.getAddressSpecHash());
-		if (!signed_address.equals(node_id))
-		{ 
-			throw new ValidationException("Signed address does not match node id");
-		}
+    AddressSpecHash signed_address = AddressUtil.getHashForSpec(payload.getClaim());
+    AddressSpecHash node_id = new AddressSpecHash(peer_info.getAddressSpecHash());
+    if (!signed_address.equals(node_id))
+    { 
+      throw new ValidationException("Signed address does not match node id");
+    }
 
-		return peer_info;
+    return peer_info;
  
   }
 }

@@ -54,7 +54,7 @@ public class ChannelNode
   private boolean autojoin = false;
 
   public static void main(String args[])
-		throws Exception
+    throws Exception
   {
     Globals.addCryptoProvider();
 
@@ -79,13 +79,13 @@ public class ChannelNode
   }
 
   public ChannelNode(Config config)
-		throws Exception
+    throws Exception
   {
     this(config, new StubHolder(StubUtil.openChannel(config, new NetworkParamsProd())));
   }
 
   public ChannelNode(Config config, StubHolder stub_holder)
-		throws Exception
+    throws Exception
   {
     this.config = config;
     this.stub_holder = stub_holder;
@@ -96,7 +96,7 @@ public class ChannelNode
     logger.info("Starting: " + ChannelGlobals.VERSION);
 
     loadWallets();
-		String db_type = config.get("db_type");
+    String db_type = config.get("db_type");
 
     if((db_type==null) || (db_type.equals("rocksdb")))
     { 

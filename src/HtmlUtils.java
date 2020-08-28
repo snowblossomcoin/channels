@@ -8,7 +8,7 @@ public class HtmlUtils
 {
 
   public static String getIndex(File dir)
-	{
+  {
     StringBuilder content=new StringBuilder();
 
     content.append("<body>");
@@ -55,7 +55,7 @@ public class HtmlUtils
 
     return content.toString();
 
-	}
+  }
 
   public static String getHeader(String title)
   {

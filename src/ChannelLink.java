@@ -23,9 +23,9 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 {   
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
-	private final boolean server_side;
+  private final boolean server_side;
   private final boolean client_side;
-	private final StreamObserver<ChannelPeerMessage> sink;
+  private final StreamObserver<ChannelPeerMessage> sink;
   private PeerLink peer_link; // only if we are client
   private ChannelNode node; // only if we are server
 
@@ -53,18 +53,18 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   private Semaphore chunk_hold_sem;
 
 
-	// As server
-	public ChannelLink(ChannelNode node, StreamObserver<ChannelPeerMessage> sink)
-	{
+  // As server
+  public ChannelLink(ChannelNode node, StreamObserver<ChannelPeerMessage> sink)
+  {
     this.node = node;
     open_time = System.currentTimeMillis();
-		this.sink = sink;
+    this.sink = sink;
     server_side = true;
     client_side = false;
 
     chunk_hold_sem = new Semaphore(0);
 
-	}
+  }
 
   // As client
   public ChannelLink(ChannelNode node, PeerLink peer_link, ChannelID cid, ChannelContext ctx)
@@ -120,10 +120,10 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   public boolean isGood()
   { 
     if (closed) return false;
-		if (peer_link != null)
-		{
-			if (!peer_link.isGood()) return false;
-		}
+    if (peer_link != null)
+    {
+      if (!peer_link.isGood()) return false;
+    }
     long tm = Math.max(open_time, last_recv);
 
     if (tm + ChannelGlobals.CHANNEL_LINK_TIMEOUT < System.currentTimeMillis())
@@ -160,27 +160,27 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     }
   }
 
-	@Override
-	public void onCompleted()
-	{
+  @Override
+  public void onCompleted()
+  {
     close();
   }
-	
-	@Override
-	public void onError(Throwable t)
-	{ 
-		//logger.log(Level.WARNING, "wobble", t);
-		close();
-	}
-	
+  
+  @Override
+  public void onError(Throwable t)
+  { 
+    //logger.log(Level.WARNING, "wobble", t);
+    close();
+  }
+  
   /** Concepts copied from Snowblossom PeerLink.  Basic contract is that each side sends
    * a ChannelTip ever little while (or on new blocks) and it is up to the other side to 
    * request what they want. */
-	@Override
-	public void onNext(ChannelPeerMessage msg)
-	{ 
+  @Override
+  public void onNext(ChannelPeerMessage msg)
+  { 
 
-		last_recv = System.currentTimeMillis();
+    last_recv = System.currentTimeMillis();
     if (peer_link != null) peer_link.pokeRecv();
 
     // Set ChannelID
@@ -276,7 +276,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
                     .build());
 
       }
-			else if (msg.hasBlock())
+      else if (msg.hasBlock())
       {
         // Getting a block, we probably asked for it.  See if we can eat it.
         ChannelBlock blk = msg.getBlock();
@@ -409,7 +409,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     }
 
 
-	}
+  }
 
   /**
    * The basic plan is, keep asking about previous blocks

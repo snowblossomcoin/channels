@@ -92,7 +92,7 @@ public class SingleChannelDB
     content_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("c"));
     outsider_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("outsider"));
     summary_map = new ProtoDBMap(ChannelBlockSummary.newBuilder().build().getParserForType(), prov.openMap("block_sum"));
-		block_height_map = prov.openMap("height");
+    block_height_map = prov.openMap("height");
 
     data_map = prov.openMap("d");
     chunk_map = prov.openMap("k");

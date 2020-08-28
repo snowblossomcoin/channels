@@ -365,12 +365,12 @@ public class ChannelValidation
       throw new ValidationException("Payload is not dht_data");
     }
 
-		AddressSpecHash signed_hash = AddressUtil.getHashForSpec(payload.getClaim());
+    AddressSpecHash signed_hash = AddressUtil.getHashForSpec(payload.getClaim());
 
-		if (!signed_hash.equals(payload.getDhtData().getPeerInfo().getAddressSpecHash()))
-		{
-			throw new ValidationException("Signer of DHT data does not match peer info");
-		}
+    if (!signed_hash.equals(payload.getDhtData().getPeerInfo().getAddressSpecHash()))
+    {
+      throw new ValidationException("Signer of DHT data does not match peer info");
+    }
     if (payload.getDhtData().getElementId().size() != ChannelGlobals.DHT_ELEMENT_SIZE)
     { 
       throw new ValidationException("Element id wrong length");
@@ -380,17 +380,17 @@ public class ChannelValidation
 
   }
 
-	public static void validateDHTDataSet(DHTDataSet ds, ByteString element_id)
+  public static void validateDHTDataSet(DHTDataSet ds, ByteString element_id)
     throws ValidationException
-	{
-		for(SignedMessage sm : ds.getDhtDataList())
-		{
-			SignedMessagePayload payload = validateDHTData(sm);
-			if (!element_id.equals(payload.getDhtData().getElementId()))
-			{ 
-				throw new ValidationException("Not requested element_id");
-			}	
-		}
-	}
+  {
+    for(SignedMessage sm : ds.getDhtDataList())
+    {
+      SignedMessagePayload payload = validateDHTData(sm);
+      if (!element_id.equals(payload.getDhtData().getElementId()))
+      { 
+        throw new ValidationException("Not requested element_id");
+      }  
+    }
+  }
 }
 

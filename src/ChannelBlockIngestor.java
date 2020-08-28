@@ -237,25 +237,25 @@ public class ChannelBlockIngestor
   }
 
   public void ingestContent(SignedMessage sm)
-		throws ValidationException
+    throws ValidationException
   {
-			ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
+      ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
 
-			if (ctx.db.getOutsiderMap().get(sm.getMessageId()) == null)
-			{
-				ctx.db.getOutsiderMap().put(sm.getMessageId(), sm);
+      if (ctx.db.getOutsiderMap().get(sm.getMessageId()) == null)
+      {
+        ctx.db.getOutsiderMap().put(sm.getMessageId(), sm);
 
-				ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
-					.setChannelId(cid.getBytes())
-					.setContent(sm)
-					.build();
+        ChannelPeerMessage m_out = ChannelPeerMessage.newBuilder()
+          .setChannelId(cid.getBytes())
+          .setContent(sm)
+          .build();
 
-				for(ChannelLink link : ctx.getLinks())
-				{
-					link.writeMessage(m_out);
-				}
+        for(ChannelLink link : ctx.getLinks())
+        {
+          link.writeMessage(m_out);
+        }
         node.getChannelSubscriber().notifyChannelContent(cid, sm);
-			}
+      }
 
   }
 

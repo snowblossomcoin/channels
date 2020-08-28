@@ -74,9 +74,9 @@ public class LocalPeerFinder
       throws Exception
     {
       String msg = "hello";
-     	SignedMessagePayload.Builder p = SignedMessagePayload.newBuilder();
-     	p.setPeerInfo( node.getNetworkExaminer().createPeerInfo() );
-	    SignedMessage signed_peer_info = node.signMessageNode(p.build());
+       SignedMessagePayload.Builder p = SignedMessagePayload.newBuilder();
+       p.setPeerInfo( node.getNetworkExaminer().createPeerInfo() );
+      SignedMessage signed_peer_info = node.signMessageNode(p.build());
 
       LocalPeerDisco.Builder lpd = LocalPeerDisco.newBuilder();
       lpd.setSignedPeerInfo(signed_peer_info);

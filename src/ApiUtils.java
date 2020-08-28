@@ -169,7 +169,7 @@ public class ApiUtils
    * Take a JSON object and convert it into a ContentInfo and sign it with this user's key
    */
   public static SignedMessage getContentFromJson(JSONObject input, ChannelNode node, ChannelContext ctx)
-		throws Exception
+    throws Exception
   {
     ContentInfo.Builder ci = ContentInfo.newBuilder();
 
@@ -177,7 +177,7 @@ public class ApiUtils
     {
       ci.setMimeType( input.get("mime_type").toString() );
     }
-		if (input.containsKey("content"))
+    if (input.containsKey("content"))
     {
       ci.setContent( ByteString.copyFrom(input.get("content").toString().getBytes()));
       ci.setContentLength( ci.getContent().size() );
@@ -202,7 +202,7 @@ public class ApiUtils
 
     ci.setContentHash( DigestUtil.hash(ci.getContent()) );
    
-		WalletDatabase wdb = node.getUserWalletDB();
+    WalletDatabase wdb = node.getUserWalletDB();
 
     TxOutPoint fbo_out = getFboOutpoint(node, wdb.getAddresses(0));
     //System.out.println("FBO OUT: " + fbo_out);
@@ -223,14 +223,14 @@ public class ApiUtils
   }
 
   public static void submitContent(JSONObject input, ChannelNode node, ChannelContext ctx)
-		throws Exception
+    throws Exception
   {
     SignedMessage sm = getContentFromJson(input, node, ctx);
-		ctx.block_ingestor.ingestContent(sm);
+    ctx.block_ingestor.ingestContent(sm);
   }
 
   public static void submitBlock(JSONObject input, ChannelNode node, ChannelContext ctx)
-		throws Exception
+    throws Exception
   {
     LinkedList<SignedMessage> content = new LinkedList<>();
 
@@ -321,7 +321,7 @@ public class ApiUtils
       allowed_signers.addAll(settings.getBlockSignerSpecHashesList());
       allowed_signers.addAll(settings.getAdminSignerSpecHashesList());
 
-		  WalletDatabase wdb = node.getUserWalletDB();
+      WalletDatabase wdb = node.getUserWalletDB();
 
       AddressSpec addr = wdb.getAddresses(0);
 

@@ -10,7 +10,7 @@ import snowblossom.channels.proto.ChannelServiceGrpc;
  */
 public class ChannelPeerServer extends ChannelServiceGrpc.ChannelServiceImplBase
 {
-	private static final Logger logger = Logger.getLogger("snowblossom.channels");
+  private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
   private final ChannelNode node;
 
@@ -25,8 +25,8 @@ public class ChannelPeerServer extends ChannelServiceGrpc.ChannelServiceImplBase
 
     // Note: we don't know what channel this request is about until the onNext() is called on the ChannelLink.
     // That should be immediately after this return, but who knows.
-		ChannelLink cl = new ChannelLink(node, sink);
-		return cl;
+    ChannelLink cl = new ChannelLink(node, sink);
+    return cl;
   }
 
 

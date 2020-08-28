@@ -18,8 +18,8 @@ public class NetworkExaminer
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
-	private String ipv4_host;
-	private String ipv6_host;
+  private String ipv4_host;
+  private String ipv6_host;
   private String onion_host;
   private ChannelNode node;
 
@@ -27,14 +27,14 @@ public class NetworkExaminer
 
   private final boolean tor_only;
 
-	public NetworkExaminer(ChannelNode node)
-	{
+  public NetworkExaminer(ChannelNode node)
+  {
     this.node = node;
 
     tor_only = node.getConfig().getBoolean("tor_only");
 
-		updateHosts();
-	}
+    updateHosts();
+  }
 
   // TODO - on failure of this, might want to use getAllAddresses().
   // Any non-link-local ipv6 address is a good bet for IPV6.
@@ -139,23 +139,23 @@ public class NetworkExaminer
   public Set<InetAddress> getAllAddresses()
     throws java.io.IOException
   {
-		HashSet<InetAddress> addrs = new HashSet<>();
+    HashSet<InetAddress> addrs = new HashSet<>();
 
-		Enumeration<NetworkInterface> faces = NetworkInterface.getNetworkInterfaces();
-		while(faces.hasMoreElements())
-		{ 
-			NetworkInterface ni = faces.nextElement();
-			for(InterfaceAddress ia : ni.getInterfaceAddresses())
-			{ 
-				InetAddress a = ia.getAddress();
-				if (!a.	isLoopbackAddress())
-				{
+    Enumeration<NetworkInterface> faces = NetworkInterface.getNetworkInterfaces();
+    while(faces.hasMoreElements())
+    { 
+      NetworkInterface ni = faces.nextElement();
+      for(InterfaceAddress ia : ni.getInterfaceAddresses())
+      { 
+        InetAddress a = ia.getAddress();
+        if (!a.  isLoopbackAddress())
+        {
           InetAddress a2 = InetAddress.getByAddress(a.getAddress());
-					addrs.add(a2);
-				}
-			}
-		}
-		return addrs;
+          addrs.add(a2);
+        }
+      }
+    }
+    return addrs;
 
   }
 

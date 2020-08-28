@@ -162,21 +162,21 @@ public class ChannelPeerMaintainer extends PeriodicThread
   }
 
   private void saveDHT(ChannelID cid, List<ByteString> dht_element_lst, ChannelPeerInfo my_info)
-		throws ValidationException
+    throws ValidationException
   {
     for(ByteString element_id : dht_element_lst)
     {
       if (!node.getDHTCache().haveWritten(element_id))
       {
-      	SignedMessage sm = node.signMessageNode(SignedMessagePayload.newBuilder()
-        	.setDhtData( DHTData.newBuilder().setElementId(element_id).setPeerInfo(my_info).build() )
-        	.build());
+        SignedMessage sm = node.signMessageNode(SignedMessagePayload.newBuilder()
+          .setDhtData( DHTData.newBuilder().setElementId(element_id).setPeerInfo(my_info).build() )
+          .build());
 
-      	node.getDHTServer().storeDHTDataAsyncTrusted(
-        	StoreDHTRequest.newBuilder()
-          	.setDesiredResultCount(0)
-          	.setSignedDhtData(sm)
-        	.build()); 
+        node.getDHTServer().storeDHTDataAsyncTrusted(
+          StoreDHTRequest.newBuilder()
+            .setDesiredResultCount(0)
+            .setSignedDhtData(sm)
+          .build()); 
         logger.fine(String.format("DHT Saved %s for %s", new ChainHash(element_id), cid.asString()));
       
         node.getDHTCache().markWrite(element_id);

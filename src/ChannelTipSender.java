@@ -67,8 +67,8 @@ public class ChannelTipSender extends PeriodicThread
       ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
       if (ctx != null)
       {
-				ChannelPeerMessage msg = getTip(ctx);
-				List<ChannelLink> links = ctx.getLinks();
+        ChannelPeerMessage msg = getTip(ctx);
+        List<ChannelLink> links = ctx.getLinks();
         for(ChannelLink link : links)
         {
           link.writeMessage(msg);
@@ -94,11 +94,11 @@ public class ChannelTipSender extends PeriodicThread
 
   public void sendTip(ChannelID cid, ChannelLink link)
   {
-		ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
-		if (ctx != null)
-		{
-			link.writeMessage(getTip(ctx));
-		}
+    ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+    if (ctx != null)
+    {
+      link.writeMessage(getTip(ctx));
+    }
   }
 
   protected ChannelPeerMessage getTip(ChannelContext ctx)

@@ -41,7 +41,7 @@ public class PeerLink implements StreamObserver<PeerList>
   private final StargateServiceBlockingStub stargate_blocking_stub;
   private final ChannelServiceStub channel_stub;
   private final ChannelServiceBlockingStub channel_blocking_stub;
-	private final ManagedChannel channel;
+  private final ManagedChannel channel;
   private final AddressSpecHash remote_node_id;
   
   private volatile boolean closed;
@@ -52,13 +52,13 @@ public class PeerLink implements StreamObserver<PeerList>
 
   // We are the client
   public PeerLink(ChannelPeerInfo info, ChannelNode node)
-		throws Exception
+    throws Exception
   {
     open_time = System.currentTimeMillis();
     this.node = node;
     this.info = info;
 
-		this.remote_node_id = new AddressSpecHash(info.getAddressSpecHash());
+    this.remote_node_id = new AddressSpecHash(info.getAddressSpecHash());
 
     ConnectInfo conn_info = findConnectInfo();
     if (conn_info == null)
@@ -80,8 +80,8 @@ public class PeerLink implements StreamObserver<PeerList>
 
     NettyChannelBuilder chan_builder = NettyChannelBuilder
       .forAddress(conn_info.getHost(), conn_info.getPort())
-			.useTransportSecurity()
-			.sslContext(ssl_ctx);
+      .useTransportSecurity()
+      .sslContext(ssl_ctx);
 
     if (conn_info.getProtocol().equals("onion"))
     {
@@ -229,13 +229,13 @@ public class PeerLink implements StreamObserver<PeerList>
    */
   public boolean isGood()
   {
-		if (closed) return false;
+    if (closed) return false;
     long tm = Math.max(last_recv, open_time);
 
-		if (tm + ChannelGlobals.PEER_LINK_TIMEOUT < System.currentTimeMillis())
-		{
-			return false;
-		}
+    if (tm + ChannelGlobals.PEER_LINK_TIMEOUT < System.currentTimeMillis())
+    {
+      return false;
+    }
     return true;
   }
 
@@ -269,7 +269,7 @@ public class PeerLink implements StreamObserver<PeerList>
   public void onError(Throwable t)
   {
     //logger.log(Level.WARNING, "wobble", t);
-		close();
+    close();
   }
 
   @Override

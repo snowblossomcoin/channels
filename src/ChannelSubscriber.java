@@ -25,10 +25,10 @@ public class ChannelSubscriber
 
   private HashMap<ChannelID, ChannelContext> chan_map;
 
-	private HashMap<ChannelID, LinkedList<ChannelWatcherInterface> > watcher_map= new HashMap<>(16,0.5f);
+  private HashMap<ChannelID, LinkedList<ChannelWatcherInterface> > watcher_map= new HashMap<>(16,0.5f);
 
 
-	protected Executor exec;
+  protected Executor exec;
   
   public ChannelSubscriber(ChannelNode node)
   {
@@ -171,16 +171,16 @@ public class ChannelSubscriber
 
   public void registerWatcher(ChannelID cid, ChannelWatcherInterface watcher)
   {
-		synchronized(watcher_map)
-		{
-			LinkedList<ChannelWatcherInterface> lst = watcher_map.get(cid);
+    synchronized(watcher_map)
+    {
+      LinkedList<ChannelWatcherInterface> lst = watcher_map.get(cid);
       if (lst == null)
       {
         lst = new LinkedList<ChannelWatcherInterface>();
         watcher_map.put(cid, lst);
       }
       lst.add(watcher);
-		}
+    }
 
   }
 

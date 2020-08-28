@@ -28,7 +28,7 @@ public class BlockGenUtils
 
   /** Creates a new channel and publishes block 0 for it */
   public static ChannelID createChannel(ChannelNode node, WalletDatabase admin, String display_name)
-		throws ValidationException
+    throws ValidationException
   {
     ChannelSettings.Builder init_settings = ChannelSettings.newBuilder();
     init_settings.setDisplayName(display_name);
@@ -44,22 +44,22 @@ public class BlockGenUtils
 
     ChannelID chan_id = ChannelSigUtil.getChannelId(new ChainHash(signed_init_settings.getMessageId()));
 
-		ChannelBlockHeader.Builder header = ChannelBlockHeader.newBuilder();
-		header.setInitialSettings(signed_init_settings);
-		header.setBlockHeight(0);
+    ChannelBlockHeader.Builder header = ChannelBlockHeader.newBuilder();
+    header.setInitialSettings(signed_init_settings);
+    header.setBlockHeight(0);
 
-		header.setVersion(1);
-		header.setChannelId( chan_id.getBytes());
-		header.setPrevBlockHash( ChainHash.ZERO_HASH.getBytes());
-		header.setContentMerkle( ChainHash.ZERO_HASH.getBytes());
+    header.setVersion(1);
+    header.setChannelId( chan_id.getBytes());
+    header.setPrevBlockHash( ChainHash.ZERO_HASH.getBytes());
+    header.setContentMerkle( ChainHash.ZERO_HASH.getBytes());
 
-		ChannelBlock.Builder blk = ChannelBlock.newBuilder();
-		blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
-			SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
+    ChannelBlock.Builder blk = ChannelBlock.newBuilder();
+    blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
+      SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-		ChannelContext ctx = node.getChannelSubscriber().openChannel(chan_id);
+    ChannelContext ctx = node.getChannelSubscriber().openChannel(chan_id);
 
-		ctx.block_ingestor.ingestBlock(blk.build());
+    ctx.block_ingestor.ingestBlock(blk.build());
     
     return chan_id;
   }
@@ -119,7 +119,7 @@ public class BlockGenUtils
 
     ChannelBlock.Builder blk = ChannelBlock.newBuilder();
 
-		header.setContentMerkle( ChainHash.ZERO_HASH.getBytes() );
+    header.setContentMerkle( ChainHash.ZERO_HASH.getBytes() );
     
     blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
