@@ -20,6 +20,8 @@ import snowblossom.lib.ChainHash;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.proto.WalletKeyPair;
+import snowblossom.util.proto.SymmetricKey;
 
 /**
  * Main view and access to a channel for modules that shouldn't have full low level access
@@ -30,6 +32,7 @@ public class ChannelAccess
   private final ChannelContext ctx;
   private final ChannelNode node;
   private final StubHolder snow_stub;
+  
 
   public ChannelAccess(ChannelNode node, ChannelContext ctx)
   {
@@ -66,7 +69,7 @@ public class ChannelAccess
   public List<SignedMessage> getOutsiderByTime(int max_return, boolean oldest_first)
   {
     TreeMap<Double, SignedMessage> message_map = new TreeMap<>();
-		Random rnd = new Random();
+    Random rnd = new Random();
 
     for(SignedMessage sm : ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 50000, true).values())
     {
@@ -78,10 +81,10 @@ public class ChannelAccess
         double v = payload.getTimestamp();
         v+=rnd.nextDouble();
 
-				if (!oldest_first)
-				{
-					v = v * -1.0;
-				}
+        if (!oldest_first)
+        {
+          v = v * -1.0;
+        }
 
         message_map.put( v, sm );
       }
@@ -91,14 +94,14 @@ public class ChannelAccess
       { 
         message_map.pollLastEntry();
       }
-		}
-		LinkedList<SignedMessage> lst = new LinkedList<>();
-		lst.addAll(message_map.values());
+    }
+    LinkedList<SignedMessage> lst = new LinkedList<>();
+    lst.addAll(message_map.values());
 
-		return lst;
+    return lst;
   }
 
-	public void createBlockWithContent(List<SignedMessage> content)
+  public void createBlockWithContent(List<SignedMessage> content)
     throws ValidationException
   {
     BlockGenUtils.createBlockForContent(ctx, content, node.getUserWalletDB());
@@ -190,18 +193,47 @@ public class ChannelAccess
       AddressSpecHash hash = AddressUtil.getHashForSpec(addr);
       if (allowed_signers.contains(hash.getBytes()))
       {
-				return true;
+        return true;
       }
       else
       {
-				return false;
+        return false;
       }
     }
     else
     {
-			return false;
+      return false;
     }
 
+  }
+
+  public SymmetricKey getCommonKeyForChannel()
+    throws ValidationException
+  {
+    String key_id = getCommonKeyId();
+    if (key_id == null) return null;
+
+    return getKeyForChannel(ctx, key_id, node.getUserWalletDB());
+  }
+
+  public static SymmetricKey getKeyForChannel(ChannelContext ctx, String key_id, WalletDatabase wallet)
+    throws ValidationException
+  {
+    SymmetricKey sym_key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, wallet.getKeys(0));
+
+    if (sym_key == null)
+    {
+      WalletKeyPair wkp = ChannelCipherUtils.getKeyForChannel(ctx.cid, wallet);
+      sym_key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, wkp);
+    }
+
+    return sym_key;
+  }
+
+
+  public String getCommonKeyId()
+  {
+    return ChannelCipherUtils.getCommonKeyID(ctx);
   }
 
 }

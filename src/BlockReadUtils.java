@@ -15,7 +15,6 @@ import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
-import snowblossom.proto.WalletKeyPair;
 import snowblossom.util.proto.SymmetricKey;
 
 public class BlockReadUtils
@@ -145,19 +144,15 @@ public class BlockReadUtils
       return;
     }
     
-		int total_chunks = MiscUtils.getNumberOfChunks(ci);
+    int total_chunks = MiscUtils.getNumberOfChunks(ci);
 
     SymmetricKey sym_key = null;
     if (ci.getEncryptedKeyId().size() > 0)
     {
       String key_id = HexUtil.getHexString(ci.getEncryptedKeyId());
-      sym_key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, wallet.getKeys(0));
 
-      if (sym_key == null)
-      {
-        WalletKeyPair wkp = ChannelCipherUtils.getKeyForChannel(ctx.cid, wallet);
-        sym_key = ChannelCipherUtils.getKeyFromChannel(ctx, key_id, wkp);
-      }
+      sym_key = ChannelAccess.getKeyForChannel(ctx, key_id, wallet);
+
       if (sym_key == null)
       {
         throw new ValidationException("Unable to load key: " + key_id);

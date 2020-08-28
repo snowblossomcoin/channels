@@ -41,6 +41,8 @@ public class PremiumContentWarden extends BaseWarden
     ByteString encryption_json_data = channel_access.readFile("/web/encryption.json");
 
     // if exists, load sym key
+    SymmetricKey sym_key = channel_access.getCommonKeyForChannel();
+
     // watch snow address
     // on payments to address, compare to required amount
     // if so, addKey for recipient
