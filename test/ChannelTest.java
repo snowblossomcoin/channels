@@ -25,7 +25,7 @@ public class ChannelTest
     Globals.addCryptoProvider();
   }
 
-	@Test
+  @Test
   public void testChannelDB()
     throws Exception
   {

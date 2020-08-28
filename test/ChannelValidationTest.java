@@ -24,7 +24,7 @@ public class ChannelValidationTest
     Globals.addCryptoProvider();
   }
 
-	@Test
+  @Test
   public void testChannelValidateGood()
     throws Exception
   {

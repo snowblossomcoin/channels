@@ -60,46 +60,46 @@ public class CipherChannelTest
     ChannelNode node_c = startNode("rocksdb", false, webport_c);
     ChannelNode node_d = startNode("rocksdb", false, webport_d);
 
-		ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getUserWalletDB(), "cipher-test");
+    ChannelID cid = BlockGenUtils.createChannel(node_a, node_a.getUserWalletDB(), "cipher-test");
 
     ChannelAccess a_a = new ChannelAccess(node_a, node_a.getChannelSubscriber().openChannel(cid));
     ChannelAccess a_b = new ChannelAccess(node_b, node_b.getChannelSubscriber().openChannel(cid));
     ChannelAccess a_c = new ChannelAccess(node_c, node_c.getChannelSubscriber().openChannel(cid));
     ChannelAccess a_d = new ChannelAccess(node_d, node_d.getChannelSubscriber().openChannel(cid));
 
-		ChannelContext ctx_a = node_a.getChannelSubscriber().openChannel(cid);
-		ChannelContext ctx_b = node_b.getChannelSubscriber().openChannel(cid);
-		ChannelContext ctx_c = node_c.getChannelSubscriber().openChannel(cid);
-		ChannelContext ctx_d = node_c.getChannelSubscriber().openChannel(cid);
+    ChannelContext ctx_a = node_a.getChannelSubscriber().openChannel(cid);
+    ChannelContext ctx_b = node_b.getChannelSubscriber().openChannel(cid);
+    ChannelContext ctx_c = node_c.getChannelSubscriber().openChannel(cid);
+    ChannelContext ctx_d = node_c.getChannelSubscriber().openChannel(cid);
     
     File file_dir = test_folder.newFolder();
 
     {
-	    JsonFormat.Printer printer = JsonFormat.printer();
-  	  EncryptedChannelConfig.Builder conf = EncryptedChannelConfig.newBuilder();
-    	conf.setProtectedPath("/prot/");
-			
-			PrintStream file_out = new PrintStream(new FileOutputStream(new File(file_dir, "encryption.json")));
+      JsonFormat.Printer printer = JsonFormat.printer();
+      EncryptedChannelConfig.Builder conf = EncryptedChannelConfig.newBuilder();
+      conf.setProtectedPath("/prot/");
+      
+      PrintStream file_out = new PrintStream(new FileOutputStream(new File(file_dir, "encryption.json")));
 
-			file_out.println(printer.print(conf.build()));
-			file_out.close();
+      file_out.println(printer.print(conf.build()));
+      file_out.close();
     }
 
 
-		Assert.assertNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
+    Assert.assertNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
 
     a_a.createBlockForFiles(file_dir);
-		//ChannelCipherUtils.establishCommonKey(node_a, ctx_a);
+    //ChannelCipherUtils.establishCommonKey(node_a, ctx_a);
 
-		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
+    Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
 
-		ChannelCipherUtils.addKeys(node_a, ctx_a, ImmutableList.of(node_b.getUserWalletDB().getAddresses(0)));
+    ChannelCipherUtils.addKeys(node_a, ctx_a, ImmutableList.of(node_b.getUserWalletDB().getAddresses(0)));
 
     WalletKeyPair node_d_key = ChannelCipherUtils.getKeyForChannel(cid, node_d.getUserWalletDB());
     AddressSpec spec_d = AddressUtil.getSimpleSpecForKey(node_d_key);
-		ChannelCipherUtils.addKeys(node_a, ctx_a, ImmutableList.of(spec_d));
+    ChannelCipherUtils.addKeys(node_a, ctx_a, ImmutableList.of(spec_d));
 
-		String key_id = ChannelCipherUtils.getCommonKeyID(ctx_a);
+    String key_id = ChannelCipherUtils.getCommonKeyID(ctx_a);
 
 
     TreeMap<String, ChainHash> plain_file_map = new TreeMap<>();
@@ -107,7 +107,7 @@ public class CipherChannelTest
 
     for(int i=0; i<FILES_TO_SYNC; i++)
     {
-			int sz = rnd.nextInt(MAX_FILE_SIZE);
+      int sz = rnd.nextInt(MAX_FILE_SIZE);
       byte[] buff = new byte[sz];
       rnd.nextBytes(buff);
 
@@ -129,7 +129,7 @@ public class CipherChannelTest
 
     for(int i=0; i<FILES_TO_SYNC; i++)
     {
-			int sz = rnd.nextInt(MAX_FILE_SIZE);
+      int sz = rnd.nextInt(MAX_FILE_SIZE);
       byte[] buff = new byte[sz];
       rnd.nextBytes(buff);
       
@@ -169,15 +169,15 @@ public class CipherChannelTest
       Thread.sleep(1000);
     }
 
-		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
-		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_b));
-		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_c));
-		Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_d));
+    Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_a));
+    Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_b));
+    Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_c));
+    Assert.assertNotNull(ChannelCipherUtils.getCommonKeyID(ctx_d));
 
-		Assert.assertNotNull(ChannelCipherUtils.getKeyFromChannel(ctx_a, key_id, node_a.getUserWalletDB().getKeys(0)));
-		Assert.assertNotNull(ChannelCipherUtils.getKeyFromChannel(ctx_b, key_id, node_b.getUserWalletDB().getKeys(0)));
-		Assert.assertNull(ChannelCipherUtils.getKeyFromChannel(ctx_c, key_id, node_c.getUserWalletDB().getKeys(0)));
-		Assert.assertNull(ChannelCipherUtils.getKeyFromChannel(ctx_d, key_id, node_d.getUserWalletDB().getKeys(0)));
+    Assert.assertNotNull(ChannelCipherUtils.getKeyFromChannel(ctx_a, key_id, node_a.getUserWalletDB().getKeys(0)));
+    Assert.assertNotNull(ChannelCipherUtils.getKeyFromChannel(ctx_b, key_id, node_b.getUserWalletDB().getKeys(0)));
+    Assert.assertNull(ChannelCipherUtils.getKeyFromChannel(ctx_c, key_id, node_c.getUserWalletDB().getKeys(0)));
+    Assert.assertNull(ChannelCipherUtils.getKeyFromChannel(ctx_d, key_id, node_d.getUserWalletDB().getKeys(0)));
 
     for(String name : plain_file_map.keySet())
     {
@@ -196,7 +196,7 @@ public class CipherChannelTest
       Assert.assertEquals( hash, download(webport_d, cid, "prot/" + name));
     }
 
-	}
+  }
 
   private ChannelNode startNode(String db_type, boolean skip_seeds, int webport)
     throws Exception
@@ -227,7 +227,7 @@ public class CipherChannelTest
     throws Exception
   {
 
-		String url = "http://localhost:" + webport + "/channel/" + cid + "/" + filename;
+    String url = "http://localhost:" + webport + "/channel/" + cid + "/" + filename;
     long start_t = System.currentTimeMillis();
     System.out.println(url);
     URL u = new URL(url);

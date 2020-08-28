@@ -128,9 +128,9 @@ public class DHTTest
     Assert.assertTrue(c_match > 60);
   }
 
-	private ChannelNode startNode(String db_type, boolean skip_seeds)
+  private ChannelNode startNode(String db_type, boolean skip_seeds)
     throws Exception
-	{
+  {
     File base_dir = test_folder.newFolder();
     TreeMap<String,String> map = new TreeMap<>();
     map.put("key_count", "1");
@@ -151,6 +151,6 @@ public class DHTTest
 
     return new ChannelNode(new ConfigMem(map));
 
-	}
+  }
 
 }

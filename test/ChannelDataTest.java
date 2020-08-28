@@ -38,9 +38,9 @@ public class ChannelDataTest
 
     WalletDatabase admin_db = TestUtil.genWallet();
     ChannelID chan_id = null;
-		ChainHash prev_hash = null;
+    ChainHash prev_hash = null;
 
-		ChannelContext ctx_a;
+    ChannelContext ctx_a;
 
       
     TreeMap<String, ByteString> data_map = new TreeMap<>();
@@ -63,15 +63,15 @@ public class ChannelDataTest
       header.setChannelId( chan_id.getBytes());
       header.setPrevBlockHash( ChainHash.ZERO_HASH.getBytes());
       header.setContentMerkle( ChainHash.ZERO_HASH.getBytes());
-			
+      
 
       ChannelBlock.Builder blk = ChannelBlock.newBuilder();
       blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
-			
-			ctx_a = node_a.getChannelSubscriber().openChannel(chan_id);
-			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
-			ctx_a.block_ingestor.ingestBlock(blk.build());
+      
+      ctx_a = node_a.getChannelSubscriber().openChannel(chan_id);
+      prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
+      ctx_a.block_ingestor.ingestBlock(blk.build());
     }
 
     for(int i=0; i<20; i++)
@@ -84,7 +84,7 @@ public class ChannelDataTest
       header.setPrevBlockHash( prev_hash.getBytes());
 
       ChannelBlock.Builder blk = ChannelBlock.newBuilder();
-		
+    
       LinkedList<ChainHash> merkle_list = new LinkedList<>();
       for(int j=0; j<20; j++)
       { 
@@ -97,27 +97,27 @@ public class ChannelDataTest
       blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
-			ctx_a.block_ingestor.ingestBlock(blk.build());
+      prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
+      ctx_a.block_ingestor.ingestBlock(blk.build());
 
-			for(String key : data_map.keySet())
-			{
-				Assert.assertEquals( data_map.get(key), ChanDataUtils.getData(ctx_a, key));
-			}
+      for(String key : data_map.keySet())
+      {
+        Assert.assertEquals( data_map.get(key), ChanDataUtils.getData(ctx_a, key));
+      }
 
     }
 
-		Assert.assertEquals(20, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
+    Assert.assertEquals(20, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
 
   }
 
-	private ChannelNode startNode()
+  private ChannelNode startNode()
     throws Exception
-	{
+  {
     File base_dir = test_folder.newFolder();
     TreeMap<String,String> map = new TreeMap<>();
     map.put("key_count", "1");
-		map.put("db_separate", "true");
+    map.put("db_separate", "true");
     map.put("db_path", new File(base_dir, "db").getPath());
     map.put("wallet_path", new File(base_dir, "wallet").getPath());
 
@@ -129,7 +129,7 @@ public class ChannelDataTest
 
     return new ChannelNode(new ConfigMem(map));
 
-	}
+  }
   protected AddressSpecHash getAddr(WalletDatabase db)
   {
     return AddressUtil.getHashForSpec(db.getAddresses(0));
@@ -153,8 +153,8 @@ public class ChannelDataTest
       ci.setContent( ByteString.copyFrom(b));
     }
 
-		for(int i=0;i<20; i++)
-		{
+    for(int i=0;i<20; i++)
+    {
       String key = "/chantestdata/" + rnd.nextLong();
       b = new byte[32];
       rnd.nextBytes(b);
@@ -162,7 +162,7 @@ public class ChannelDataTest
       ci.putChanMapUpdates(key, ByteString.copyFrom(b));
       data_map.put(key, ByteString.copyFrom(b));
 
-		}	
+    }  
 
     WalletDatabase wdb = user;
     return ChannelSigUtil.signMessage( wdb.getAddresses(0),wdb.getKeys(0),

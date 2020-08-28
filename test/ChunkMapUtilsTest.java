@@ -29,11 +29,11 @@ public class ChunkMapUtilsTest
   }
 
 
-	@Test
-	public void testChunkMap()
-		throws Exception
+  @Test
+  public void testChunkMap()
+    throws Exception
   {
-		ChannelNode node = startNode();
+    ChannelNode node = startNode();
     Random rnd = new Random();
 
     byte[] b = new byte[20];

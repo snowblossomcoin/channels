@@ -66,7 +66,7 @@ public class MultipartUploadTest
   }
 
   private void assertHash(String hash_hex, MultipartSlicer.FileData fd)
-		throws Exception
+    throws Exception
   {
 
     MessageDigest md = MessageDigest.getInstance("SHA-256");

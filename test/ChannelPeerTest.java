@@ -67,9 +67,9 @@ public class ChannelPeerTest
     WalletDatabase admin_db = TestUtil.genWallet();
     WalletDatabase user_db = TestUtil.genWallet();
     ChannelID chan_id = null;
-		ChainHash prev_hash = null;
+    ChainHash prev_hash = null;
 
-		ChannelContext ctx_a;
+    ChannelContext ctx_a;
     ChannelContext ctx_b;
     ChannelContext ctx_c;
 
@@ -96,15 +96,15 @@ public class ChannelPeerTest
       ChannelBlock.Builder blk = ChannelBlock.newBuilder();
       blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
         SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
-			
-			ctx_a = node_a.getChannelSubscriber().openChannel(chan_id);
-			Thread.sleep(500);
-			ctx_b = node_b.getChannelSubscriber().openChannel(chan_id);
-			ctx_c = node_c.getChannelSubscriber().openChannel(chan_id);
+      
+      ctx_a = node_a.getChannelSubscriber().openChannel(chan_id);
+      Thread.sleep(500);
+      ctx_b = node_b.getChannelSubscriber().openChannel(chan_id);
+      ctx_c = node_c.getChannelSubscriber().openChannel(chan_id);
 
-			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
+      prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
 
-			ctx_a.block_ingestor.ingestBlock(blk.build());
+      ctx_a.block_ingestor.ingestBlock(blk.build());
     }
 
     for(int i=0; i<20; i++)
@@ -131,8 +131,8 @@ public class ChannelPeerTest
         blk.setSignedHeader( ChannelSigUtil.signMessage(admin_db.getAddresses(0), admin_db.getKeys(0),
           SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
-			prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
-			ctx_a.block_ingestor.ingestBlock(blk.build());
+      prev_hash = new ChainHash(blk.getSignedHeader().getMessageId());
+      ctx_a.block_ingestor.ingestBlock(blk.build());
 
       for(ContentChunk c : large_chunks)
       {
@@ -142,7 +142,7 @@ public class ChannelPeerTest
     }
 
     Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_a).size());
-		Assert.assertEquals(20, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
+    Assert.assertEquals(20, ctx_a.block_ingestor.getHead().getHeader().getBlockHeight());
 
     for(int i=0; i<100; i++)
     {
@@ -166,20 +166,20 @@ public class ChannelPeerTest
       }
     }
 
-		Assert.assertEquals(20, ctx_b.block_ingestor.getHead().getHeader().getBlockHeight());
+    Assert.assertEquals(20, ctx_b.block_ingestor.getHead().getHeader().getBlockHeight());
     Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_b).size());
     
-		Assert.assertEquals(20, ctx_c.block_ingestor.getHead().getHeader().getBlockHeight());
+    Assert.assertEquals(20, ctx_c.block_ingestor.getHead().getHeader().getBlockHeight());
     Assert.assertEquals(0, ChunkMapUtils.getWantList(ctx_c).size());
   }
 
-	private ChannelNode startNode()
+  private ChannelNode startNode()
     throws Exception
-	{
+  {
     File base_dir = test_folder.newFolder();
     TreeMap<String,String> map = new TreeMap<>();
     map.put("key_count", "1");
-		map.put("db_separate", "true");
+    map.put("db_separate", "true");
     map.put("db_path", new File(base_dir, "db").getPath());
     map.put("wallet_path", new File(base_dir, "wallet").getPath());
 
@@ -191,7 +191,7 @@ public class ChannelPeerTest
 
     return new ChannelNode(new ConfigMem(map));
 
-	}
+  }
   protected AddressSpecHash getAddr(WalletDatabase db)
   {
     return AddressUtil.getHashForSpec(db.getAddresses(0));
@@ -224,7 +224,7 @@ public class ChannelPeerTest
     { 
       ci.setContent( data);
     }
-		else
+    else
     {
       MessageDigest md = DigestUtil.getMD();
       for(int chunk = 0; chunk*ChannelGlobals.CONTENT_DATA_BLOCK_SIZE < len; chunk++)
