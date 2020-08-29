@@ -22,6 +22,7 @@ import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.util.proto.SymmetricKey;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Main view and access to a channel for modules that shouldn't have full low level access
@@ -65,6 +66,11 @@ public class ChannelAccess
   {
     return snow_stub;
   }
+
+  public ChannelID getChannelID()
+  {
+    return ctx.cid;
+  } 
 
   public List<SignedMessage> getOutsiderByTime(int max_return, boolean oldest_first)
   {
@@ -234,6 +240,24 @@ public class ChannelAccess
   public String getCommonKeyId()
   {
     return ChannelCipherUtils.getCommonKeyID(ctx);
+  }
+
+  public void addKey(AddressSpec hash)
+    throws ValidationException
+  {
+    addKeys(ImmutableList.of(hash));
+  }
+  public void addKeys(List<AddressSpec> addrs)
+    throws ValidationException
+  {
+    ChannelCipherUtils.addKeys(node, ctx, addrs);
+  }
+
+  public boolean hasKeyInChannel(AddressSpecHash addr)
+  {
+    String key_id = ChannelCipherUtils.getCommonKeyID(ctx);
+    return ChannelCipherUtils.hasKeyInChannel(ctx, key_id, addr);
+    
   }
 
 }

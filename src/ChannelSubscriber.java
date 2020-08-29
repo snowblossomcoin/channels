@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import snowblossom.channels.proto.*;
 import snowblossom.lib.DaemonThreadFactory;
+import snowblossom.channels.warden.PremiumContentWarden;
 
 /** 
  * Manage channels we are tracking 
@@ -69,7 +70,10 @@ public class ChannelSubscriber
     if (opened)
     {
       node.getChannelPeerMaintainer().wake();
+      checkForWardens(ctx);
     }
+
+    
 
     return ctx; 
   }
@@ -101,6 +105,16 @@ public class ChannelSubscriber
   public void dropChannel(ChannelID cid)
   { //TODO - something
 
+  }
+
+  private void checkForWardens(ChannelContext ctx)
+  {
+    ChannelAccess ca = new ChannelAccess(node, ctx);
+
+    if (PremiumContentWarden.wantsToRun(ca))
+    {
+      new PremiumContentWarden(ca);
+    }
   }
 
   public Set<ChannelID> getChannelSet()

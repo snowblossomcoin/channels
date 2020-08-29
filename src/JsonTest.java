@@ -19,6 +19,7 @@ public class JsonTest
     Offer.Builder offer = Offer.newBuilder();
     offer.setOfferMode( Offer.OfferMode.FOREVER_ACCESS );
     offer.putOfferPrice("SNOW", OfferCurrency.newBuilder().setPrice(1.0).setAddress("snow:x").build());
+    offer.setOfferId("bzzzz");
 
     conf.setOffer(offer.build());
 
