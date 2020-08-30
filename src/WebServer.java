@@ -1,15 +1,19 @@
 package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.util.JsonFormat;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import duckutil.Config;
 import duckutil.TaskMaster;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
@@ -19,9 +23,14 @@ import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import net.minidev.json.JSONObject;
 import snowblossom.channels.proto.*;
+import snowblossom.client.OfferPayInterface;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.ValidationException;
+import snowblossom.proto.WalletKeyPair;
+import snowblossom.util.proto.Offer;
+import snowblossom.util.proto.OfferAcceptance;
 
 public class WebServer
 {
@@ -136,6 +145,8 @@ public class WebServer
       PrintStream print_out = new PrintStream(b_out);
       int code = 200;
       ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
+      ChannelAccess ca = new ChannelAccess(node, ctx);
+
       if (ctx == null)
       {
         if (node.getAutoJoin())
@@ -212,6 +223,16 @@ public class WebServer
           processApiGet(t, ctx, id);
           return;
 
+        }
+        else if (api_path.startsWith("/beta/premium_pay"))
+        {
+          t.getResponseHeaders().add("Content-type","text/plain");
+          print_out.println("Wyrd");
+
+          payPremium(print_out, ctx, ca);
+
+
+          
         }
         else
         {
@@ -320,6 +341,49 @@ public class WebServer
       OutputStream out = t.getResponseBody();
       out.write(data);
       out.close();
+
+    }
+
+    private void payPremium(PrintStream out, ChannelContext ctx, ChannelAccess ca)
+      throws Exception
+    {
+      if (ca.getCommonKeyForChannel() != null)
+      {
+        out.println("We already have the key for this channel");
+        return;
+      }
+      ByteString encryption_json_data = ca.readFile("/web/encryption.json");
+      if (encryption_json_data==null)
+      {
+        out.println("No encryption.json file found");
+        return;
+      }
+      EncryptedChannelConfig.Builder config = EncryptedChannelConfig.newBuilder();
+
+      JsonFormat.Parser parser = JsonFormat.parser();
+      Reader input = new InputStreamReader(new ByteArrayInputStream(encryption_json_data.toByteArray()));
+      parser.merge(input, config);
+
+      Offer offer = config.getOffer();
+
+      WalletKeyPair wkp = ChannelCipherUtils.getKeyForChannel(ctx.cid, node.getUserWalletDB()); 
+
+      OfferAcceptance.Builder oa = OfferAcceptance.newBuilder();
+      oa.setForAddressSpec(AddressUtil.getSimpleSpecForKey(wkp));
+
+      OfferPayInterface pay = node.getStubHolder().getOfferPayInterface();
+      if (pay == null)
+      {
+        out.println("No OfferPayInterface is loaded");
+        return;
+      }
+
+      pay.maybePayOffer(offer, oa.build());
+
+      out.println("Payment info sent to 'Send' tab of client UI");
+      out.println(offer);
+      out.println(oa);
+
 
     }
 

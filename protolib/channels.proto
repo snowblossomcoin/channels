@@ -7,6 +7,7 @@ option java_outer_classname = "SnowBlossomChannelsProto";
 package snowblossom.channels;
 
 import "protolib/snowblossom.proto";
+import "protolib/util.proto";
 
 // The Stargate Service is the DHT network
 service StargateService {
@@ -348,24 +349,5 @@ message EncryptedChannelConfig
 {
   string protected_path = 1;
   Offer offer = 2;
-
-
-}
-message Offer
-{
-  enum OfferMode {
-    UNDEFINED = 0;
-    FOREVER_ACCESS = 1;
-  }
-  OfferMode offer_mode = 10;
-  string offer_id = 11;
-  map<string, OfferCurrency> offer_price = 12;
-
-}
-
-message OfferCurrency
-{
-  double price = 1;
-  string address = 2;
 }
 

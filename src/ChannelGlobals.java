@@ -3,7 +3,7 @@ package snowblossom.channels;
 
 public class ChannelGlobals
 {
-  public static final String VERSION = "v0.6.0-2020.08.28.02";
+  public static final String VERSION = "v0.6.0-2020.08.29.00";
 
   public static final String USER_ADDRESS_STRING="user";
   public static final String NODE_ADDRESS_STRING="node";
@@ -63,6 +63,7 @@ public class ChannelGlobals
   public static final String CHAN_NEED_PEERS_WARDEN = "snowblossom.channels.warden.NeedPeersWarden";
 
 }
+
 
 
 

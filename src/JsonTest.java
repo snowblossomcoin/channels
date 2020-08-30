@@ -2,8 +2,8 @@ package snowblossom.channels;
 
 import com.google.protobuf.util.JsonFormat;
 import snowblossom.channels.proto.EncryptedChannelConfig;
-import snowblossom.channels.proto.Offer;
-import snowblossom.channels.proto.OfferCurrency;
+import snowblossom.util.proto.Offer;
+import snowblossom.util.proto.OfferCurrency;
 
 public class JsonTest
 {

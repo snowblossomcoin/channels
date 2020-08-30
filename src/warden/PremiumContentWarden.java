@@ -11,24 +11,24 @@ import snowblossom.channels.ChannelAccess;
 import snowblossom.channels.ChannelID;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.EncryptedChannelConfig;
-import snowblossom.channels.proto.Offer;
-import snowblossom.channels.proto.OfferCurrency;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.client.MonitorInterface;
 import snowblossom.client.MonitorTool;
 import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.Globals;
 import snowblossom.lib.NetworkParams;
 import snowblossom.lib.NetworkParamsProd;
 import snowblossom.lib.TransactionUtil;
-import snowblossom.lib.AddressUtil;
-import snowblossom.proto.Transaction;
 import snowblossom.proto.AddressSpec;
+import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionInner;
 import snowblossom.proto.TransactionOutput;
-import snowblossom.util.proto.SymmetricKey;
+import snowblossom.util.proto.Offer;
 import snowblossom.util.proto.OfferAcceptance;
+import snowblossom.util.proto.OfferCurrency;
+import snowblossom.util.proto.SymmetricKey;
 
 public class PremiumContentWarden extends BaseWarden implements MonitorInterface
 {
