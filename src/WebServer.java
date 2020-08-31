@@ -2,19 +2,16 @@ package snowblossom.channels;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 import duckutil.Config;
-import duckutil.TaskMaster;
+import duckutil.webserver.DuckWebServer;
+import duckutil.webserver.WebContext;
+import duckutil.webserver.WebHandler;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -35,7 +32,6 @@ import snowblossom.util.proto.OfferAcceptance;
 public class WebServer
 {
   private ChannelNode node;
-  private final HttpServer http_server;
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
   public WebServer(ChannelNode node)
@@ -50,20 +46,11 @@ public class WebServer
 
     String web_host = config.get("web_host");
 
-    InetSocketAddress listen = new InetSocketAddress(port);
-    if (web_host != null)
-    {
-      listen = new InetSocketAddress(web_host, port);
-    }
-    logger.info("Starting web server on " + listen);
-    http_server = HttpServer.create(listen, 16);
-    http_server.createContext("/", new RootHandler());
-    http_server.setExecutor(TaskMaster.getBasicExecutor(64,"web_server"));
-    http_server.start();
+    new DuckWebServer(web_host, port, new RootHandler(), 64);
 
   }
 
-  public class RootHandler implements HttpHandler
+  public class RootHandler implements WebHandler
   {
     
     // this is a mess
@@ -72,28 +59,29 @@ public class WebServer
     // TODO - support range requests
     // TODO - add hash to returned headers on data get (why not)
     @Override
-    public void handle(HttpExchange t) throws IOException {
-      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-      PrintStream print_out = new PrintStream(b_out);
-      int code = 200;
+    public void handle(WebContext wctx) throws Exception 
+    {
+      wctx.setHttpCode(200);
 
-      URI uri = t.getRequestURI();
-      logger.fine("Web request: " + uri);
-
-      print_out.println("Request: " + uri);
+      URI uri = wctx.getURI();
+      
+      wctx.out().println("Request: " + uri);
 
       List<String> tokens = tokenizePath(uri);
-      print_out.println("Tokens: " + tokens);
+      wctx.out().println("Tokens: " + tokens);
+
+      List<String> channel_base_tokens = new ArrayList<>();
 
       try
       {
         ChannelID cid = null;
-        String host = t.getRequestHeaders().get("Host").get(0);
+        String host = wctx.getHost();
         cid = getChannelFromHost(host);
 
         if ((tokens.size() >= 2) && (tokens.get(0).equals("channel")))
         {
           cid = ChannelID.fromStringWithNames(tokens.get(1), node);
+          channel_base_tokens = tokens.subList(0, 2);
           tokens = tokens.subList(2, tokens.size());
         }
 
@@ -101,7 +89,8 @@ public class WebServer
         {
           if (cid == null)
           {
-            handleRoot(t);
+            wctx.resetBuffer();
+            handleRoot(wctx);
             return;
           }
         }
@@ -109,41 +98,31 @@ public class WebServer
         {
           if ((tokens.size() >= 1) && (tokens.get(0).equals("api")))
           {
-            handleChannelApi(cid, tokens, t);
+            handleChannelApi(cid, tokens, wctx, channel_base_tokens);
           }
           else
           {
-            handleChannelGet(cid, tokens, t);
+            handleChannelGet(cid, tokens, wctx, channel_base_tokens);
           }
         }
         else
         {
-          print_out.println("No known handler for URI");
+          wctx.out().println("No known handler for URI");
         }
 
       }
       catch(Throwable e)
       {
-        print_out.println("Error: " + e);
-        code = 400;
-        e.printStackTrace();
+        wctx.setException(e);
       }
       
-      t.getResponseHeaders().add("Content-type","text/plain");
-
-      byte[] data = b_out.toByteArray();
-      t.sendResponseHeaders(code, data.length);
-      OutputStream out = t.getResponseBody();
-      out.write(data);
-      out.close();
-
     }
-    private void handleChannelApi(ChannelID cid, List<String> tokens, HttpExchange t)
+
+    private void handleChannelApi(ChannelID cid, List<String> tokens, WebContext wctx, List<String> channel_base_tokens)
       throws Exception
     {
-      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-      PrintStream print_out = new PrintStream(b_out);
-      int code = 200;
+      wctx.resetBuffer();
+
       ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
       ChannelAccess ca = new ChannelAccess(node, ctx);
 
@@ -155,134 +134,111 @@ public class WebServer
         }
         else
         {
-          code = 404;
-          print_out.println("Channel not subscribed and autojoin is disabled.");
+          wctx.setHttpCode(404);
+          wctx.out().println("Channel not subscribed and autojoin is disabled.");
+          return;
         }
       }
 
-
-      if (ctx != null)
+      String api_path = "";
+      for(int i=1; i<tokens.size(); i++)
       {
+        api_path += "/" + tokens.get(i);
+      }
 
-        String api_path = "";
-        for(int i=1; i<tokens.size(); i++)
+      if (api_path.equals("/beta/outsider/order_by_time"))
+      {
+        wctx.setContentType("application/json");
+        wctx.out().println(ApiUtils.getOutsiderByTime(node, ctx, 1000));
+      }
+      else if (api_path.equals("/beta/outsider/submit"))
+      {
+        if (!wctx.getRequestMethod().equals("POST"))
         {
-          api_path += "/" + tokens.get(i);
-        }
-
-        if (api_path.equals("/beta/outsider/order_by_time"))
-        {
-          t.getResponseHeaders().add("Content-type","application/json");
-          print_out.println(ApiUtils.getOutsiderByTime(node, ctx, 1000));
-        }
-        else if (api_path.equals("/beta/outsider/submit"))
-        {
-          if (!t.getRequestMethod().equals("POST"))
-          {
-            code = 401;
-            print_out.println("Submit must be a POST");
-          }
-          else
-          {
-            JSONObject input = ApiUtils.readJSON(t.getRequestBody());
-            ApiUtils.submitContent(input, node, ctx);
-
-          }
-        }
-        else if (api_path.equals("/beta/block/submit"))
-        {
-          if (!t.getRequestMethod().equals("POST"))
-          {
-            code = 401;
-            print_out.println("Submit must be a POST");
-          }
-          else
-          {
-            JSONObject input = ApiUtils.readJSON(t.getRequestBody());
-            ApiUtils.submitBlock(input, node, ctx);
-          }
-        }
-        else if (api_path.equals("/beta/block/tail"))
-        {
-          t.getResponseHeaders().add("Content-type","application/json");
-          print_out.println(ApiUtils.getBlockTail(node, ctx, 100));
-        }
-        else if (api_path.equals("/beta/am_i_block_signer"))
-        {
-          t.getResponseHeaders().add("Content-type","application/json");
-          print_out.println(ApiUtils.amIBlockSigner(node, ctx));
-          
-        }
-        else if (api_path.equals("/beta/block/submit_files"))
-        {
-          processFileUpload(print_out, t, ctx);
-        }
-        else if (api_path.startsWith("/beta/content/get"))
-        {
-          String id = api_path.substring("/beta/content/get/".length());
-          processApiGet(t, ctx, id);
-          return;
-
-        }
-        else if (api_path.startsWith("/beta/premium_pay"))
-        {
-          t.getResponseHeaders().add("Content-type","text/plain");
-          print_out.println("Wyrd");
-
-          payPremium(print_out, ctx, ca);
-
-
-          
+          wctx.setHttpCode(401);
+          wctx.out().println("Submit must be a POST");
         }
         else
         {
-          code = 404;
-          print_out.println("Unknown api: " + api_path);
-        }   
+          JSONObject input = ApiUtils.readJSON(wctx.getRequestBody());
+          ApiUtils.submitContent(input, node, ctx);
+        }
       }
+      else if (api_path.equals("/beta/block/submit"))
+      {
+        if (!wctx.getRequestMethod().equals("POST"))
+        {
+          wctx.setHttpCode(401);
+          wctx.out().println("Submit must be a POST");
+        }
+        else
+        {
+          JSONObject input = ApiUtils.readJSON(wctx.getRequestBody());
+          ApiUtils.submitBlock(input, node, ctx);
+        }
+      }
+      else if (api_path.equals("/beta/block/tail"))
+      {
+        wctx.setContentType("application/json");
+        wctx.out().println(ApiUtils.getBlockTail(node, ctx, 100));
+      }
+      else if (api_path.equals("/beta/am_i_block_signer"))
+      {
+        wctx.setContentType("application/json");
+        wctx.out().println(ApiUtils.amIBlockSigner(node, ctx));
+        
+      }
+      else if (api_path.equals("/beta/block/submit_files"))
+      {
+        processFileUpload(wctx, ctx);
+      }
+      else if (api_path.startsWith("/beta/content/get"))
+      {
+        String id = api_path.substring("/beta/content/get/".length());
+        processApiGet(wctx, ctx, id, channel_base_tokens);
+        return;
 
-      byte[] data = b_out.toByteArray();
-      t.sendResponseHeaders(code, data.length);
-      OutputStream out = t.getResponseBody();
-      out.write(data);
-      out.close();
+      }
+      else if (api_path.startsWith("/beta/premium_pay"))
+      {
+        wctx.setContentType("text/plain");
+        wctx.out().println("Wyrd");
+
+        payPremium(wctx.out(), ctx, ca);
+        
+      }
+      else
+      {
+        wctx.setHttpCode(404);
+        wctx.out().println("Unknown api: " + api_path);
+      }   
+
     }
 
-    private void processApiGet(HttpExchange t, ChannelContext ctx, String id)
+    private void processApiGet(WebContext wctx, ChannelContext ctx, String id, List<String> channel_base_tokens)
       throws IOException, ValidationException
     {
       ByteString content_id = HexUtil.hexStringToBytes(id);
       SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
       if (content_msg == null)
       {
-        int code = 404;
-        ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-        PrintStream print_out = new PrintStream(b_out);
-        t.getResponseHeaders().add("Content-type","text/plain");
-        print_out.println("Path entry found, but not content info message.");
-        byte[] data = b_out.toByteArray();
-        t.sendResponseHeaders(code, data.length);
-
-        OutputStream out = t.getResponseBody();
-        out.write(data);
-        out.close();
+        wctx.setHttpCode(404);
+        wctx.setContentType("text/plain");
+        wctx.out().println("Path entry found, but not content info message.");
       }
       else
       {
         ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
-        sendFile(t, ctx, new ChainHash(content_id), ci);
-        return;
+        sendFile(wctx, ctx, new ChainHash(content_id), ci, channel_base_tokens);
       }
 
     }
 
 
-    private void handleChannelGet(ChannelID cid, List<String> tokens, HttpExchange t)
+    private void handleChannelGet(ChannelID cid, List<String> tokens, WebContext wctx, List<String> channel_base_tokens)
       throws IOException, ValidationException
     {
-      int code = 200;
-      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-      PrintStream print_out = new PrintStream(b_out);
+      wctx.setHttpCode(200);
 
       ChannelContext ctx = node.getChannelSubscriber().getContext(cid);
       if (ctx == null)
@@ -293,54 +249,45 @@ public class WebServer
         }
         else
         {
-          code = 404;
-          print_out.println("Channel not subscribed and autojoin is disabled.");
+          wctx.setHttpCode(404);
+          wctx.out().println("Channel not subscribed and autojoin is disabled.");
+          return;
         }
       }
-      if (ctx != null)
+
+      String path = "/web";
+      for(int i=0; i<tokens.size(); i++)
       {
+        path += "/" + tokens.get(i);
+      }
+      if (wctx.getURI().getPath().endsWith("/"))
+      {
+        path+= "/index.html";
+      }
 
-        String path = "/web";
-        for(int i=0; i<tokens.size(); i++)
-        {
-          path += "/" + tokens.get(i);
-        }
-        if (t.getRequestURI().getPath().endsWith("/"))
-        {
-          path+= "/index.html";
-        }
+      ByteString content_id = ChanDataUtils.getData(ctx, path);
 
-        ByteString content_id = ChanDataUtils.getData(ctx, path);
-
-        if (content_id == null)
+      if (content_id == null)
+      {
+        wctx.setHttpCode(404);
+        wctx.out().println("Item not found: " + cid + path);
+      }
+      else
+      {
+        SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
+        if (content_msg == null)
         {
-          code = 404;
-          t.getResponseHeaders().add("Content-type","text/plain");
-          print_out.println("Item not found: " + cid + path);
+          wctx.setHttpCode(404);
+          wctx.out().println("Path entry found, but not content info message.");
         }
         else
         {
-          SignedMessage content_msg = ctx.db.getContentMap().get(content_id);
-          if (content_msg == null)
-          {
-            code = 404;
-            t.getResponseHeaders().add("Content-type","text/plain");
-            print_out.println("Path entry found, but not content info message.");
-          }
-          else
-          {
-            ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
-            sendFile(t, ctx, new ChainHash(content_id), ci);
-            return;
-          }
+          ContentInfo ci = ChannelSigUtil.quickPayload(content_msg).getContentInfo();
+          wctx.out().println(tokens);
+          sendFile(wctx, ctx, new ChainHash(content_id), ci, channel_base_tokens);
+          return;
         }
       }
-
-      byte[] data = b_out.toByteArray();
-      t.sendResponseHeaders(code, data.length);
-      OutputStream out = t.getResponseBody();
-      out.write(data);
-      out.close();
 
     }
 
@@ -387,14 +334,14 @@ public class WebServer
 
     }
 
-    private void sendFile(HttpExchange t, ChannelContext ctx, ChainHash content_id, ContentInfo ci)
+    private void sendFile(WebContext wctx, ChannelContext ctx, ChainHash content_id, ContentInfo ci, List<String> channel_base_tokens)
       throws IOException, ValidationException
     {
       if (ci.getMimeType() != null)
       {
-        t.getResponseHeaders().add("Content-type",ci.getMimeType());
+        wctx.setContentType( ci.getMimeType() );
       }
-      int code = 200;
+      wctx.setHttpCode(200);
 
       boolean using_chunks = false;
       if (ci.getContentLength() > ci.getContent().size())
@@ -405,21 +352,10 @@ public class WebServer
         BitSet bs = ChunkMapUtils.getSavedChunksSet(ctx, content_id);
         if (bs.cardinality() < total_chunks)
         {
-          code = 404;
+          wctx.setHttpCode(404);
 
-          ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-          PrintStream print_out = new PrintStream(b_out);
-
-          print_out.println(String.format("We only have %d of %d chunks", bs.cardinality(), total_chunks));
-
-          byte[] data = b_out.toByteArray();
-          t.sendResponseHeaders(code, data.length);
-          OutputStream out = t.getResponseBody();
-          out.write(data);
-          out.close();
-
+          wctx.out().println(String.format("We only have %d of %d chunks", bs.cardinality(), total_chunks));
           return;
-
         }
       }
 
@@ -427,41 +363,57 @@ public class WebServer
       if (ci.getEncryptedKeyId().size() > 0)
       {
         len = ci.getPlainContentLength();
+        // Check keys
+        if (!BlockReadUtils.checkKey(ctx, ci, node.getUserWalletDB()))
+        {
+          wctx.resetBuffer();
+          wctx.setContentType("text/html");
+          wctx.setHttpCode(403);
+
+          wctx.out().println(HtmlUtils.getHeader("Unable to decrypt"));
+          wctx.out().println("<br>Base: " + channel_base_tokens);
+          wctx.out().println("<br>Unable to decrypt - we don't have the key");
+
+          String pay_url = "";
+          for(String s : channel_base_tokens)
+          {
+            pay_url += "/";
+            pay_url += s;
+          }
+          pay_url += "/api/beta/premium_pay";
+          wctx.out().println(String.format("<br>Try payments <a href='%s'>pay</a>", pay_url));
+          
+          return;
+        }
       }
 
-      t.sendResponseHeaders(code, len);
-      OutputStream out = t.getResponseBody();
+
+      wctx.setOutputSize(len);
+
+      wctx.writeHeaders();
+
+      OutputStream out = wctx.getOutStream();
       BlockReadUtils.streamContentOut(ctx, content_id, ci, out, node.getUserWalletDB());
       out.close();
 
     }
 
-    private void handleRoot(HttpExchange t)
+    private void handleRoot(WebContext wctx)
       throws IOException
     {
-
-      ByteArrayOutputStream b_out = new ByteArrayOutputStream();
-      PrintStream print_out = new PrintStream(b_out);
-      int code = 200;
+      PrintStream print_out = wctx.out();
 
       print_out.println("Snowblossom Channels Web Server");
-      print_out.println(t.getRequestMethod());
-      print_out.println(t.getRequestURI());
-      for(String k : t.getRequestHeaders().keySet())
+      print_out.println(wctx.getRequestMethod());
+      print_out.println(wctx.getURI());
+
+      /*for(String k : t.getRequestHeaders().keySet())
       {
         for(String v : t.getRequestHeaders().get(k))
         {
           print_out.println(k + ": " + v); 
         }
-      }
-
-      t.getResponseHeaders().add("Content-type","text/plain");
-
-      byte[] data = b_out.toByteArray();
-      t.sendResponseHeaders(code, data.length);
-      OutputStream out = t.getResponseBody();
-      out.write(data);
-      out.close();
+      }*/
     }
   }
 
@@ -499,15 +451,14 @@ public class WebServer
 
   }
 
-  private void processFileUpload(PrintStream print_out, HttpExchange t, ChannelContext ctx)
+  private void processFileUpload(WebContext wctx, ChannelContext ctx)
     throws Exception
   {
 
-    t.getResponseHeaders().add("Content-type","text/plain");
-    print_out.println("");
-    print_out.println("Submit called");
+    wctx.out().println("");
+    wctx.out().println("Submit called");
 
-    ApiUtils.submitFileBlock(t.getRequestBody(), node, ctx);
+    ApiUtils.submitFileBlock(wctx.getRequestBody(), node, ctx);
   }
 
 }

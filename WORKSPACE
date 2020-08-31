@@ -76,7 +76,7 @@ git_repository(
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "0dd4f3aff5bab1f9ce9f4ac326c120c47b7e71e0",
+  commit = "11275e4d042311b438731e66892bcd96d21d865b",
   shallow_since = "1576867546 -0800",
 )
 

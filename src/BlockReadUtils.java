@@ -132,6 +132,21 @@ public class BlockReadUtils
 
   }
 
+  public static boolean checkKey(ChannelContext ctx, ContentInfo ci, WalletDatabase wallet)
+    throws ValidationException
+  {
+    String key_id = HexUtil.getHexString(ci.getEncryptedKeyId());
+
+    SymmetricKey sym_key = ChannelAccess.getKeyForChannel(ctx, key_id, wallet);
+
+    if (sym_key == null)
+    {
+      return false;
+    }
+
+    return true;
+  }
+
 
   public static void streamContentOut(ChannelContext ctx, ChainHash msg_id, ContentInfo ci, OutputStream out, WalletDatabase wallet)
     throws java.io.IOException, ValidationException

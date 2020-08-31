@@ -9,6 +9,7 @@ java_library(
     "@snowblossom//node",
     "@snowblossom//iceleaf-ui:iceleaf",
     "@duckutil//:duckutil_lib",
+    "@duckutil//:webserver_lib",
     "@duckutil//:duckutil_jsonrpc_lib",
     "@io_grpc_grpc_java//netty",
     "@maven//:junit_junit",
