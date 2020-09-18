@@ -18,8 +18,8 @@ public class ChannelComboBox extends JComboBox<String>
   {
     this.node_panel = node_panel;
 
-		UpdateThread ut = new UpdateThread();
-		ut.start();
+    UpdateThread ut = new UpdateThread();
+    ut.start();
 
   }
   public class UpdateThread extends PeriodicThread
@@ -45,7 +45,7 @@ public class ChannelComboBox extends JComboBox<String>
       }
       catch(Throwable e)
       { 
-				e.printStackTrace();
+        e.printStackTrace();
       }
 
     }

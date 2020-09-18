@@ -306,4 +306,3 @@ public class PeerLink implements StreamObserver<PeerList>
     return link_type + "/" + link_remote;
   }
 }
-

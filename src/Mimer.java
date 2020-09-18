@@ -1,5 +1,4 @@
 package snowblossom.channels;
-
 public class Mimer
 {
   public static String guessContentType(String path)
@@ -566,6 +565,6 @@ public class Mimer
     if (path.endsWith(".wrl")) return "x-world/x-vrml";
     return null;
   }
-
 }
+
 

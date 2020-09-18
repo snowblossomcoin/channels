@@ -1,8 +1,8 @@
 package snowblossom.channels.iceleaf;
 
 import java.util.prefs.Preferences;
-import javax.swing.JTabbedPane;
 import javax.swing.JFrame;
+import javax.swing.JTabbedPane;
 import snowblossom.channels.ChannelGlobals;
 import snowblossom.iceleaf.IceLeaf;
 import snowblossom.lib.Globals;
@@ -22,7 +22,7 @@ public class ChannelIceLeaf extends IceLeaf
   }
 
   public ChannelIceLeaf(NetworkParams params, Preferences prefs)
-		throws Exception
+    throws Exception
   {
     super(params, Preferences.userNodeForPackage(
       ClassLoader.getSystemClassLoader().loadClass("snowblossom.iceleaf.IceLeaf")));

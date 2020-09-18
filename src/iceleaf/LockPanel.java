@@ -59,11 +59,11 @@ public class LockPanel extends BasePanel
   public LockPanel(ChannelIceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
+  public void setupPanel()
+  {
 
     GridBagConstraints c = new GridBagConstraints();
     c.weightx = 0.0;
@@ -138,13 +138,13 @@ public class LockPanel extends BasePanel
   {
     public void threadActionPerformed(ActionEvent e)
     {
-			try
-			{
-				synchronized(state_obj)
-				{
-					if (send_state == 1) return;
-					if (send_state == 2)
-					{
+      try
+      {
+        synchronized(state_obj)
+        {
+          if (send_state == 1) return;
+          if (send_state == 2)
+          {
             saved_state.check();
             
             SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx_result.getTx());
@@ -152,44 +152,44 @@ public class LockPanel extends BasePanel
             setMessageBox(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
             setStatusBox("");
 
-						send_state = 0;
-						setProgressBar(0, SEND_DELAY);
+            send_state = 0;
+            setProgressBar(0, SEND_DELAY);
             setStatusBox("");
 
-						return;
-					}
-					if (send_state == 0)
-					{
+            return;
+          }
+          if (send_state == 0)
+          {
             saved_state = new SendState();
-						send_state = 1;
-					}
-				}
+            send_state = 1;
+          }
+        }
 
         setupTx(saved_state);
 
         setStatusBox("Time delay to review");
-				for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
-				{
-					setProgressBar(i, SEND_DELAY);
-					Thread.sleep(SEND_DELAY_STEP);
-				}
+        for(int i=0; i<SEND_DELAY; i+=SEND_DELAY_STEP)
+        {
+          setProgressBar(i, SEND_DELAY);
+          Thread.sleep(SEND_DELAY_STEP);
+        }
         setStatusBox("Ready to broadcast");
-				setProgressBar(SEND_DELAY, SEND_DELAY);
-				synchronized(state_obj)
-				{
-					send_state=2;
-				}
-			}
-			catch(Throwable t)
-			{
+        setProgressBar(SEND_DELAY, SEND_DELAY);
+        synchronized(state_obj)
+        {
+          send_state=2;
+        }
+      }
+      catch(Throwable t)
+      {
         setStatusBox("Error");
-				setMessageBox(ErrorUtil.getThrowInfo(t));
-				
-				synchronized(state_obj)
-				{
-					send_state=0;
-				}
-			}
+        setMessageBox(ErrorUtil.getThrowInfo(t));
+        
+        synchronized(state_obj)
+        {
+          send_state=0;
+        }
+      }
     }
 
   }
@@ -271,7 +271,7 @@ public class LockPanel extends BasePanel
   }
 
   public void setProgressBar(int curr, int net)
-		throws Exception
+    throws Exception
   {
     int enet = Math.max(net, curr);
     SwingUtilities.invokeAndWait(new Runnable() {

@@ -1,4 +1,5 @@
 package snowblossom.channels;
+
 import com.google.protobuf.ByteString;
 import java.math.BigDecimal;
 import java.math.BigInteger;

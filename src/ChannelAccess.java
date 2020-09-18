@@ -1,5 +1,6 @@
 package snowblossom.channels;
 
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -22,7 +23,6 @@ import snowblossom.proto.AddressSpec;
 import snowblossom.proto.WalletDatabase;
 import snowblossom.proto.WalletKeyPair;
 import snowblossom.util.proto.SymmetricKey;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Main view and access to a channel for modules that shouldn't have full low level access

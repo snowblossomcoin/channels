@@ -59,19 +59,19 @@ public class ChannelNodePanel extends BasePanel
   public ChannelNodePanel(IceLeaf ice_leaf)
   {
     super(ice_leaf);
-	}
+  }
 
   @Override
-	public void setupPanel()
-	{
-			GridBagConstraints c = new GridBagConstraints();
-			c.weightx = 0.0;
-			c.weighty= 0.0;
-			c.gridheight = 1;
-			c.anchor = GridBagConstraints.WEST;
+  public void setupPanel()
+  {
+      GridBagConstraints c = new GridBagConstraints();
+      c.weightx = 0.0;
+      c.weighty= 0.0;
+      c.gridheight = 1;
+      c.anchor = GridBagConstraints.WEST;
 
     c.gridwidth = GridBagConstraints.REMAINDER;
-	  panel.add(new JLabel("Starting local node"), c);
+    panel.add(new JLabel("Starting local node"), c);
     new NodeUpdateThread().start();
 
     progress = new JProgressBar(0,0);
@@ -432,8 +432,8 @@ public class ChannelNodePanel extends BasePanel
     {
       try
       {
-			  ChannelID cid = ChannelID.fromStringWithNames(sub_chan_field.getText().trim(), node);
-			  node.getChannelSubscriber().openChannel(cid);
+        ChannelID cid = ChannelID.fromStringWithNames(sub_chan_field.getText().trim(), node);
+        node.getChannelSubscriber().openChannel(cid);
         setMessageBox("Channel added: " + cid);
       }
       catch(Throwable t)

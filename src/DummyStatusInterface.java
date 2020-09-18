@@ -1,4 +1,5 @@
 package snowblossom.channels;
+
 import snowblossom.node.StatusInterface;
 
 public class DummyStatusInterface implements StatusInterface
