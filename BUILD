@@ -265,3 +265,16 @@ java_test(
     ],
 )
 
+java_test(
+    name = "unicode_test",
+    srcs = ["test/UnicodeTest.java"],
+    test_class = "channels.UnicodeTest",
+    size="small",
+    deps = [
+      "@snowblossom//lib:lib",
+      ":channelslib",
+      ":protolib",
+    ],
+)
+
+

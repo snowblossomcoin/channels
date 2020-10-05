@@ -24,4 +24,14 @@ public class MiscUtils
     return new String(bout.toByteArray());
   }
 
+  public static String getStringCodePoints(String in )
+  {
+    StringBuilder sb = new StringBuilder();
+    for(int i=0; i<in.length(); i++)
+    {
+      sb.append(" " + in.charAt(i) +"/"+in.codePointAt(i));
+    }
+    return sb.toString();
+
+  }
 }

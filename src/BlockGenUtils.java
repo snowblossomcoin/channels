@@ -292,6 +292,7 @@ public class BlockGenUtils
       for(File f : path.listFiles())
       {
         // TODO - if we really want to murder some drives make this multithreaded
+
         boolean res = addFiles(settings, f, prefix + "/" + f.getName(), blk, file_map_ci, ps, done_set);
 
         if (f.getName().equals("index.html")) has_index=true;
