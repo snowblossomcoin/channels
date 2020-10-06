@@ -12,11 +12,18 @@ public class ChanDataUtils
 
   public static ByteString getData(ChannelContext ctx, String key)
   {
-    ByteString key_bs = ByteString.copyFrom(key.getBytes());
+    try
+    {
+    ByteString key_bs = ByteString.copyFrom(key.getBytes("UTF-8"));
     ChannelBlockSummary summary = ctx.block_ingestor.getHead();
     if (summary == null) return null;
     
     return ctx.db.getDataTrie().getLeafData(summary.getDataRootHash(), key_bs);
+    }
+    catch(java.io.UnsupportedEncodingException e)
+    {
+      throw new RuntimeException(e);
+    }
   }
 
   public static Map<String,ByteString> getAllData(ChannelContext ctx, String base_key)
@@ -30,12 +37,19 @@ public class ChanDataUtils
     }
     else
     {
-      TreeMap<ByteString, ByteString> m = ctx.db.getDataTrie().getDataMap(summary.getDataRootHash(), ByteString.copyFrom(base_key.getBytes()), 1000000);
-
-      for(Map.Entry<ByteString, ByteString> me : m.entrySet())
+      try
       {
-        String k = new String(me.getKey().toByteArray());
-        result_map.put(k, me.getValue());
+        TreeMap<ByteString, ByteString> m = ctx.db.getDataTrie().getDataMap(summary.getDataRootHash(), ByteString.copyFrom(base_key.getBytes("UTF-8")), 1000000);
+
+        for(Map.Entry<ByteString, ByteString> me : m.entrySet())
+        {
+          String k = new String(me.getKey().toByteArray());
+          result_map.put(k, me.getValue());
+        }
+      }
+      catch(java.io.UnsupportedEncodingException e)
+      {
+        throw new RuntimeException(e);
       }
     }
     return result_map;

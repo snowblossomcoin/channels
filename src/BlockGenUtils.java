@@ -451,7 +451,7 @@ public class BlockGenUtils
     
     // TODO - do things
     String content = HtmlUtils.getIndex(path);
-    byte[] content_bytes = content.getBytes();
+    byte[] content_bytes = content.getBytes("UTF-8");
 
     long len = content_bytes.length;
 
