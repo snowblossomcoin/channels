@@ -16,7 +16,7 @@ FROM openjdk:11-slim as run
 COPY --from=build /channels/bazel-bin/ChannelNode_deploy.jar /channels/
 COPY docker/node.conf /channels/node.conf
 
-CMD java -Xmx1g -jar /channels/ChannelNode_deploy.jar /channels/node.conf
+CMD java -Xmx256m -jar /channels/ChannelNode_deploy.jar /channels/node.conf
 
 
 

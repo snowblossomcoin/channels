@@ -40,8 +40,8 @@ maven_install(
         "commons-codec:commons-codec:1.11",
         "org.apache.commons:commons-math3:3.6.1",
         "io.netty:netty-tcnative-boringssl-static:2.0.28.Final",
-        "org.bouncycastle:bcprov-jdk15on:1.66",
-        "org.bouncycastle:bcpkix-jdk15on:1.66",
+        "org.bouncycastle:bcprov-jdk15on:1.68",
+        "org.bouncycastle:bcpkix-jdk15on:1.68",
         "com.thetransactioncompany:jsonrpc2-server:1.11",
         "net.minidev:json-smart:2.3",
         "com.lambdaworks:scrypt:1.4.0",
@@ -69,7 +69,7 @@ pinned_maven_install()
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-	commit = "fd1a34f0ae882900116cb2c8d59f8d31f9a4318e",
+	commit = "909868bdb7aa0b8752a6291938604f39cd9b302a",
   shallow_since = "1607220214 -0800"
 )
 
