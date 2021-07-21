@@ -17,6 +17,7 @@ import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.HexUtil;
 import snowblossom.lib.RpcUtil;
+import snowblossom.lib.NetworkParamsProd;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.RequestAddress;
@@ -148,7 +149,7 @@ public class ApiUtils
 
     try
     {
-      jo.put("payload", RpcUtil.protoToJson( payload ));
+      jo.put("payload", RpcUtil.protoToJson( payload, new NetworkParamsProd()));
     }
     catch(Exception e)
     {
@@ -315,7 +316,7 @@ public class ApiUtils
     {
       ChannelSettings settings = head_summary.getEffectiveSettings();
 
-      reply.put("settings", RpcUtil.protoToJson(settings));
+      reply.put("settings", RpcUtil.protoToJson(settings, new NetworkParamsProd()));
 
       HashSet<ByteString> allowed_signers = new HashSet<>();
       allowed_signers.addAll(settings.getBlockSignerSpecHashesList());
