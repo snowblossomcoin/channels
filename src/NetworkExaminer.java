@@ -96,6 +96,7 @@ public class NetworkExaminer
 
   protected void tryUpnp() throws Exception
   {
+    logger.info("Attemping UPNP");
     int port = node.getPort();
 
     GatewayDiscover discover = new GatewayDiscover();
@@ -128,6 +129,7 @@ public class NetworkExaminer
         }
       }
     }
+    logger.info("Done with UPNP");
 
   }
 

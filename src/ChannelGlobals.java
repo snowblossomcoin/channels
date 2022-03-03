@@ -2,7 +2,7 @@ package snowblossom.channels;
 
 public class ChannelGlobals
 {
-  public static final String VERSION = "v0.8.0-2021.07.20.00";
+  public static final String VERSION = "v0.9.0-2022.02.23.00";
   public static final String USER_ADDRESS_STRING="user";
   public static final String NODE_ADDRESS_STRING="node";
   public static final String CHANNEL_ADDRESS_STRING="chan";
@@ -38,6 +38,8 @@ public class ChannelGlobals
   // Special Channels
   public static final String CHAN_NEED_PEERS = "chan:ej08g32tltwx56ayzceuq3afyv2qrs2qhkg4fnn9";
   public static final String CHAN_NEED_PEERS_WARDEN = "snowblossom.channels.warden.NeedPeersWarden";
+
+  public static final int MAX_BLOCK_SIZE=3800000;
 }
 
 

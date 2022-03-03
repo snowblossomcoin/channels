@@ -282,7 +282,7 @@ public class BlockGenUtils
   {
     if (done_set.contains(prefix)) return true;
 
-    if (blk.build().toByteString().size() + file_map_ci.build().toByteString().size() > Globals.MAX_BLOCK_SIZE*3/4) return false;
+    if (blk.build().toByteString().size() + file_map_ci.build().toByteString().size() > ChannelGlobals.MAX_BLOCK_SIZE*3/4) return false;
 
     if (path.isDirectory())
     {

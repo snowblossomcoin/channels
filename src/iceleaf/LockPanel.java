@@ -25,6 +25,7 @@ import snowblossom.lib.ValidationException;
 import snowblossom.proto.ClaimedIdentifiers;
 import snowblossom.proto.SubmitReply;
 import snowblossom.proto.TransactionOutput;
+import snowblossom.proto.Transaction;
 import snowblossom.proto.TransactionRequirements;
 import snowblossom.util.proto.*;
 
@@ -146,9 +147,12 @@ public class LockPanel extends BasePanel
           if (send_state == 2)
           {
             saved_state.check();
+            if (tx_result.getTxsCount() != 0) throw new RuntimeException("Too many transactions");
+
+            Transaction tx = tx_result.getTxs(0);
             
-            SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx_result.getTx());
-            ChainHash tx_hash = new ChainHash(tx_result.getTx().getTxHash());
+            SubmitReply reply = ice_leaf.getStubHolder().getBlockingStub().submitTransaction(tx);
+            ChainHash tx_hash = new ChainHash(tx.getTxHash());
             setMessageBox(String.format("%s\n%s", tx_hash.toString(), reply.toString()));
             setStatusBox("");
 
@@ -266,7 +270,7 @@ public class LockPanel extends BasePanel
     tx_result = TransactionFactory.createTransaction(config.build(), src_client.getPurse().getDB(), src_client);
 
     setMessageBox(String.format("Press Send again to when progress bar is full to send:\n%s",
-      TransactionUtil.prettyDisplayTx(tx_result.getTx(), ice_leaf.getParams())));
+      TransactionUtil.prettyDisplayTx(tx_result.getTxs(0), ice_leaf.getParams())));
     
   }
 

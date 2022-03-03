@@ -94,7 +94,7 @@ public class ChannelValidation
     throws ValidationException
   {
     ChannelBlockHeader header = checkBlockHeaderBasics(chan_id, blk.getSignedHeader());
-    if (blk.toByteString().size() > Globals.MAX_BLOCK_SIZE)
+    if (blk.toByteString().size() > ChannelGlobals.MAX_BLOCK_SIZE)
     {
       throw new ValidationException("Over max block size");
     }
