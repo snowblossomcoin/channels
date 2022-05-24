@@ -36,7 +36,7 @@ java_grpc_library()
 maven_install(
     artifacts = [
         "com.google.protobuf:protobuf-java:3.5.1",
-        "org.rocksdb:rocksdbjni:6.28.2",
+        "org.rocksdb:rocksdbjni:5.18.4",
         "junit:junit:4.12",
         "commons-codec:commons-codec:1.11",
         "org.apache.commons:commons-math3:3.6.1",
@@ -71,7 +71,7 @@ pinned_maven_install()
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-	commit = "3cd0d6aa351322d85faebe723e92cdf0e9313538",
+	commit = "991191f75f1d265ae3e6e8c03ee623f07872ecca",
   shallow_since = "1652629632 -0700"
 )
 
