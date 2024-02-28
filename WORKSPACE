@@ -36,14 +36,13 @@ java_grpc_library()
 maven_install(
     artifacts = [
         "com.google.protobuf:protobuf-java:3.5.1",
-        "org.rocksdb:rocksdbjni:5.18.4",
+        "org.rocksdb:rocksdbjni:8.10.2",
         "junit:junit:4.12",
         "commons-codec:commons-codec:1.11",
         "org.apache.commons:commons-math3:3.6.1",
         "io.netty:netty-tcnative-boringssl-static:2.0.28.Final",
-        "org.bouncycastle:bcprov-jdk15on:1.69",
-        "org.bouncycastle:bcpkix-jdk15on:1.69",
-        "org.bouncycastle:bcprov-jdk15to18:1.69",
+        "org.bouncycastle:bcprov-jdk18on:1.77",
+        "org.bouncycastle:bcpkix-jdk18on:1.77",
         "com.thetransactioncompany:jsonrpc2-server:1.11",
         "net.minidev:json-smart:2.3",
         "com.lambdaworks:scrypt:1.4.0",
@@ -71,15 +70,15 @@ pinned_maven_install()
 git_repository(
   name = "snowblossom",
   remote = "https://github.com/snowblossomcoin/snowblossom",
-	commit = "991191f75f1d265ae3e6e8c03ee623f07872ecca",
-  shallow_since = "1652629632 -0700"
+	commit = "bfa5614184a74a8d205ca0be563a97479c0dbc9b",
+  shallow_since = "1709102973 -0800"
 )
 
 git_repository(
   name = "duckutil",
   remote = "https://github.com/fireduck64/duckutil",
-  commit = "b721d945278dc2069bb9f5c1556161b37d6b4ee8",
-  shallow_since = "1648055343 -0700",
+  commit = "ee8a3b5a0fe8a53108fbba12e8c166e0a36baad7",
+  shallow_since = "1673546064 -0800",
 )
 
 
