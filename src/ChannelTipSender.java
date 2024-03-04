@@ -33,7 +33,7 @@ public class ChannelTipSender extends PeriodicThread
       if (now < earliest_time) return;
     }
 
-    
+
     Set<ChannelID> chan_set = node.getChannelSubscriber().getChannelSet();
 
     long next_earliest = now + ChannelGlobals.CHANNEL_TIP_SEND_MS;
@@ -108,7 +108,7 @@ public class ChannelTipSender extends PeriodicThread
     ChannelTip.Builder tip = ChannelTip.newBuilder();
 
     if (head_sum != null)
-    { 
+    {
       signed_header = head_sum.getSignedHeader();
       tip.setBlockHeader( signed_header );
     }
@@ -118,8 +118,8 @@ public class ChannelTipSender extends PeriodicThread
       .setTip(tip.build())
       .build();
     return msg;
-  
+
   }
-  
+
 
 }

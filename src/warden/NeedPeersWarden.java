@@ -1,5 +1,6 @@
 package snowblossom.channels.warden;
 
+import duckutil.Config;
 import snowblossom.channels.ChannelAccess;
 import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelSigUtil;
@@ -10,9 +11,9 @@ import snowblossom.channels.proto.SignedMessage;
 public class NeedPeersWarden extends BaseWarden
 {
 
-  public NeedPeersWarden(ChannelAccess channel_access)
+  public NeedPeersWarden(ChannelAccess channel_access, Config config)
   {
-    super(channel_access);
+    super(channel_access, config);
     logger.info("Started Need Peers Warden");
   }
 

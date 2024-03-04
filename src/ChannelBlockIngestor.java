@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockHeader;
@@ -18,6 +19,7 @@ import snowblossom.channels.proto.ContentChunk;
 import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.lib.*;
+import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.trie.HashUtils;
 
 /**
@@ -31,7 +33,7 @@ public class ChannelBlockIngestor
   private SingleChannelDB db;
   private ChannelID cid;
   private ChannelContext ctx;
-  
+
   private volatile ChannelBlockSummary chainhead;
 
   private static final ByteString HEAD = ByteString.copyFrom(new String("head").getBytes());
@@ -49,15 +51,15 @@ public class ChannelBlockIngestor
     if (chainhead != null)
     {
 
-      logger.info(String.format("Loaded chain tip: %d %s", 
-        chainhead.getHeader().getBlockHeight(), 
+      logger.info(String.format("Loaded chain tip: %d %s",
+        chainhead.getHeader().getBlockHeight(),
         new ChainHash(chainhead.getBlockId())));
     }
 
 
   }
 
-  
+
 
   public boolean ingestBlock(ChannelBlock blk)
     throws ValidationException
@@ -107,9 +109,11 @@ public class ChannelBlockIngestor
       try(TimeRecordAuto tra_tx = TimeRecord.openAuto("ChannelBlockIngestor.blockSave"))
       {
         HashMap<ByteString, SignedMessage> content_put_map = new HashMap<>(16,0.5f);
+        TreeMap<ByteString, ByteString> content_to_block_map = new TreeMap<>(new ByteStringComparator());
         for(SignedMessage content : blk.getContentList())
         {
           content_put_map.put( content.getMessageId(), content);
+          content_to_block_map.put( content.getMessageId(), blockhash.getBytes());
           ContentInfo ci = ChannelSigUtil.quickPayload(content).getContentInfo();
           if (ci.getChanMapUpdatesCount() > 0)
           {
@@ -126,12 +130,13 @@ public class ChannelBlockIngestor
         }
         summary.setDataRootHash(data_hash);
         db.getContentMap().putAll(content_put_map);
+        db.getContentToBlockMap().putAll(content_to_block_map);
         db.getBlockMap().put( blockhash.getBytes(), blk);
         db.getBlockSummaryMap().put( blockhash.getBytes(), summary.build());
       }
 
       node.getChannelChunkGetter().wakeFor(cid);
-      
+
       ChannelBlockSummary summary_fin = summary.build();
 
       BigInteger summary_work_sum = BlockchainUtil.readInteger(summary.getWorkSum());
@@ -157,7 +162,7 @@ public class ChannelBlockIngestor
         age_min = age_min / 60000.0;
 
         DecimalFormat df = new DecimalFormat("0.0");
-        
+
         node.getChannelSubscriber().notifyChannelBlock(cid, blk);
       }
 
@@ -174,7 +179,7 @@ public class ChannelBlockIngestor
     {
       throw new ValidationException("Unset data_hash");
     }
-    
+
     HashMap<ByteString, ByteString> update_map = new HashMap<>();
     for(Map.Entry<String, ByteString> me : ci.getChanMapUpdates().entrySet())
     {

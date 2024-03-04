@@ -145,7 +145,7 @@ public class DHTMaintainer extends PeriodicThread
     {
       pl.getDHTPeers(sm);
     }
-  
+
   }
 
   private Map<AddressSpecHash, LocalPeerInfo> pickTargetsFromDB()
@@ -161,7 +161,7 @@ public class DHTMaintainer extends PeriodicThread
     double ring_dist= 0.5;
     for(int i=0; i<ChannelGlobals.RING_DIVISONS; i++)
     {
-      
+
       ByteString t_high = HashMath.shiftHashOnRing( node.getNodeID().getBytes(), ring_dist);
       ByteString t_low =  HashMath.shiftHashOnRing( node.getNodeID().getBytes(), -ring_dist);
 
@@ -171,7 +171,7 @@ public class DHTMaintainer extends PeriodicThread
       ring_dist = ring_dist / 2.0;
     }
 
-    return target_map; 
+    return target_map;
   }
 
   private Map<AddressSpecHash, LocalPeerInfo> getClosestValid(ByteString target, int count)
@@ -208,7 +208,7 @@ public class DHTMaintainer extends PeriodicThread
     if (count == 1)
     {
       // If we just want one, get it from absolute closest
- 
+
       while((ordered_valid_map.size()>0) && (result_map.size() < count))
       {
         LocalPeerInfo info = ordered_valid_map.pollFirstEntry().getValue();
@@ -231,7 +231,7 @@ public class DHTMaintainer extends PeriodicThread
         result_map.put(new AddressSpecHash(info.getInfo().getAddressSpecHash()), info);
       }
     }
-    //System.out.println(String.format("Asked for %d got %d", count, result_map.size())); 
+    //System.out.println(String.format("Asked for %d got %d", count, result_map.size()));
 
     return result_map;
   }
@@ -262,7 +262,7 @@ public class DHTMaintainer extends PeriodicThread
     LinkedList<ChannelPeerInfo> seed_list = new LinkedList<>();
 
     seed_list.add( ChannelPeerInfo.newBuilder()
-      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
+      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING,
         "node:f6w25aj23fw0yz0ww06rqx53vgde4nz9u60uf07x").getBytes())
       .setVersion("seed")
       .putConnectInfos("ipv4", ConnectInfo.newBuilder()
@@ -283,7 +283,7 @@ public class DHTMaintainer extends PeriodicThread
       .build());
 
     seed_list.add( ChannelPeerInfo.newBuilder()
-      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
+      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING,
         "node:2tcsr57am4wzlmcca56alrsplxzhpk6fawkycch3").getBytes())
       .setVersion("seed")
       .putConnectInfos("ipv4", ConnectInfo.newBuilder()
@@ -304,7 +304,7 @@ public class DHTMaintainer extends PeriodicThread
       .build());
 
     seed_list.add( ChannelPeerInfo.newBuilder()
-      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING, 
+      .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING,
         "node:ut58s0rxxtyqe8u3c695xt59drxxf7vspz79p60a").getBytes())
       .setVersion("seed")
       .putConnectInfos("ipv4", ConnectInfo.newBuilder()
@@ -365,7 +365,7 @@ public class DHTMaintainer extends PeriodicThread
           logger.info("Purging peer: " + HexUtil.getHexString(key));
           node.getDB().getPeerMap().remove(key);
         }
-  
+
       }
 
     }

@@ -41,7 +41,7 @@ public class BlockReadUtils
     for(Map.Entry<String, ByteString> me : data_map.entrySet())
     {
       status.setStatus("Extraction in progress: " + ps.getStatusLine());
-      
+
       // Now, we have to assume that the data is hostile
       String key = me.getKey();
 
@@ -69,7 +69,7 @@ public class BlockReadUtils
   {
     File curr_path = base_path;
     File last_parent = null;
-    
+
     StringTokenizer stok = new StringTokenizer(file_key, "/");
     while(stok.hasMoreTokens())
     {
@@ -152,13 +152,13 @@ public class BlockReadUtils
     throws java.io.IOException, ValidationException
   {
     // TODO - check hash of stream as we stream it
-    if (ci.getContentLength() == ci.getContent().size()) 
+    if (ci.getContentLength() == ci.getContent().size())
     {
       //TODO - support encrypted data direct in CI
       out.write(ci.getContent().toByteArray());
       return;
     }
-    
+
     int total_chunks = MiscUtils.getNumberOfChunks(ci);
 
     SymmetricKey sym_key = null;
@@ -176,7 +176,7 @@ public class BlockReadUtils
     }
 
     for(int i=0; i<total_chunks; i++)
-    { 
+    {
       // TODO - decrypt as needed
       ByteString chunk_data = ChunkMapUtils.getChunk(ctx, msg_id, i);
       logger.finer("Get chunk data: " + msg_id + " " + i + " sz:" + chunk_data.size());

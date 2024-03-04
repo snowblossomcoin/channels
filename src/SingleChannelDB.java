@@ -44,6 +44,7 @@ public class SingleChannelDB
   protected DBMap data_map;
   protected HashedTrie data_trie;
   protected DBMap chunk_map;
+  protected DBMap content_to_block_map;
 
   public SingleChannelDB(Config base_config, ChannelID cid)
     throws Exception
@@ -57,19 +58,19 @@ public class SingleChannelDB
 
     this.config = new ConfigCat(new ConfigMem(
       ImmutableMap.of("db_path", db_path.getPath(), "db_separate", "false")), base_config);
-   
+
     String db_type = base_config.get("db_type");
 
     if((db_type==null) || (db_type.equals("rocksdb")))
-    { 
+    {
       this.prov = new JRocksDB(config);
     }
     else if (db_type.equals("lobstack"))
-    { 
+    {
       this.prov = new LobstackDB(config);
     }
     else
-    { 
+    {
       logger.log(Level.SEVERE, String.format("Unknown db_type: %s", db_type));
       throw new RuntimeException("Unable to load DB");
     }
@@ -90,10 +91,11 @@ public class SingleChannelDB
     block_map = new ProtoDBMap(ChannelBlock.newBuilder().build().getParserForType(), prov.openMap("blocks"));
     peer_map = new ProtoDBMap(LocalPeerInfo.newBuilder().build().getParserForType(), prov.openMap("peer"));
     content_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("c"));
+
     outsider_map = new ProtoDBMap(SignedMessage.newBuilder().build().getParserForType(), prov.openMap("outsider"));
     summary_map = new ProtoDBMap(ChannelBlockSummary.newBuilder().build().getParserForType(), prov.openMap("block_sum"));
     block_height_map = prov.openMap("height");
-
+    content_to_block_map = prov.openMap("c2b");
     data_map = prov.openMap("d");
     chunk_map = prov.openMap("k");
     data_trie = new HashedTrie(new TrieDBMap(data_map), true, true);
@@ -107,6 +109,7 @@ public class SingleChannelDB
   public ProtoDBMap<SignedMessage> getOutsiderMap(){return outsider_map; }
   public HashedTrie getDataTrie() {return data_trie; }
   public DBMap getChunkMap(){return chunk_map; }
+  public DBMap getContentToBlockMap(){return content_to_block_map; }
 
   public ChainHash getBlockHashAtHeight(long height)
   {
@@ -119,7 +122,7 @@ public class SingleChannelDB
   }
 
   public void setBlockHashAtHeight(long height, ChainHash hash)
-  { 
+  {
     ByteBuffer bb = ByteBuffer.allocate(8);
     bb.putLong(height);
 

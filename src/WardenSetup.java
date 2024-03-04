@@ -1,5 +1,9 @@
 package snowblossom.channels;
 
+import com.google.common.collect.ImmutableMap;
+import duckutil.Config;
+import duckutil.ConfigFile;
+import duckutil.ConfigMem;
 import java.lang.reflect.Constructor;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -19,29 +23,37 @@ public class WardenSetup
       String warden = stok.nextToken();
       String channel = stok.nextToken();
 
+      Config config = new ConfigMem(ImmutableMap.of());
+      if (stok.hasMoreTokens())
+      {
+        String config_path = stok.nextToken();
+        config = new ConfigFile(config_path);
+      }
+
       ChannelID cid = ChannelID.fromStringWithNames(channel, node);
-      loadWarden(node, warden, cid);
+      loadWarden(node, warden, cid, config);
 
     }
     if (node.getConfig().getBoolean("support_need_peers"))
     {
       ChannelID cid = ChannelID.fromStringWithNames(ChannelGlobals.CHAN_NEED_PEERS, node);
-      loadWarden(node, ChannelGlobals.CHAN_NEED_PEERS_WARDEN, cid);
+      loadWarden(node, ChannelGlobals.CHAN_NEED_PEERS_WARDEN, cid, new ConfigMem(ImmutableMap.of()));
     }
 
   }
 
-  public static void loadWarden(ChannelNode node, String warden, ChannelID cid)
+  public static void loadWarden(ChannelNode node, String warden, ChannelID cid, Config config)
     throws Exception
   {
     logger.info(String.format("Loading %s for %s",warden, cid));
 
     Class clazz = Class.forName(warden);
-    Constructor<?> constructor = clazz.getConstructor(ChannelAccess.class);
+    Constructor<?> constructor = clazz.getConstructor(ChannelAccess.class, Config.class);
 
     ChannelAccess ca = new ChannelAccess(node, node.getChannelSubscriber().openChannel(cid));
 
-    BaseWarden ward = (BaseWarden) constructor.newInstance(ca);
+
+    BaseWarden ward = (BaseWarden) constructor.newInstance(ca, config);
 
   }
 

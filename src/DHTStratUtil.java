@@ -19,19 +19,19 @@ public class DHTStratUtil
   public  LinkedList<ByteString> getDHTLocations(ChannelID cid, ChannelSettings settings)
   {
     // TODO - actually check the strategies
-    return getDHTLocationsBasic(cid, 10); 
+    return getDHTLocationsBasic(cid, 10);
 
   }
 
   public LinkedList<ByteString> getDHTLocationsBasic(ChannelID cid, int count)
   {
     LinkedList<ByteString> lst = new LinkedList<>();
-    
+
     MessageDigest md = DigestUtil.getMD();
 
     for(int i=0; i<count; i++)
     {
-      md.update(cid.getBytes().toByteArray()); 
+      md.update(cid.getBytes().toByteArray());
       String s = "" + i;
       md.update(s.getBytes());
 

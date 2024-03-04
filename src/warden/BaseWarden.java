@@ -1,5 +1,6 @@
 package snowblossom.channels.warden;
 
+import duckutil.Config;
 import duckutil.PeriodicThread;
 import java.util.logging.Logger;
 import snowblossom.channels.ChannelAccess;
@@ -12,11 +13,13 @@ public abstract class BaseWarden implements ChannelWatcherInterface
 {
   protected static final Logger logger = Logger.getLogger("snowblossom.channels.warden");
   protected final ChannelAccess channel_access;
+  protected final Config config;
 
-  public BaseWarden(ChannelAccess channel_access)
+  public BaseWarden(ChannelAccess channel_access, Config config)
   {
     this.channel_access = channel_access;
     this.channel_access.watch(this);
+    this.config = config;
 
     if (getPeriod() > 0)
     {
@@ -56,7 +59,7 @@ public abstract class BaseWarden implements ChannelWatcherInterface
   {
 
   }
-  
+
   public void onBlock(ChannelID cid, ChannelBlock sm)
   {
 

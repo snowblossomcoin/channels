@@ -44,7 +44,7 @@ public class MultipartSlicer
     loc += marker.size() + crlf.size();
 
     file_list = new ArrayList<>();
-    
+
     while(loc + marker.size() < total_data.size())
     {
       System.out.println("Location: " + loc + " / " + total_data.size());
@@ -148,7 +148,7 @@ public class MultipartSlicer
 
   }
 
-  
+
 
 
 }

@@ -86,7 +86,7 @@ public class PeerManager extends PeriodicThread
     }
     return link;
   }
-  
+
   public void removeReason(AddressSpecHash node_id, String reason)
   {
     synchronized(reason_map)
@@ -122,5 +122,5 @@ public class PeerManager extends PeriodicThread
     }
     return links;
   }
-  
+
 }

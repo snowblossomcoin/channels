@@ -103,7 +103,7 @@ public class ChannelCipherUtils
     SymmetricKey sym_key = CipherUtil.generageSymmetricKey();
 
     ContentInfo.Builder ci = ContentInfo.newBuilder();
-    
+
     ci.setContentHash( DigestUtil.hash(ByteString.EMPTY) );
 
     ci.putChanMapUpdates(common_key_id_path, sym_key.getKeyId());
@@ -120,7 +120,7 @@ public class ChannelCipherUtils
     String key_id = getCommonKeyID(ctx);
 
     SymmetricKey sym_key = getKeyFromChannel(ctx, key_id, node.getUserWalletDB().getKeys(0));
-    
+
     ContentInfo.Builder ci = ContentInfo.newBuilder();
 
     ci.setContentHash( DigestUtil.hash(ByteString.EMPTY) );
@@ -132,13 +132,13 @@ public class ChannelCipherUtils
 
     ChannelAccess ca = new ChannelAccess(node, ctx);
     ca.createBlockWithContentUnsigned(ImmutableList.of(ci.build()));
-    
+
   }
 
   public static void addKey(ContentInfo.Builder ci, SymmetricKey sym_key, AddressSpec spec)
     throws ValidationException
   {
-    if (spec.getSigSpecsCount() != 1) 
+    if (spec.getSigSpecsCount() != 1)
       throw new ValidationException("AddressSpec must have exactly one public key");
 
 
@@ -172,7 +172,7 @@ public class ChannelCipherUtils
 
   }
 
-  
+
 
 
 }

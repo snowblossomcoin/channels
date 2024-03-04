@@ -71,7 +71,7 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
       SignedMessagePayload payload = ChannelSigUtil.quickPayload(peer_signed_message);
 
       LocalPeerInfo.Builder new_local_info = LocalPeerInfo.newBuilder();
-      
+
       LocalPeerInfo local_info = node.getDB().getPeerMap().get(node_id.getBytes());
       if (local_info != null)
       {
@@ -118,7 +118,7 @@ public class DHTServer extends StargateServiceGrpc.StargateServiceImplBase
     }
   }
 
-  
+
   public void storeDHTDataAsyncTrusted(StoreDHTRequest req)
   {
       SignedMessagePayload payload = ChannelSigUtil.quickPayload(req.getSignedDhtData());

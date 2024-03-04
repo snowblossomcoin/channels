@@ -16,8 +16,8 @@ import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.HexUtil;
-import snowblossom.lib.RpcUtil;
 import snowblossom.lib.NetworkParamsProd;
+import snowblossom.lib.RpcUtil;
 import snowblossom.lib.ValidationException;
 import snowblossom.proto.AddressSpec;
 import snowblossom.proto.RequestAddress;
@@ -35,7 +35,7 @@ public class ApiUtils
     JSONArray block_lst = new JSONArray();
 
     ChainHash next_block_hash = null;
-    
+
     ChannelBlockSummary head_summary = ctx.block_ingestor.getHead();
     if (head_summary != null)
     {
@@ -69,7 +69,7 @@ public class ApiUtils
     TreeMap<Double, SignedMessage> message_map = new TreeMap<>();
 
     Random rnd = new Random();
-    
+
     for(SignedMessage sm : ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 10000).values())
     {
       try
@@ -182,7 +182,7 @@ public class ApiUtils
     {
       ci.setContent( ByteString.copyFrom(input.get("content").toString().getBytes()));
       ci.setContentLength( ci.getContent().size() );
-      
+
     }
     if ((input.containsKey("data_map")) && (input.get("data_map") instanceof JSONObject))
     {
@@ -202,7 +202,7 @@ public class ApiUtils
     }
 
     ci.setContentHash( DigestUtil.hash(ci.getContent()) );
-   
+
     WalletDatabase wdb = node.getUserWalletDB();
 
     TxOutPoint fbo_out = getFboOutpoint(node, wdb.getAddresses(0));
@@ -258,14 +258,14 @@ public class ApiUtils
 
     ci_proto.putContentDataMap("blog_entry", ByteString.copyFrom("true".getBytes()));
 
-    BlockGenUtils.createBlockForFilesMultipart(ctx, ms, node.getUserWalletDB(), ci_proto.build()); 
+    BlockGenUtils.createBlockForFilesMultipart(ctx, ms, node.getUserWalletDB(), ci_proto.build());
 
   }
 
   public static ChannelID getChannelByName(ChannelNode node, String name)
   {
     // TODO - do some caching nerd
-    TxOutList lst = node.getStubHolder().getBlockingStub().getIDList( 
+    TxOutList lst = node.getStubHolder().getBlockingStub().getIDList(
       RequestNameID.newBuilder()
         .setNameType(RequestNameID.IdType.CHANNELNAME)
         .setName(ByteString.copyFrom(name.getBytes()))
@@ -281,7 +281,7 @@ public class ApiUtils
   public static TxOutPoint getFboOutpoint(ChannelNode node, AddressSpec address)
   {
     AddressSpecHash address_hash = AddressUtil.getHashForSpec(address);
-    TxOutList out_list = node.getStubHolder().getBlockingStub().getFBOList( 
+    TxOutList out_list = node.getStubHolder().getBlockingStub().getFBOList(
       RequestAddress.newBuilder().setAddressSpecHash( address_hash.getBytes() ).build() );
 
     // TODO - do something smarter if multiple
@@ -304,7 +304,7 @@ public class ApiUtils
     // TODO, make sure name is correct for this address
 
     return new String(tx_out.getIds().getUsername().toByteArray());
-  } 
+  }
 
   public static JSONObject amIBlockSigner(ChannelNode node, ChannelContext ctx)
     throws Exception

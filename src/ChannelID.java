@@ -23,7 +23,7 @@ public class ChannelID extends AddressSpecHash
     throws ValidationException
   {
     return new ChannelID( Duck32.decode(ChannelGlobals.CHANNEL_ADDRESS_STRING, str) );
-    
+
   }
   public static ChannelID fromStringWithNames(String str, ChannelNode node)
     throws ValidationException
@@ -37,7 +37,7 @@ public class ChannelID extends AddressSpecHash
       ChannelID id = ApiUtils.getChannelByName(node, str);
       if (id != null) return id;
       throw new ValidationException("Unable to parse or lookup: " + str);
-    
+
     }
 
   }

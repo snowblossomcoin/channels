@@ -88,7 +88,7 @@ public class ChannelSigUtil
 
     payload.setTimestamp(System.currentTimeMillis());
     payload.setClaim(claim);
-    
+
     ByteString payload_data = payload.build().toByteString();
 
     SignedMessage.Builder signed = SignedMessage.newBuilder();
@@ -119,7 +119,7 @@ public class ChannelSigUtil
     {
       SignedMessagePayload payload = SignedMessagePayload.parseFrom(sm.getPayload());
       return payload;
-    } 
+    }
     catch(com.google.protobuf.InvalidProtocolBufferException e)
     {
       throw new RuntimeException(e);
@@ -145,11 +145,11 @@ public class ChannelSigUtil
     AddressSpecHash signed_address = AddressUtil.getHashForSpec(payload.getClaim());
     AddressSpecHash node_id = new AddressSpecHash(peer_info.getAddressSpecHash());
     if (!signed_address.equals(node_id))
-    { 
+    {
       throw new ValidationException("Signed address does not match node id");
     }
 
     return peer_info;
- 
+
   }
 }

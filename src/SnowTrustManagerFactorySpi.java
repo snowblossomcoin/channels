@@ -71,7 +71,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
    * then even if we define everything in X509TrustManager
    * we still get cert failures on hostname validation with recent
    * grpc/netty.  shrug.
-   */ 
+   */
   public class SnowTrustManager extends X509ExtendedTrustManager
   {
     @Override
@@ -81,7 +81,7 @@ public class SnowTrustManagerFactorySpi extends TrustManagerFactorySpi
     public void checkClientTrusted(X509Certificate[] chain, String authType)
       throws CertificateException
     {
-      logger.log(Level.FINER,"Evaluating client cert");    
+      logger.log(Level.FINER,"Evaluating client cert");
 
     }
 

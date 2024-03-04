@@ -21,7 +21,7 @@ public class LocalPeerFinder
 
   private ChannelNode node;
 
-  private ExpiringLRUCache<AddressSpecHash, LocalPeerDisco> disco_cache = 
+  private ExpiringLRUCache<AddressSpecHash, LocalPeerDisco> disco_cache =
     new ExpiringLRUCache<>(10000, ChannelGlobals.MULTICAST_CACHE_EXPIRE);
 
   public LocalPeerFinder(ChannelNode node)
@@ -54,7 +54,7 @@ public class LocalPeerFinder
       throws java.io.IOException
     {
       super(ChannelGlobals.MULTICAST_BROADCAST_PERIOD);
-      
+
       setDaemon(true);
       setName("LocalPeerFinder/PacketSender/" + group);
 
@@ -64,7 +64,7 @@ public class LocalPeerFinder
       ds = new MulticastSocket(port);
       ds.setLoopbackMode(false);
       ds.joinGroup(group);
-      
+
       logger.fine("Sender on: " + group + " from " + ds.getInterface());
       logger.fine("Addresses: " + node.getNetworkExaminer().getAllAddresses());
 

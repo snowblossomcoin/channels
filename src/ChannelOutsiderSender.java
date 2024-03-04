@@ -35,7 +35,7 @@ public class ChannelOutsiderSender extends PeriodicThread
     {
       if (now < earliest_time) return;
     }
-    
+
     Set<ChannelID> chan_set = node.getChannelSubscriber().getChannelSet();
 
     long next_earliest = now + ChannelGlobals.CHANNEL_TIP_SEND_MS;
@@ -137,6 +137,6 @@ public class ChannelOutsiderSender extends PeriodicThread
     this.wake();
   }
 
-  
+
 
 }

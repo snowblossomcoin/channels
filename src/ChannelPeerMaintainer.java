@@ -176,9 +176,9 @@ public class ChannelPeerMaintainer extends PeriodicThread
           StoreDHTRequest.newBuilder()
             .setDesiredResultCount(0)
             .setSignedDhtData(sm)
-          .build()); 
+          .build());
         logger.fine(String.format("DHT Saved %s for %s", new ChainHash(element_id), cid.asString()));
-      
+
         node.getDHTCache().markWrite(element_id);
       }
     }
@@ -191,12 +191,12 @@ public class ChannelPeerMaintainer extends PeriodicThread
   }
   public LinkedList<ChannelPeerInfo> getAllDHTPeers(ChannelID cid, Set<AddressSpecHash> connected_set)
   {
-    
+
     // TODO - actually get head settings
     ChannelSettings settings = null;
     List<ByteString> dht_element_lst = node.getDHTStratUtil().getDHTLocations(cid, settings);
 
-    return getAllDHTPeers(cid, dht_element_lst, connected_set); 
+    return getAllDHTPeers(cid, dht_element_lst, connected_set);
   }
 
   public LinkedList<ChannelPeerInfo> getAllDHTPeers(ChannelID cid, List<ByteString> dht_element_lst, Set<AddressSpecHash> connected_set)
@@ -243,7 +243,7 @@ public class ChannelPeerMaintainer extends PeriodicThread
 
     ContentInfo.Builder ci = ContentInfo.newBuilder();
     ci.addBroadcastChannelIds(cid_need_peers.getBytes());
-    ci.setParentRef( 
+    ci.setParentRef(
       ContentReference.newBuilder()
         .setChannelId(cid.getBytes())
         .setRefMode( ContentReference.ReferenceMode.DIRECT).build());

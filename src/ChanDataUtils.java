@@ -17,7 +17,7 @@ public class ChanDataUtils
     ByteString key_bs = ByteString.copyFrom(key.getBytes("UTF-8"));
     ChannelBlockSummary summary = ctx.block_ingestor.getHead();
     if (summary == null) return null;
-    
+
     return ctx.db.getDataTrie().getLeafData(summary.getDataRootHash(), key_bs);
     }
     catch(java.io.UnsupportedEncodingException e)

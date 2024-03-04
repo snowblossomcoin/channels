@@ -43,7 +43,7 @@ public class PeerLink implements StreamObserver<PeerList>
   private final ChannelServiceBlockingStub channel_blocking_stub;
   private final ManagedChannel channel;
   private final AddressSpecHash remote_node_id;
-  
+
   private volatile boolean closed;
   private volatile long last_recv;
   private final long open_time;
@@ -112,8 +112,8 @@ public class PeerLink implements StreamObserver<PeerList>
 
   public ChannelServiceBlockingStub getChannelBlockingStub() {return channel_blocking_stub; }
   public ChannelServiceStub getChannelAsyncStub() {return channel_stub; }
- 
-  
+
+
 
   private ConnectInfo findConnectInfo()
   {
@@ -162,22 +162,22 @@ public class PeerLink implements StreamObserver<PeerList>
     if (net_ex.canConnectToTor())
     {
       ConnectInfo conn_info = info.getConnectInfosMap().get("onion");
-      if (conn_info != null) 
-      { 
+      if (conn_info != null)
+      {
         selector.addItem(conn_info, 5);
       }
 
       // We can do anything via tor
       conn_info = info.getConnectInfosMap().get("ipv6");
-      if (conn_info != null) 
-      { 
-        selector.addItem(ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(), 5); 
+      if (conn_info != null)
+      {
+        selector.addItem(ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(), 5);
       }
 
       conn_info = info.getConnectInfosMap().get("ipv4");
-      if (conn_info != null) 
-      { 
-        selector.addItem(ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(), 2); 
+      if (conn_info != null)
+      {
+        selector.addItem(ConnectInfo.newBuilder().mergeFrom(conn_info).setProtocol("onion").build(), 2);
       }
     }
 
@@ -244,9 +244,9 @@ public class PeerLink implements StreamObserver<PeerList>
     if (closed) return;
     closed=true;
     try
-    { 
+    {
       if (channel != null)
-      { 
+      {
         channel.shutdownNow();
         channel.awaitTermination(3, TimeUnit.SECONDS);
       }
@@ -288,7 +288,7 @@ public class PeerLink implements StreamObserver<PeerList>
   public class OnionProxyDetector implements ProxyDetector
   {
     @Override
-    public ProxiedSocketAddress proxyFor(SocketAddress targetServerAddress) 
+    public ProxiedSocketAddress proxyFor(SocketAddress targetServerAddress)
       throws IOException
     {
       return HttpConnectProxiedSocketAddress.newBuilder()

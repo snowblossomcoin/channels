@@ -313,6 +313,9 @@ message ContentInfo {
   bytes encrypted_key_id = 23;
   bytes encryption_iv_base = 24;
   int64 plain_content_length = 25;
+
+  // Optional nonce if there is a desire to avoid duplicate Content messages
+  bytes nonce = 26;
 }
 
 
@@ -332,6 +335,8 @@ message ChannelSettings
   int64 required_outsider_snow_days = 7; // flakes * days required for staking
   int32 max_outsider_message_size = 8;
   int64 max_outsider_age_ms = 9;
+  // Allow these users to send outside messages even if allow_outside_messages is false
+  repeated bytes outsider_signer_spec_hashes = 10;
 }
 
 message DHTStrategy

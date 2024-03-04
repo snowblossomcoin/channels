@@ -137,9 +137,23 @@ public class ChannelValidation
     validateContent(sm);
 
     if (head == null) throw new ValidationException("No known head");
-   
+
     ChannelSettings settings = head.getEffectiveSettings();
-    if (!settings.getAllowOutsideMessages()) throw new ValidationException("No outside messages allowed on channel");
+
+
+    HashSet<ByteString> allowed_signers = new HashSet<>();
+
+    allowed_signers.addAll(settings.getBlockSignerSpecHashesList());
+    allowed_signers.addAll(settings.getAdminSignerSpecHashesList());
+    allowed_signers.addAll(settings.getOutsiderSignerSpecHashesList());
+
+    SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
+    AddressSpecHash signer = AddressUtil.getHashForSpec(payload.getClaim());
+
+    if (!allowed_signers.contains(signer.getBytes()))
+    {
+      if (!settings.getAllowOutsideMessages()) throw new ValidationException("No outside messages allowed on channel");
+    }
 
     //TODO - check required_outsider_snow_days
 
@@ -148,7 +162,6 @@ public class ChannelValidation
       throw new ValidationException("Outsider message too large");
     }
 
-    SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
     if (payload.getTimestamp() + settings.getMaxOutsiderAgeMs()  < System.currentTimeMillis())
     {
       throw new ValidationException("Outsider message too old");
@@ -226,7 +239,7 @@ public class ChannelValidation
           throw new ValidationException("chunk_hash element must be " + Globals.BLOCKCHAIN_HASH_LEN + " length");
         }
       }
-      
+
     }
 
     if (ci.getParentRef().getChannelId().size() > 0)
@@ -238,7 +251,7 @@ public class ChannelValidation
       validateRef(ref);
     }
 
- 
+
   }
 
   public static void validateRef(ContentReference ref)
@@ -265,7 +278,7 @@ public class ChannelValidation
     SignedMessagePayload header_payload = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader());
 
     ChannelBlockHeader header = header_payload.getChannelBlockHeader();
-    
+
 
     // Validate signer of block vs effective settings
     // if changing settings, validate that it is admin
@@ -372,7 +385,7 @@ public class ChannelValidation
       throw new ValidationException("Signer of DHT data does not match peer info");
     }
     if (payload.getDhtData().getElementId().size() != ChannelGlobals.DHT_ELEMENT_SIZE)
-    { 
+    {
       throw new ValidationException("Element id wrong length");
     }
 
@@ -387,9 +400,9 @@ public class ChannelValidation
     {
       SignedMessagePayload payload = validateDHTData(sm);
       if (!element_id.equals(payload.getDhtData().getElementId()))
-      { 
+      {
         throw new ValidationException("Not requested element_id");
-      }  
+      }
     }
   }
 }

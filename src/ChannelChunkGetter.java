@@ -65,7 +65,7 @@ public class ChannelChunkGetter extends PeriodicThread
     {
       if (now < earliest_time) return;
     }
-    
+
     Set<ChannelID> chan_set = node.getChannelSubscriber().getChannelSet();
 
     long next_earliest = now + ChannelGlobals.CHANNEL_TIP_SEND_MS;
@@ -73,7 +73,7 @@ public class ChannelChunkGetter extends PeriodicThread
 
     synchronized(get_time_map)
     {
-    
+
       for(ChannelID cid : chan_set)
       {
         long tm = 0L;
@@ -140,7 +140,7 @@ public class ChannelChunkGetter extends PeriodicThread
 
       links = shuffleAndFilter(links);
       if (want_list.size() ==0) return;
-      logger.info(String.format("Want chunks %s: links:%d, wants:%d, sem:%d", 
+      logger.info(String.format("Want chunks %s: links:%d, wants:%d, sem:%d",
         cid, links.size(), want_list.size(), to_send ));
       if (links.size() == 0) return;
 
@@ -171,13 +171,13 @@ public class ChannelChunkGetter extends PeriodicThread
           if (links.size() == 0) return;
 
           ChannelLink link = links.get(0);
-   
+
           if ( getChanSem(cid).tryAcquire())
           {
             logger.fine("Reserving sem, requesting chunk: " + link);
             link.setChunkSem(getChanSem(cid));
             link.getChunkHoldSem().release();
-            link.writeMessage( 
+            link.writeMessage(
               ChannelPeerMessage.newBuilder()
                 .setChannelId( cid.getBytes())
                 .setReqChunk( RequestChunk.newBuilder().setMessageId(content_id.getBytes()).setChunk(w).build() )
@@ -189,7 +189,7 @@ public class ChannelChunkGetter extends PeriodicThread
           }
 
         }
-  
+
       }
 
     }
@@ -205,6 +205,6 @@ public class ChannelChunkGetter extends PeriodicThread
     this.wake();
   }
 
-  
+
 
 }

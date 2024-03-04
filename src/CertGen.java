@@ -46,7 +46,7 @@ public class CertGen
     if (db.getAddressesCount() != 1) throw new RuntimeException("Unexpected number of addresses in wallet db");
     WalletKeyPair wkp = db.getKeys(0);
     AddressSpec address_spec = db.getAddresses(0);
-    
+
     WalletKeyPair tls_wkp = KeyUtil.generateWalletRSAKey(2048);
     KeyPair tls_pair = KeyUtil.decodeKeypair(tls_wkp);
 

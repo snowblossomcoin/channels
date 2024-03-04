@@ -2,6 +2,7 @@ package snowblossom.channels.warden;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
+import duckutil.Config;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -34,9 +35,9 @@ public class PremiumContentWarden extends BaseWarden implements MonitorInterface
 {
   private static final Logger logger = Logger.getLogger("snowblossom.channels.warden");
 
-  public PremiumContentWarden(ChannelAccess channel_access)
+  public PremiumContentWarden(ChannelAccess channel_access, Config config)
   {
-    super(channel_access);
+    super(channel_access, config);
   }
 
   public static boolean wantsToRun(ChannelAccess channel_access)

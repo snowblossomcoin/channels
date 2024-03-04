@@ -20,7 +20,7 @@ import snowblossom.lib.ValidationException;
  * Outgoing messages go via 'sink'
  */
 public class ChannelLink implements StreamObserver<ChannelPeerMessage>
-{   
+{
   private static final Logger logger = Logger.getLogger("snowblossom.channels");
 
   private final boolean server_side;
@@ -76,7 +76,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     this.peer_link = peer_link;
     this.cid = cid;
     this.ctx = ctx;
-    
+
     chunk_hold_sem = new Semaphore(0);
 
     sink = peer_link.getChannelAsyncStub().subscribePeering(this);
@@ -118,7 +118,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
 
   public boolean isGood()
-  { 
+  {
     if (closed) return false;
     if (peer_link != null)
     {
@@ -127,7 +127,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     long tm = Math.max(open_time, last_recv);
 
     if (tm + ChannelGlobals.CHANNEL_LINK_TIMEOUT < System.currentTimeMillis())
-    { 
+    {
       return false;
     }
     return true;
@@ -165,20 +165,20 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
   {
     close();
   }
-  
+
   @Override
   public void onError(Throwable t)
-  { 
+  {
     //logger.log(Level.WARNING, "wobble", t);
     close();
   }
-  
+
   /** Concepts copied from Snowblossom PeerLink.  Basic contract is that each side sends
-   * a ChannelTip ever little while (or on new blocks) and it is up to the other side to 
+   * a ChannelTip ever little while (or on new blocks) and it is up to the other side to
    * request what they want. */
   @Override
   public void onNext(ChannelPeerMessage msg)
-  { 
+  {
 
     last_recv = System.currentTimeMillis();
     if (peer_link != null) peer_link.pokeRecv();
@@ -222,7 +222,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
 
         if (tip.getBlockHeader().getMessageId().size() > 0)
         {
-          
+
           ChannelBlockHeader header = ChannelValidation.checkBlockHeaderBasics(cid, tip.getBlockHeader());
           ChainHash hash = new ChainHash(tip.getBlockHeader().getMessageId());
           logger.fine(String.format("Channel %s got tip from remote %d %s ", cid.asString(), header.getBlockHeight(), hash.toString()));
@@ -251,7 +251,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         ChannelBlock blk = ctx.db.getBlockMap().get(desired_hash.getBytes());
 
         writeMessage( ChannelPeerMessage.newBuilder()
-          .setChannelId( cid.getBytes()) 
+          .setChannelId( cid.getBytes())
           .setBlock(blk)
           .build());
 
@@ -271,7 +271,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         ChannelBlockSummary summary = ctx.db.getBlockSummaryMap().get(desired_hash.getBytes());
 
                   writeMessage( ChannelPeerMessage.newBuilder()
-                    .setChannelId( cid.getBytes()) 
+                    .setChannelId( cid.getBytes())
                     .setHeader(summary.getSignedHeader())
                     .build());
 
@@ -281,20 +281,20 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         // Getting a block, we probably asked for it.  See if we can eat it.
         ChannelBlock blk = msg.getBlock();
         try
-        { 
+        {
           if (ctx.block_ingestor.ingestBlock(blk))
           { // we could eat it, think about getting more blocks
             long next = ChannelSigUtil.quickPayload(blk.getSignedHeader()).getChannelBlockHeader().getBlockHeight()+1L;
             synchronized(peer_block_map)
-            { 
+            {
               if (peer_block_map.containsKey(next))
-              { 
+              {
                 ChainHash target = peer_block_map.get(next);
 
                 if (ctx.block_ingestor.reserveBlock(target))
-                { 
+                {
                   writeMessage( ChannelPeerMessage.newBuilder()
-                    .setChannelId( cid.getBytes()) 
+                    .setChannelId( cid.getBytes())
                     .setReqBlock(
                       RequestBlock.newBuilder().setBlockHash(target.getBytes()).build())
                     .build());
@@ -304,7 +304,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
           }
         }
         catch(ValidationException ve)
-        { 
+        {
           logger.info("Got a block %s that didn't validate - closing link");
           close();
           throw(ve);
@@ -322,7 +322,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         if (ci != null)
         {
            writeMessage( ChannelPeerMessage.newBuilder()
-              .setChannelId( cid.getBytes()) 
+              .setChannelId( cid.getBytes())
               .setContent(ci)
               .build());
         }
@@ -360,7 +360,7 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
         }
 
         writeMessage( ChannelPeerMessage.newBuilder()
-          .setChannelId( cid.getBytes()) 
+          .setChannelId( cid.getBytes())
           .setChunk(chunk_msg.build())
           .build());
 
@@ -427,14 +427,14 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
     if (ctx.db.getBlockSummaryMap() == null) throw new RuntimeException("map");
     if (block_hash == null) throw new RuntimeException("block_hash");
     if (ctx.db.getBlockSummaryMap().get(block_hash.getBytes())==null)
-    { 
+    {
       long height = header.getBlockHeight();
       if ((height == 0) || (ctx.db.getBlockSummaryMap().get(header.getPrevBlockHash())!=null))
-      { // but we have the prev block - get this block 
+      { // but we have the prev block - get this block
         if (ctx.block_ingestor.reserveBlock(block_hash))
-        { 
+        {
           writeMessage( ChannelPeerMessage.newBuilder()
-            .setChannelId( cid.getBytes()) 
+            .setChannelId( cid.getBytes())
             .setReqBlock(
               RequestBlock.newBuilder().setBlockHash(block_hash.getBytes()).build())
             .build());
@@ -444,41 +444,41 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       { //get more headers, still in the woods
         long next = header.getBlockHeight();
         if (ctx.block_ingestor.getHeight() + ChannelGlobals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE < next)
-        { 
+        {
           next = ctx.block_ingestor.getHeight() + ChannelGlobals.BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE;
         }
         while(peer_block_map.containsKey(next))
-        { 
+        {
           next--;
         }
-        
+
         if (next >= 0)
-        { 
+        {
           ChainHash prev = new ChainHash(header.getPrevBlockHash());
           synchronized(peer_block_map)
-          { 
+          {
             if (peer_block_map.containsKey(next))
-            { 
+            {
               if (peer_block_map.get(next).equals(prev)) return;
             }
           }
-          
+
           writeMessage( ChannelPeerMessage.newBuilder()
-            .setChannelId( cid.getBytes()) 
+            .setChannelId( cid.getBytes())
             .setReqHeader(
               RequestBlock.newBuilder().setBlockHeight(next).build())
             .build());
         }
       }
-    
+
     }
 
   }
 
   public void writeMessage(ChannelPeerMessage msg)
-  { 
+  {
     if (!closed)
-    { 
+    {
       synchronized(sink)
       {
         sink.onNext(msg);

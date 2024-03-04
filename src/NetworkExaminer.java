@@ -41,7 +41,7 @@ public class NetworkExaminer
   // Any non-private ipv4 address is also probably good.
   private void updateHosts()
   {
-    
+
     if(!isTorOnly())
     {
       try{
@@ -67,7 +67,7 @@ public class NetworkExaminer
       }
       else
       {
-        logger.warning("tor_advertise does not seem to end with .onion - not using");        
+        logger.warning("tor_advertise does not seem to end with .onion - not using");
       }
     }
 
@@ -107,7 +107,7 @@ public class NetworkExaminer
       logger.info(String.format("Found UPNP gateway %s %s", d.getModelName(), d.getModelDescription()));
       InetAddress localAddress = d.getLocalAddress();
       PortMappingEntry portMapping = new PortMappingEntry();
-      if (d.getSpecificPortMappingEntry(port,"TCP",portMapping)) 
+      if (d.getSpecificPortMappingEntry(port,"TCP",portMapping))
       {
         String mapped = portMapping.getInternalClient();
         String local = localAddress.getHostAddress();
@@ -117,7 +117,7 @@ public class NetworkExaminer
         }
         else
         {
-          logger.warning(String.format("Port %d already mapped to %s:%d. Consider using a different port.", port, mapped, portMapping.getInternalPort())); 
+          logger.warning(String.format("Port %d already mapped to %s:%d. Consider using a different port.", port, mapped, portMapping.getInternalPort()));
           logger.warning(String.format("While I am on %s:%d", local, port));
         }
       }
@@ -145,10 +145,10 @@ public class NetworkExaminer
 
     Enumeration<NetworkInterface> faces = NetworkInterface.getNetworkInterfaces();
     while(faces.hasMoreElements())
-    { 
+    {
       NetworkInterface ni = faces.nextElement();
       for(InterfaceAddress ia : ni.getInterfaceAddresses())
-      { 
+      {
         InetAddress a = ia.getAddress();
         if (!a.  isLoopbackAddress())
         {

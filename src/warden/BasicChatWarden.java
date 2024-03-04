@@ -1,5 +1,6 @@
 package snowblossom.channels.warden;
 
+import duckutil.Config;
 import java.util.LinkedList;
 import java.util.List;
 import snowblossom.channels.ChannelAccess;
@@ -14,9 +15,9 @@ public class BasicChatWarden extends BaseWarden
 
   private boolean first_run=true;
 
-  public BasicChatWarden(ChannelAccess channel_access)
+  public BasicChatWarden(ChannelAccess channel_access, Config config)
   {
-    super(channel_access);
+    super(channel_access, config);
 
   }
 
@@ -55,7 +56,7 @@ public class BasicChatWarden extends BaseWarden
   {
 
   }
-  
+
   @Override
   public void onBlock(ChannelID cid, ChannelBlock sm)
   {

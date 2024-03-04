@@ -15,8 +15,8 @@ import snowblossom.channels.proto.*;
 import snowblossom.channels.warden.PremiumContentWarden;
 import snowblossom.lib.DaemonThreadFactory;
 
-/** 
- * Manage channels we are tracking 
+/**
+ * Manage channels we are tracking
  * Also handles notifications of events to people watching channels
  */
 public class ChannelSubscriber
@@ -29,7 +29,7 @@ public class ChannelSubscriber
 
 
   protected Executor exec;
-  
+
   public ChannelSubscriber(ChannelNode node)
   {
     this.node = node;
@@ -44,7 +44,7 @@ public class ChannelSubscriber
       openChannel(cid);
     }
   }
-  
+
   /**
    * open a channel and get context
    * or if already open, get the context
@@ -72,9 +72,9 @@ public class ChannelSubscriber
       checkForWardens(ctx);
     }
 
-    
 
-    return ctx; 
+
+    return ctx;
   }
 
   /**
@@ -86,7 +86,7 @@ public class ChannelSubscriber
     {
       return chan_map.get(cid);
     }
-   
+
   }
 
   private ChannelContext openChannelInternal(ChannelID cid)
@@ -112,7 +112,7 @@ public class ChannelSubscriber
 
     if (PremiumContentWarden.wantsToRun(ca))
     {
-      new PremiumContentWarden(ca);
+      new PremiumContentWarden(ca, null);
     }
   }
 

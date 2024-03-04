@@ -59,7 +59,7 @@ public class ChannelNode
     Globals.addCryptoProvider();
 
     if (args.length != 1)
-    { 
+    {
       logger.log(Level.SEVERE, "Incorrect syntax. Syntax: ChannelNode <config_file>");
       System.exit(-1);
     }
@@ -75,7 +75,7 @@ public class ChannelNode
 
     ChannelNode node = new ChannelNode(config);
 
-    
+
   }
 
   public ChannelNode(Config config)
@@ -99,15 +99,15 @@ public class ChannelNode
     String db_type = config.get("db_type");
 
     if((db_type==null) || (db_type.equals("rocksdb")))
-    { 
+    {
       db = new ChannelsDB(config, new JRocksDB(config));
     }
     else if (db_type.equals("lobstack"))
-    { 
+    {
       db = new ChannelsDB(config, new LobstackDB(config));
     }
     else
-    { 
+    {
       logger.log(Level.SEVERE, String.format("Unknown db_type: %s", db_type));
       throw new RuntimeException("Unable to load DB");
     }
@@ -130,7 +130,7 @@ public class ChannelNode
     local_peer_finder = new LocalPeerFinder(this);
 
     WardenSetup.setupFromConfig(this);
-   
+
     startServer();
 
     dht_maintainer.start();
@@ -160,6 +160,9 @@ public class ChannelNode
     String node_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getNodeID());
     logger.info("My node address is: " + node_addr);
 
+    String user_addr = AddressUtil.getAddressString(ChannelGlobals.NODE_TAG, getUserID());
+    logger.info("My user address is: " + user_addr);
+
     if (config.isSet("channel_list"))
     {
       for(String s : config.getList("channel_list"))
@@ -184,7 +187,7 @@ public class ChannelNode
     if (config.isSet("wallet_path")) { wallet_path = new File(config.get("wallet_path")); }
     if (config.isSet("node_wallet_path")) { node_wallet_path = new File(config.get("node_wallet_path")); }
     if (config.isSet("user_wallet_path")) { user_wallet_path = new File(config.get("user_wallet_path")); }
-  
+
     if (node_wallet_path == null)
     {
       node_wallet_path = wallet_path;
@@ -205,15 +208,16 @@ public class ChannelNode
 
     user_wallet_db = WalletUtil.loadWallet(user_wallet_path, true, params);
     if (user_wallet_db == null)
-    { 
+    {
       logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", user_wallet_path.getPath()));
       user_wallet_db = WalletUtil.makeNewDatabase(config, params);
       WalletUtil.saveWallet(user_wallet_db, user_wallet_path);
     }
 
+
     node_wallet_db = WalletUtil.loadWallet(node_wallet_path, true, params);
     if (node_wallet_db == null)
-    { 
+    {
       logger.log(Level.WARNING, String.format("Directory %s does not contain wallet, creating new wallet", node_wallet_path.getPath()));
       node_wallet_db = WalletUtil.makeNewDatabase(config, params);
       WalletUtil.saveWallet(node_wallet_db, node_wallet_path);
@@ -247,7 +251,7 @@ public class ChannelNode
 
   private void startServer()
     throws Exception
-  {  
+  {
     int port = getPort();
 
     Server s = NettyServerBuilder
@@ -281,12 +285,12 @@ public class ChannelNode
   public AddressSpecHash getNodeID()
   {
     AddressSpec spec = node_wallet_db.getAddresses(0);
-    return AddressUtil.getHashForSpec(spec); 
+    return AddressUtil.getHashForSpec(spec);
   }
   public AddressSpecHash getUserID()
   {
     AddressSpec spec = user_wallet_db.getAddresses(0);
-    return AddressUtil.getHashForSpec(spec); 
+    return AddressUtil.getHashForSpec(spec);
   }
 
   public SignedMessage signMessageNode(SignedMessagePayload starting_payload)

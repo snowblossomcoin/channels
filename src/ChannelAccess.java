@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
+import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockSummary;
 import snowblossom.channels.proto.ChannelSettings;
 import snowblossom.channels.proto.ContentInfo;
@@ -33,7 +34,7 @@ public class ChannelAccess
   private final ChannelContext ctx;
   private final ChannelNode node;
   private final StubHolder snow_stub;
-  
+
 
   public ChannelAccess(ChannelNode node, ChannelContext ctx)
   {
@@ -70,7 +71,7 @@ public class ChannelAccess
   public ChannelID getChannelID()
   {
     return ctx.cid;
-  } 
+  }
 
   public List<SignedMessage> getOutsiderByTime(int max_return, boolean oldest_first)
   {
@@ -80,7 +81,7 @@ public class ChannelAccess
     for(SignedMessage sm : ctx.db.getOutsiderMap().getByPrefix(ByteString.EMPTY, 50000, true).values())
     {
       try
-      { 
+      {
         ChannelValidation.validateOutsiderContent(sm, ctx.block_ingestor.getHead(), ctx);
         SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
 
@@ -97,7 +98,7 @@ public class ChannelAccess
       catch(ValidationException e){}
 
       while(message_map.size() > max_return)
-      { 
+      {
         message_map.pollLastEntry();
       }
     }
@@ -123,10 +124,10 @@ public class ChannelAccess
 
     for(ContentInfo ci : content)
     {
-      SignedMessage sm = 
+      SignedMessage sm =
         ChannelSigUtil.signMessage(
-          node.getUserWalletDB().getAddresses(0), 
-          node.getUserWalletDB().getKeys(0), 
+          node.getUserWalletDB().getAddresses(0),
+          node.getUserWalletDB().getKeys(0),
           SignedMessagePayload.newBuilder().setContentInfo(ci).build());
       lst.add(sm);
     }
@@ -177,6 +178,11 @@ public class ChannelAccess
     BlockReadUtils.streamContentOut(ctx, new ChainHash(content_id), ci, out, node.getUserWalletDB());
 
     return ByteString.copyFrom(out.toByteArray());
+  }
+
+  public WalletDatabase getUserWalletDB()
+  {
+    return node.getUserWalletDB();
   }
 
   public boolean amIBlockSigner()
@@ -257,7 +263,33 @@ public class ChannelAccess
   {
     String key_id = ChannelCipherUtils.getCommonKeyID(ctx);
     return ChannelCipherUtils.hasKeyInChannel(ctx, key_id, addr);
-    
+
+  }
+
+  public SignedMessage getContentByHash(ChainHash content_id)
+  {
+    return ctx.db.getContentMap().get(content_id.getBytes());
+  }
+
+  public ChainHash getBlockIdForContent(ChainHash content_id)
+  {
+    ByteString s = ctx.db.getContentToBlockMap().get(content_id.getBytes());
+    if (s == null) return null;
+    return new ChainHash(s);
+
+  }
+
+  public ChannelBlock getBlockByHash(ChainHash block_id)
+  {
+    return ctx.db.getBlockMap().get(block_id.getBytes());
+
+  }
+
+  public void broadcast(SignedMessage sm)
+    throws ValidationException
+  {
+    ctx.block_ingestor.ingestContent(sm);
+
   }
 
 }

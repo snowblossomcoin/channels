@@ -52,19 +52,19 @@ public class WebServer
 
   public class RootHandler implements WebHandler
   {
-    
+
     // this is a mess
     // TODO - make error reporting helper function to sets code and returns some message
     // TODO - what the hell is this decomposition
     // TODO - support range requests
     // TODO - add hash to returned headers on data get (why not)
     @Override
-    public void handle(WebContext wctx) throws Exception 
+    public void handle(WebContext wctx) throws Exception
     {
       wctx.setHttpCode(200);
 
       URI uri = wctx.getURI();
-      
+
       wctx.out().println("Request: " + uri);
 
       List<String> tokens = tokenizePath(uri);
@@ -115,7 +115,7 @@ public class WebServer
       {
         wctx.setException(e);
       }
-      
+
     }
 
     private void handleChannelApi(ChannelID cid, List<String> tokens, WebContext wctx, List<String> channel_base_tokens)
@@ -186,7 +186,7 @@ public class WebServer
       {
         wctx.setContentType("application/json");
         wctx.out().println(ApiUtils.amIBlockSigner(node, ctx));
-        
+
       }
       else if (api_path.equals("/beta/block/submit_files"))
       {
@@ -205,13 +205,13 @@ public class WebServer
         wctx.out().println("Wyrd");
 
         payPremium(wctx.out(), ctx, ca);
-        
+
       }
       else
       {
         wctx.setHttpCode(404);
         wctx.out().println("Unknown api: " + api_path);
-      }   
+      }
 
     }
 
@@ -313,7 +313,7 @@ public class WebServer
 
       Offer offer = config.getOffer();
 
-      WalletKeyPair wkp = ChannelCipherUtils.getKeyForChannel(ctx.cid, node.getUserWalletDB()); 
+      WalletKeyPair wkp = ChannelCipherUtils.getKeyForChannel(ctx.cid, node.getUserWalletDB());
 
       OfferAcceptance.Builder oa = OfferAcceptance.newBuilder();
       oa.setForAddressSpec(AddressUtil.getSimpleSpecForKey(wkp));
@@ -345,7 +345,7 @@ public class WebServer
 
       boolean using_chunks = false;
       if (ci.getContentLength() > ci.getContent().size())
-      { // need to use chunks 
+      { // need to use chunks
         using_chunks = true;
 
         int total_chunks = MiscUtils.getNumberOfChunks(ci);
@@ -382,7 +382,7 @@ public class WebServer
           }
           pay_url += "/api/beta/premium_pay";
           wctx.out().println(String.format("<br>Try payments <a href='%s'>pay</a>", pay_url));
-          
+
           return;
         }
       }
@@ -411,7 +411,7 @@ public class WebServer
       {
         for(String v : t.getRequestHeaders().get(k))
         {
-          print_out.println(k + ": " + v); 
+          print_out.println(k + ": " + v);
         }
       }*/
     }

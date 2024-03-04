@@ -17,7 +17,6 @@ import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.CipherUtil;
 import snowblossom.lib.DigestUtil;
-import snowblossom.lib.Globals;
 import snowblossom.lib.ValidationException;
 import snowblossom.node.StatusInterface;
 import snowblossom.proto.WalletDatabase;
@@ -38,7 +37,7 @@ public class BlockGenUtils
     init_settings.setAllowOutsideMessages(true);
     init_settings.setMaxOutsiderMessageSize(8192);
     init_settings.setMaxOutsiderAgeMs( 86400L * 14L * 1000L); //2 weeks
-    
+
     SignedMessage signed_init_settings = ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelSettings(init_settings.build()).build());
 
@@ -60,7 +59,7 @@ public class BlockGenUtils
     ChannelContext ctx = node.getChannelSubscriber().openChannel(chan_id);
 
     ctx.block_ingestor.ingestBlock(blk.build());
-    
+
     return chan_id;
   }
 
@@ -92,7 +91,7 @@ public class BlockGenUtils
     }
 
     header.setContentMerkle( DigestUtil.getMerkleRootForTxList(merkle_list).getBytes());
-    
+
     blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
@@ -120,7 +119,7 @@ public class BlockGenUtils
     ChannelBlock.Builder blk = ChannelBlock.newBuilder();
 
     header.setContentMerkle( ChainHash.ZERO_HASH.getBytes() );
-    
+
     blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
@@ -149,7 +148,7 @@ public class BlockGenUtils
       if (mime != null)
       {
         ci.setMimeType(mime);
-      } 
+      }
       String filename = fd.meta.get("filename");
       if (filename != null)
       {
@@ -176,12 +175,12 @@ public class BlockGenUtils
         chunk_map.put(chunk_no, chunk_data);
         chunk_no++;
       }
-      
+
       ci.setContentHash(DigestUtil.hash(fd.file_data));
 
       ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
 
-      SignedMessage sm = 
+      SignedMessage sm =
         ChannelSigUtil.signMessage( admin.getAddresses(0), admin.getKeys(0),
           SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
 
@@ -192,14 +191,14 @@ public class BlockGenUtils
         ctx.block_ingestor.ingestChunk(
           ContentChunk.newBuilder()
             .setMessageId(sm.getMessageId())
-            .setChunk(c) 
+            .setChunk(c)
             .setChunkData(chunk_map.get(c))
             .build()
           ,true, ci.build());
       }
     }
 
-    // once we are done playing with files, call 
+    // once we are done playing with files, call
     createBlockForContent(ctx, content_list, admin);
 
   }
@@ -227,7 +226,7 @@ public class BlockGenUtils
   /**
    * Creates a block for the files in the directory and broadcasts it to the channel
    * @return true if all files fit in one block, false if there are blocks to write
-   */ 
+   */
   public static boolean createSingleBlockForFiles(FileBlockImportSettings settings, ProcessStatus ps, TreeSet<String> done_set)
     throws ValidationException, java.io.IOException
   {
@@ -261,7 +260,7 @@ public class BlockGenUtils
     }
 
     header.setContentMerkle( DigestUtil.getMerkleRootForTxList(merkle_list).getBytes());
-    
+
     blk.setSignedHeader( ChannelSigUtil.signMessage(settings.signer.getAddresses(0), settings.signer.getKeys(0),
       SignedMessagePayload.newBuilder().setChannelBlockHeader(header.build()).build()));
 
@@ -271,7 +270,7 @@ public class BlockGenUtils
     return all_fit;
   }
 
-  
+
   /**
    * @return true iff we were able to add all files
    */
@@ -323,7 +322,7 @@ public class BlockGenUtils
       if (mime != null)
       {
         ci.setMimeType(mime);
-      } 
+      }
       // Save hash
       // save merkle list
       MessageDigest md_whole = DigestUtil.getMD();
@@ -343,7 +342,7 @@ public class BlockGenUtils
 
         if (settings.encrypt(prefix))
         {
-          
+
           ByteString iv = ChannelCipherUtils.getIv( ci.getEncryptionIvBase(), chunk_no );
           ByteString encrypted_data = CipherUtil.encryptSymmetric(settings.getSymmetricKey(), ByteString.copyFrom(b) , iv);
 
@@ -383,7 +382,7 @@ public class BlockGenUtils
             done_set.add(prefix);
             ps.add("files_preexisting");
 
-            return true; 
+            return true;
           }
         }
       }
@@ -391,7 +390,7 @@ public class BlockGenUtils
 
       ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
 
-      SignedMessage sm = 
+      SignedMessage sm =
         ChannelSigUtil.signMessage( settings.signer.getAddresses(0), settings.signer.getKeys(0),
           SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
 
@@ -416,18 +415,18 @@ public class BlockGenUtils
         {
           ByteString iv = ChannelCipherUtils.getIv( ci.getEncryptionIvBase(), chunk_count );
           ByteString encrypted_data = CipherUtil.encryptSymmetric(settings.getSymmetricKey(), chunk_data , iv);
-          
+
           ByteString part_hash = ByteString.copyFrom(md_part.digest(encrypted_data.toByteArray()));
 
           chunk_data = encrypted_data;
         }
-        
+
 
 
         settings.ctx.block_ingestor.ingestChunk(
           ContentChunk.newBuilder()
             .setMessageId(sm.getMessageId())
-            .setChunk(chunk_count) 
+            .setChunk(chunk_count)
             .setChunkData(chunk_data)
             .build()
           ,true, ci.build());
@@ -444,11 +443,11 @@ public class BlockGenUtils
     return true;
   }
 
-  private static void addIndexFile(FileBlockImportSettings settings, File path, 
+  private static void addIndexFile(FileBlockImportSettings settings, File path,
     String prefix, ChannelBlock.Builder blk, ContentInfo.Builder file_map_ci, ProcessStatus ps)
     throws ValidationException, java.io.IOException
   {
-    
+
     // TODO - do things
     String content = HtmlUtils.getIndex(path);
     byte[] content_bytes = content.getBytes("UTF-8");
@@ -495,7 +494,7 @@ public class BlockGenUtils
         {
           ps.add("index_preexisting");
 
-          return; 
+          return;
         }
       }
     }
@@ -503,7 +502,7 @@ public class BlockGenUtils
 
     ChannelValidation.validateContent(ci.build(), DigestUtil.getMD());
 
-    SignedMessage sm = 
+    SignedMessage sm =
       ChannelSigUtil.signMessage( settings.signer.getAddresses(0), settings.signer.getKeys(0),
         SignedMessagePayload.newBuilder().setContentInfo(ci.build()).build());
 
@@ -525,7 +524,7 @@ public class BlockGenUtils
       settings.ctx.block_ingestor.ingestChunk(
         ContentChunk.newBuilder()
           .setMessageId(sm.getMessageId())
-          .setChunk(chunk_count) 
+          .setChunk(chunk_count)
           .setChunkData(ByteString.copyFrom(b))
           .build()
         ,true, ci.build());
@@ -536,7 +535,7 @@ public class BlockGenUtils
       chunk_count++;
     }
     din.close();
-    
+
   }
   protected static AddressSpecHash getAddr(WalletDatabase db)
   {

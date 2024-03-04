@@ -87,7 +87,7 @@ public class SocksServer
 
         DataInputStream in = new DataInputStream(sock.getInputStream());
         OutputStream out = sock.getOutputStream();
-        
+
         { // auth negotiation
           int ver = readByteAsUnsigned(in);
           int method_count = readByteAsUnsigned(in);
@@ -100,7 +100,7 @@ public class SocksServer
           {
             if (i > 0) sb.append(" ");
             sb.append(String.format("%d", (int)methods[i]));
-            
+
           }
           sb.append(")");
           logger.log(Level.FINE, sb.toString());
@@ -222,7 +222,7 @@ public class SocksServer
       {
         logger.log(Level.FINE, "Sock5 error",t);
       }
-      
+
     }
 
 
@@ -263,7 +263,7 @@ public class SocksServer
       }
 
     }
-    
+
 
   }
 

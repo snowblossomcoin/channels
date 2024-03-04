@@ -1,5 +1,4 @@
 package snowblossom.channels;
-
 public class ChannelGlobals
 {
   public static final String VERSION = "v0.10.0-2024.02.27.00";
@@ -29,7 +28,7 @@ public class ChannelGlobals
   public static final int DHT_CACHE_ELEMENTS = 2500 * 100;
   public static final long DHT_CACHE_EXPIRE = 120000L;
   // TODO - move this way up once we have saving wait for DHT peering to be ready
-  public static final long DHT_SAVE_CACHE_EXPIRE = 120000L; 
+  public static final long DHT_SAVE_CACHE_EXPIRE = 120000L;
   public static final long BLOCK_CHUNK_HEADER_DOWNLOAD_SIZE=100L;
   public static final long CHANNEL_TIP_SEND_MS = 30000L;
   public static final long CONTENT_DATA_BLOCK_SIZE = 1048576L;
@@ -38,7 +37,6 @@ public class ChannelGlobals
   // Special Channels
   public static final String CHAN_NEED_PEERS = "chan:ej08g32tltwx56ayzceuq3afyv2qrs2qhkg4fnn9";
   public static final String CHAN_NEED_PEERS_WARDEN = "snowblossom.channels.warden.NeedPeersWarden";
-
   public static final int MAX_BLOCK_SIZE=3800000;
 }
 
