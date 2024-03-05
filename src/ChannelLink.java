@@ -394,7 +394,14 @@ public class ChannelLink implements StreamObserver<ChannelPeerMessage>
       {
         SignedMessage sm = msg.getContent();
 
-        ctx.block_ingestor.ingestContent(sm);
+        try
+        {
+          ctx.block_ingestor.ingestContent(sm);
+        }
+        catch(ValidationException e)
+        {
+          logger.log(Level.FINE, "Validation exception on content", e);
+        }
       }
       else
       {

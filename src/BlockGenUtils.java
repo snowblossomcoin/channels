@@ -51,6 +51,7 @@ public class BlockGenUtils
     header.setChannelId( chan_id.getBytes());
     header.setPrevBlockHash( ChainHash.ZERO_HASH.getBytes());
     header.setContentMerkle( ChainHash.ZERO_HASH.getBytes());
+    header.setTimestamp(System.currentTimeMillis());
 
     ChannelBlock.Builder blk = ChannelBlock.newBuilder();
     blk.setSignedHeader( ChannelSigUtil.signMessage(admin.getAddresses(0), admin.getKeys(0),
@@ -80,6 +81,7 @@ public class BlockGenUtils
     header.setVersion(1);
     header.setChannelId( ctx.cid.getBytes() );
     header.setPrevBlockHash( prev_sum.getBlockId());
+    header.setTimestamp(System.currentTimeMillis());
 
     ChannelBlock.Builder blk = ChannelBlock.newBuilder();
 
@@ -113,6 +115,7 @@ public class BlockGenUtils
     header.setVersion(1);
     header.setChannelId( ctx.cid.getBytes() );
     header.setPrevBlockHash( prev_sum.getBlockId());
+    header.setTimestamp(System.currentTimeMillis());
 
     header.setSettings(settings);
 
@@ -241,6 +244,7 @@ public class BlockGenUtils
     header.setVersion(1);
     header.setChannelId( settings.ctx.cid.getBytes() );
     header.setPrevBlockHash( prev_sum.getBlockId());
+    header.setTimestamp(System.currentTimeMillis());
 
     ChannelBlock.Builder blk = ChannelBlock.newBuilder();
 

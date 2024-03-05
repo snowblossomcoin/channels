@@ -285,6 +285,12 @@ public class ChannelAccess
 
   }
 
+  public ChainHash getBlockHashAtHeight(long height)
+  {
+    return ctx.db.getBlockHashAtHeight(height);
+  }
+
+
   public void broadcast(SignedMessage sm)
     throws ValidationException
   {

@@ -1,5 +1,6 @@
 package snowblossom.channels.warden;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.Config;
 import duckutil.webserver.DuckWebServer;
@@ -8,6 +9,7 @@ import duckutil.webserver.WebHandler;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import snowblossom.channels.ChannelAccess;
@@ -25,19 +28,47 @@ import snowblossom.channels.proto.ChannelBlockHeader;
 import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.SignedMessage;
 import snowblossom.channels.proto.SignedMessagePayload;
+import snowblossom.client.AuditLog;
+import snowblossom.client.SnowBlossomClient;
+import snowblossom.lib.AddressSpecHash;
+import snowblossom.lib.AddressUtil;
 import snowblossom.lib.ChainHash;
 import snowblossom.lib.DigestUtil;
 import snowblossom.lib.Globals;
 import snowblossom.lib.HexUtil;
+import snowblossom.lib.PowUtil;
+import snowblossom.lib.SnowFieldInfo;
 import snowblossom.lib.ValidationException;
+import snowblossom.proto.Block;
+import snowblossom.proto.BlockHeader;
+import snowblossom.proto.RequestBlock;
+import snowblossom.proto.RequestTransaction;
+import snowblossom.proto.SnowPowProof;
+import snowblossom.proto.Transaction;
 import snowblossom.proto.WalletDatabase;
+import snowblossom.util.proto.AuditLogChain;
+import snowblossom.util.proto.AuditLogItem;
+import snowblossom.util.proto.AuditLogReport;
 
 public class TimestampServiceWarden extends BaseWarden
 {
+  private final static long SNOW_CHECKPOINT_INTERVAL = 1800L * 1000L; // 30 min
+
+  private static final Logger logger = Logger.getLogger("channelnode.warden");
+
+  private SnowBlossomClient snow_client;
+
+  private ImmutableMap<ChainHash, AuditLogItem> saved_audit_items= ImmutableMap.of();
+
+  boolean first_run=true;
+
 
   public TimestampServiceWarden(ChannelAccess channel_access, Config config)
   {
     super(channel_access, config);
+
+    config.require("audit_log_source");
+    config.require("wallet_path");
 
     if (config.isSet("web_port"))
     {
@@ -55,11 +86,26 @@ public class TimestampServiceWarden extends BaseWarden
       }
     }
 
+    try
+    {
+      snow_client = new SnowBlossomClient(config);
+    }
+    catch(Exception e)
+    {
+      throw new RuntimeException(e);
+    }
+
   }
 
   @Override
   public void periodicRun() throws Exception
   {
+
+    if (first_run)
+    {
+      Thread.sleep(8000);
+      first_run=false;
+    }
     /*{
       Random rnd = new Random();
       byte [] b = new byte[32];
@@ -67,6 +113,7 @@ public class TimestampServiceWarden extends BaseWarden
       sendTimestamp( ByteString.copyFrom(b), null);
 
     }*/
+    // Build blocks
     while(true)
     {
       List<SignedMessage> content_list = channel_access.getOutsiderByTime(500, true);
@@ -78,13 +125,91 @@ public class TimestampServiceWarden extends BaseWarden
       }
       if (to_include.size() > 0)
       {
+        logger.info("Saving block with " + to_include.size() + " entries");
         channel_access.createBlockWithContent(to_include);
       }
       else
       {
+        break;
+      }
+    }
+
+    // Save to audit log
+    recordSnowblossom();
+
+  }
+
+  private void recordSnowblossom()
+    throws Exception
+  {
+    AddressSpecHash audit_log_hash = AddressUtil.getHashForAddress(
+      snow_client.getParams().getAddressPrefix(),
+      config.get("audit_log_source"));
+
+    AuditLogReport audit_report = AuditLog.getAuditReport(snow_client, audit_log_hash);
+
+    AuditLogItem highest = null;
+
+    boolean in_mem_pool=false;
+
+    HashMap<ChainHash, AuditLogItem> new_saved_audit_items = new HashMap<>();
+
+    for(AuditLogChain c : audit_report.getChainsList())
+    for(AuditLogItem i : c.getItemsList())
+    {
+
+      if ((highest == null) || (i.getConfirmedHeight() > highest.getConfirmedHeight()))
+      {
+        highest = i;
+      }
+      if (i.getConfirmedHeight() == 0)
+      {
+        in_mem_pool=true;
+      }
+      else
+      {
+        new_saved_audit_items.put(new ChainHash(i.getLogMsg()), i);
+      }
+    }
+
+    // Make this map availible for readers
+    saved_audit_items = ImmutableMap.copyOf(new_saved_audit_items);
+
+    if (channel_access.getHeight() < 1) return;
+
+    ChainHash block_head = new ChainHash(channel_access.getHead().getBlockId());
+
+    if (in_mem_pool)
+    {
+      logger.info("Checkpoint already in snowblossom mempool");
+      return;
+    }
+
+    if (highest != null)
+    {
+      ChainHash saved_block_hash = new ChainHash(highest.getLogMsg());
+
+      // already saved this block
+      if (saved_block_hash.equals( block_head) ) return;
+
+
+      ChannelBlock chan_block = channel_access.getBlockByHash(saved_block_hash);
+      SignedMessagePayload payload = ChannelSigUtil.quickPayload( chan_block.getSignedHeader() );
+
+
+      long saved_block_time = payload.getTimestamp();
+
+      if (saved_block_time + SNOW_CHECKPOINT_INTERVAL > System.currentTimeMillis())
+      {
+        // too early
         return;
       }
     }
+
+
+    AuditLog.recordLog(snow_client, block_head.getBytes());
+    logger.info("Saving block to Snowblossom chain: " + block_head);
+
 
   }
 
@@ -238,6 +363,9 @@ public class TimestampServiceWarden extends BaseWarden
       proof_lst.add(getProofJson(payload_hash.concat(sm.getSignature()), payload_hash, sm.getMessageId(), "transaction outer"));
     }
 
+    long included_block_height = -1L;
+
+    // Content to channel block
     {
       ChannelBlock block = channel_access.getBlockByHash(block_id);
       LinkedList<ChainHash> block_content_lst = new LinkedList<>();
@@ -250,6 +378,7 @@ public class TimestampServiceWarden extends BaseWarden
 
       SignedMessagePayload block_payload = ChannelSigUtil.quickPayload(block.getSignedHeader());
       ChannelBlockHeader header = block_payload.getChannelBlockHeader();
+      included_block_height = header.getBlockHeight();
       ChainHash merkle_root = new ChainHash(header.getContentMerkle());
 
       proof_lst.addAll(getMerkleProof(tx_hash, block_content_lst, merkle_root));
@@ -260,9 +389,140 @@ public class TimestampServiceWarden extends BaseWarden
       proof_lst.add(getProofJson(block_payload_hash.concat(block.getSignedHeader().getSignature()), block_payload_hash, block_id.getBytes(), "block outer"));
 
     }
+
+    // Channel block to Snowblossom transaction
+    {
+      long check_height = included_block_height;
+      ChainHash check_hash = channel_access.getBlockHashAtHeight(check_height);
+      LinkedList<ChainHash> block_path = new LinkedList<>();
+      AuditLogItem found_log = null;
+      while(true)
+      {
+        if (saved_audit_items.containsKey(check_hash))
+        {
+          found_log = saved_audit_items.get(check_hash);
+          // We found a log
+          break;
+
+        }
+
+        check_height++;
+        if (check_height > channel_access.getHeight()) break;
+
+        check_hash = channel_access.getBlockHashAtHeight(check_height);
+        block_path.add(check_hash);
+      }
+
+      if (found_log != null)
+      {
+        // Chain from the block our content was included in
+        // to the block that was saved in snowblossom
+        for(ChainHash block_hash : block_path)
+        {
+          ChannelBlock block = channel_access.getBlockByHash(block_hash);
+          SignedMessagePayload block_payload = ChannelSigUtil.quickPayload(block.getSignedHeader());
+          ChannelBlockHeader header = block_payload.getChannelBlockHeader();
+          ChainHash prev = new ChainHash(header.getPrevBlockHash());
+
+          ByteString block_payload_hash = DigestUtil.hash(block.getSignedHeader().getPayload());
+
+          proof_lst.add(
+            getProofJson(block.getSignedHeader().getPayload(), prev.getBytes(), block_payload_hash, "channel block path payload"));
+
+          proof_lst.add(
+            getProofJson(block_payload_hash.concat(block.getSignedHeader().getSignature()), block_payload_hash, block_hash.getBytes(), "channel block path outer"));
+        }
+
+        // Prove channel block hash in snowblossom transaction
+        {
+          Transaction snow_tx = snow_client.getStub().getTransaction(
+            RequestTransaction.newBuilder().setTxHash( found_log.getTxHash() ).build());
+          //TransactionInner snow_tx_inner = TransactionUtil.getInner(tx);
+
+          proof_lst.add(
+            getProofJson( snow_tx.getInnerData(), found_log.getLogMsg(), found_log.getTxHash(), "snow tx has channel block hash"));
+
+          top.put("snow_transaction", HexUtil.getHexString( found_log.getTxHash()));
+
+        }
+        // prove snow transaction in snow block
+        {
+          ChainHash block_hash = new ChainHash(found_log.getBlockHash());
+
+          top.put("snow_block", block_hash.toString());
+
+          Block snow_blk = snow_client.getStub().getBlock(
+            RequestBlock.newBuilder().setBlockHash(block_hash.getBytes() ).build());
+
+          LinkedList<ChainHash> tx_lst = new LinkedList<>();
+
+          for(Transaction tx : snow_blk.getTransactionsList())
+          {
+            tx_lst.add(new ChainHash(tx.getTxHash()));
+          }
+
+          proof_lst.addAll( getMerkleProof(
+            new ChainHash(found_log.getTxHash()),
+            tx_lst,
+            new ChainHash(snow_blk.getHeader().getMerkleRootHash())));
+
+          proof_lst.addAll(getSnowblossomBlockProof(snow_blk));
+
+        }
+
+
+      }
+      else
+      {
+        top.put("incomplete", true);
+        top.put("incomplete_reason","not in snowblossom");
+      }
+
+
+
+
+    }
     return top;
 
   }
+
+  public List<JSONObject> getSnowblossomBlockProof(Block snow_blk)
+  {
+    BlockHeader header = snow_blk.getHeader();
+    ByteString pass_one = PowUtil.getHeaderBits(header);
+    ByteString context = pass_one;
+
+    LinkedList<JSONObject> out_lst = new LinkedList<>();
+
+    out_lst.add( getProofJson(pass_one, header.getMerkleRootHash(), DigestUtil.hash(pass_one), "snow pow"));
+
+    context = DigestUtil.hash(pass_one);
+
+    LinkedList<SnowPowProof> proofs = new LinkedList<>();
+    proofs.addAll(header.getPowProofList());
+
+    SnowFieldInfo field_info = snow_client.getParams().getSnowFieldInfo(header.getSnowField());
+    long word_count = field_info.getLength() / (long)Globals.SNOW_MERKLE_HASH_LEN;
+
+    for(SnowPowProof proof : proofs)
+    {
+      long idx = proof.getWordIdx();
+      long nx = PowUtil.getNextSnowFieldIndex(context.toByteArray(), word_count);
+      ByteString data = proof.getMerkleComponentList().get(0);
+
+      ByteString next_context = DigestUtil.hash( context.concat(data) );
+
+      out_lst.add( getProofJson( context.concat(data), context, next_context, "snow pow step"));
+
+      context = next_context;
+
+    }
+
+    return out_lst;
+
+
+  }
+
   public List<JSONObject> getMerkleProof(ChainHash tx_hash, List<ChainHash> merkle_list, ChainHash merkle_root)
   {
     ChainHash found_merkle = DigestUtil.getMerkleRootForTxList(merkle_list);
@@ -378,5 +638,6 @@ public class TimestampServiceWarden extends BaseWarden
     return tx;
 
   }
+
 
 }
