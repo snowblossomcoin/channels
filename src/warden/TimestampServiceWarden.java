@@ -49,6 +49,7 @@ import snowblossom.proto.WalletDatabase;
 import snowblossom.util.proto.AuditLogChain;
 import snowblossom.util.proto.AuditLogItem;
 import snowblossom.util.proto.AuditLogReport;
+import duckutil.LRUCache;
 
 public class TimestampServiceWarden extends BaseWarden
 {
@@ -60,7 +61,11 @@ public class TimestampServiceWarden extends BaseWarden
 
   private ImmutableMap<ChainHash, AuditLogItem> saved_audit_items= ImmutableMap.of();
 
-  boolean first_run=true;
+  private boolean first_run=true;
+
+  private LRUCache<ChainHash, Long> known_messages = new LRUCache<>(2500);
+
+
 
 
   public TimestampServiceWarden(ChannelAccess channel_access, Config config)
@@ -216,6 +221,10 @@ public class TimestampServiceWarden extends BaseWarden
   @Override
   public void onContent(ChannelID cid, SignedMessage sm)
   {
+    synchronized(known_messages)
+    {
+      known_messages.put(new ChainHash(sm.getMessageId()),System.currentTimeMillis());
+    }
 
   }
 
@@ -339,12 +348,29 @@ public class TimestampServiceWarden extends BaseWarden
   public JSONObject getProof(ChainHash tx_hash)
   {
     SignedMessage sm = channel_access.getContentByHash(tx_hash);
+    JSONObject top = new JSONObject();
+    if (sm == null)
+    {
+      top.put("incomplete", true);
+      synchronized(known_messages)
+      {
+        if (known_messages.containsKey(tx_hash))
+        {
+          top.put("incomplete_reason","not confirmed on channel yet");
+        }
+        else
+        {
+          top.put("incomplete_reason","token not known");
+        }
+      }
+
+      return top;
+    }
 
     ChainHash block_id = channel_access.getBlockIdForContent(tx_hash);
 
     SignedMessagePayload payload = ChannelSigUtil.quickPayload(sm);
 
-    JSONObject top = new JSONObject();
 
     top.put("transaction_hash", tx_hash.toString());
     top.put("channel_block_hash", block_id.toString());
