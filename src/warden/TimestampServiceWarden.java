@@ -292,6 +292,7 @@ public class TimestampServiceWarden extends BaseWarden
         JSONObject reply = new JSONObject();
         reply.put("input_hash", hash);
         reply.put("transaction_hash", message_hash.toString());
+        reply.put("channel", channel_access.getChannelID().toString());
 
         wctx.setHttpCode(200);
         wctx.setContentType("application/json");
@@ -349,9 +350,10 @@ public class TimestampServiceWarden extends BaseWarden
   {
     SignedMessage sm = channel_access.getContentByHash(tx_hash);
     JSONObject top = new JSONObject();
+    top.put("proof_ver", 1L);
     if (sm == null)
     {
-      top.put("incomplete", true);
+      top.put("complete", false);
       synchronized(known_messages)
       {
         if (known_messages.containsKey(tx_hash))
@@ -480,6 +482,9 @@ public class TimestampServiceWarden extends BaseWarden
           Block snow_blk = snow_client.getStub().getBlock(
             RequestBlock.newBuilder().setBlockHash(block_hash.getBytes() ).build());
 
+          top.put("snow_block_time", snow_blk.getHeader().getTimestamp());
+
+
           LinkedList<ChainHash> tx_lst = new LinkedList<>();
 
           for(Transaction tx : snow_blk.getTransactionsList())
@@ -495,12 +500,13 @@ public class TimestampServiceWarden extends BaseWarden
           proof_lst.addAll(getSnowblossomBlockProof(snow_blk));
 
         }
+        top.put("complete", true);
 
 
       }
       else
       {
-        top.put("incomplete", true);
+        top.put("complete", false);
         top.put("incomplete_reason","not in snowblossom");
       }
 

@@ -303,7 +303,7 @@ public class DHTMaintainer extends PeriodicThread
         .build())
       .build());
 
-    seed_list.add( ChannelPeerInfo.newBuilder()
+    /*seed_list.add( ChannelPeerInfo.newBuilder()
       .setAddressSpecHash(AddressUtil.getHashForAddress(ChannelGlobals.NODE_ADDRESS_STRING,
         "node:ut58s0rxxtyqe8u3c695xt59drxxf7vspz79p60a").getBytes())
       .setVersion("seed")
@@ -317,7 +317,7 @@ public class DHTMaintainer extends PeriodicThread
         .setHost("snowplough.kekku.li")
         .setPort(ChannelGlobals.NETWORK_PORT)
         .build())
-      .build());
+      .build());*/
 
     return seed_list;
 
