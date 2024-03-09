@@ -147,7 +147,7 @@ public class LockPanel extends BasePanel
           if (send_state == 2)
           {
             saved_state.check();
-            if (tx_result.getTxsCount() != 0) throw new RuntimeException("Too many transactions");
+            if (tx_result.getTxsCount() != 1) throw new RuntimeException("Too many transactions");
 
             Transaction tx = tx_result.getTxs(0);
             

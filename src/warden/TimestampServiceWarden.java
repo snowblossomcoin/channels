@@ -22,6 +22,7 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import snowblossom.channels.ChannelAccess;
 import snowblossom.channels.ChannelID;
+import snowblossom.channels.ChannelGlobals;
 import snowblossom.channels.ChannelSigUtil;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockHeader;
@@ -64,6 +65,8 @@ public class TimestampServiceWarden extends BaseWarden
   private boolean first_run=true;
 
   private LRUCache<ChainHash, Long> known_messages = new LRUCache<>(2500);
+
+  private long last_saved_block_time = 0L;
 
 
 
@@ -204,6 +207,8 @@ public class TimestampServiceWarden extends BaseWarden
 
       long saved_block_time = payload.getTimestamp();
 
+      last_saved_block_time = saved_block_time;
+
       if (saved_block_time + SNOW_CHECKPOINT_INTERVAL > System.currentTimeMillis())
       {
         // too early
@@ -279,6 +284,20 @@ public class TimestampServiceWarden extends BaseWarden
       URI uri = wctx.getURI();
       String path = uri.getPath();
 
+      if (path.equals("/api/v1/info"))
+      {
+        JSONObject reply = new JSONObject();
+
+        reply.put("version", ChannelGlobals.VERSION);
+        reply.put("channel", channel_access.getChannelID().toString());
+        long age = System.currentTimeMillis() - last_saved_block_time;
+        reply.put("last_saved_age", age);
+
+        wctx.setHttpCode(200);
+        wctx.setContentType("application/json");
+        wctx.out().println(reply);
+        return;
+      }
       if (path.equals("/api/v1/publish"))
       {
 
@@ -387,8 +406,8 @@ public class TimestampServiceWarden extends BaseWarden
     // data hash to transaction
     {
       ByteString payload_hash = DigestUtil.hash(sm.getPayload());
-      proof_lst.add(getProofJson(sm.getPayload(), tx_ci.getContent(), payload_hash, "transaction payload"));
-      proof_lst.add(getProofJson(payload_hash.concat(sm.getSignature()), payload_hash, sm.getMessageId(), "transaction outer"));
+      proof_lst.add(getProofJson(sm.getPayload(), tx_ci.getContent(), payload_hash, "content payload"));
+      proof_lst.add(getProofJson(payload_hash.concat(sm.getSignature()), payload_hash, sm.getMessageId(), "content outer"));
     }
 
     long included_block_height = -1L;

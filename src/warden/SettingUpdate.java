@@ -33,12 +33,15 @@ public class SettingUpdate extends BaseWarden
     }
 
     // Fireduck key
-    AddressSpecHash node = new AddressSpecHash("node:3usv5u30e0wt7q4r69upxz0z3dc6x7fl0ktncc5c", "node");
+    AddressSpecHash fdk = new AddressSpecHash("node:3usv5u30e0wt7q4r69upxz0z3dc6x7fl0ktncc5c", "node");
+    AddressSpecHash timestamp1 = new AddressSpecHash("node:ajjtxpxlvahj7lj5mm23g8qrsyz5n5trvxxx635n", "node");
 
-    if (!admins.contains(node))
+    if (!admins.contains(timestamp1))
     {
       logger.info("Updating channel settings");
-      channel_access.updateSettings( ChannelSettings.newBuilder().mergeFrom(current_settings).addAdminSignerSpecHashes(node.getBytes()).build() );
+      channel_access.updateSettings( ChannelSettings.newBuilder().mergeFrom(current_settings).addAdminSignerSpecHashes(timestamp1.getBytes()).build() );
+
+      return;
     }
 
     if (current_settings.getAllowOutsideMessages() == true)
@@ -46,8 +49,6 @@ public class SettingUpdate extends BaseWarden
       channel_access.updateSettings( ChannelSettings.newBuilder().mergeFrom(current_settings).setAllowOutsideMessages(false).build());
 
     }
-
-
 
 
 

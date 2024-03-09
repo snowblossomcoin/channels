@@ -27,6 +27,10 @@ public class WardenSetup
       if (stok.hasMoreTokens())
       {
         String config_path = stok.nextToken();
+        if (node.getConfig().isSet("warden_config_dir"))
+        {
+          config_path = node.getConfig().get("warden_config_dir") + "/" + config_path;
+        }
         config = new ConfigFile(config_path);
       }
 
