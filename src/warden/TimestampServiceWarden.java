@@ -3,6 +3,7 @@ package snowblossom.channels.warden;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import duckutil.Config;
+import duckutil.LRUCache;
 import duckutil.webserver.DuckWebServer;
 import duckutil.webserver.WebContext;
 import duckutil.webserver.WebHandler;
@@ -21,8 +22,8 @@ import java.util.logging.Logger;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import snowblossom.channels.ChannelAccess;
-import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelGlobals;
+import snowblossom.channels.ChannelID;
 import snowblossom.channels.ChannelSigUtil;
 import snowblossom.channels.proto.ChannelBlock;
 import snowblossom.channels.proto.ChannelBlockHeader;
@@ -50,7 +51,6 @@ import snowblossom.proto.WalletDatabase;
 import snowblossom.util.proto.AuditLogChain;
 import snowblossom.util.proto.AuditLogItem;
 import snowblossom.util.proto.AuditLogReport;
-import duckutil.LRUCache;
 
 public class TimestampServiceWarden extends BaseWarden
 {
@@ -66,7 +66,10 @@ public class TimestampServiceWarden extends BaseWarden
 
   private LRUCache<ChainHash, Long> known_messages = new LRUCache<>(2500);
 
-  private long last_saved_block_time = 0L;
+  private long snow_last_saved_block_time = 0L;
+
+  private ChainHash snow_last_save = null;
+  private ChainHash snow_mempool = null;
 
 
 
@@ -103,6 +106,12 @@ public class TimestampServiceWarden extends BaseWarden
       throw new RuntimeException(e);
     }
 
+  }
+
+  @Override
+  public long getPeriod()
+  {
+    return 30L * 1000L;
   }
 
   @Override
@@ -162,6 +171,9 @@ public class TimestampServiceWarden extends BaseWarden
 
     HashMap<ChainHash, AuditLogItem> new_saved_audit_items = new HashMap<>();
 
+    AuditLogItem mempool_item = null;
+
+
     for(AuditLogChain c : audit_report.getChainsList())
     for(AuditLogItem i : c.getItemsList())
     {
@@ -173,11 +185,29 @@ public class TimestampServiceWarden extends BaseWarden
       if (i.getConfirmedHeight() == 0)
       {
         in_mem_pool=true;
+        mempool_item = i;
       }
       else
       {
         new_saved_audit_items.put(new ChainHash(i.getLogMsg()), i);
       }
+    }
+
+    if (highest != null)
+    {
+      snow_last_save = new ChainHash(highest.getTxHash());
+    }
+    else
+    {
+      snow_last_save = null; //not sure how this would happen
+    }
+    if (mempool_item != null)
+    {
+      snow_mempool = new ChainHash(mempool_item.getTxHash());
+    }
+    else
+    {
+      snow_mempool = null;
     }
 
     // Make this map availible for readers
@@ -198,7 +228,7 @@ public class TimestampServiceWarden extends BaseWarden
       ChainHash saved_block_hash = new ChainHash(highest.getLogMsg());
 
       // already saved this block
-      if (saved_block_hash.equals( block_head) ) return;
+      if (saved_block_hash.equals( block_head ) ) return;
 
 
       ChannelBlock chan_block = channel_access.getBlockByHash(saved_block_hash);
@@ -207,7 +237,7 @@ public class TimestampServiceWarden extends BaseWarden
 
       long saved_block_time = payload.getTimestamp();
 
-      last_saved_block_time = saved_block_time;
+      snow_last_saved_block_time = saved_block_time;
 
       if (saved_block_time + SNOW_CHECKPOINT_INTERVAL > System.currentTimeMillis())
       {
@@ -216,10 +246,8 @@ public class TimestampServiceWarden extends BaseWarden
       }
     }
 
-
-    AuditLog.recordLog(snow_client, block_head.getBytes());
+    snow_mempool = new ChainHash(AuditLog.recordLog(snow_client, block_head.getBytes()));
     logger.info("Saving block to Snowblossom chain: " + block_head);
-
 
   }
 
@@ -290,8 +318,31 @@ public class TimestampServiceWarden extends BaseWarden
 
         reply.put("version", ChannelGlobals.VERSION);
         reply.put("channel", channel_access.getChannelID().toString());
-        long age = System.currentTimeMillis() - last_saved_block_time;
-        reply.put("last_saved_age", age);
+        reply.put("channel_height", channel_access.getHeight());
+
+        if (snow_last_saved_block_time > 0L)
+        {
+          long age = System.currentTimeMillis() - snow_last_saved_block_time;
+          reply.put("snow_last_saved_age", age);
+        }
+
+        int outstanding = channel_access.getOutsiderByTime(500, true).size();
+        reply.put("records_to_include", outstanding);
+
+        {
+          ChainHash ch = snow_last_save;
+          if (ch != null)
+          {
+            reply.put("snowblossom_confirmed_tx", ch.toString());
+          }
+        }
+        {
+          ChainHash ch = snow_mempool;
+          if (ch != null)
+          {
+            reply.put("snowblossom_mempool_tx", ch.toString());
+          }
+        }
 
         wctx.setHttpCode(200);
         wctx.setContentType("application/json");
@@ -395,6 +446,7 @@ public class TimestampServiceWarden extends BaseWarden
 
     top.put("transaction_hash", tx_hash.toString());
     top.put("channel_block_hash", block_id.toString());
+    top.put("channel_block_time", getBlockTime(block_id));
 
     ContentInfo tx_ci = payload.getContentInfo();
 
@@ -534,6 +586,14 @@ public class TimestampServiceWarden extends BaseWarden
 
     }
     return top;
+
+  }
+
+  public long getBlockTime(ChainHash block_id)
+  {
+    ChannelBlock blk = channel_access.getBlockByHash(block_id);
+
+    return ChannelSigUtil.quickPayload(blk.getSignedHeader()).getTimestamp();
 
   }
 
