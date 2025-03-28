@@ -246,7 +246,7 @@ public class TimestampServiceWarden extends BaseWarden
       }
     }
 
-    snow_mempool = new ChainHash(AuditLog.recordLog(snow_client, block_head.getBytes()));
+    snow_mempool = AuditLog.recordLog(snow_client, block_head.getBytes());
     logger.info("Saving block to Snowblossom chain: " + block_head);
 
   }

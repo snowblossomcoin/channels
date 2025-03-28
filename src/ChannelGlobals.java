@@ -1,7 +1,7 @@
 package snowblossom.channels;
 public class ChannelGlobals
 {
-  public static final String VERSION = "v0.12.0-2024.08.07.00";
+  public static final String VERSION = "v0.13.0-2025.03.28.00";
   public static final String USER_ADDRESS_STRING="user";
   public static final String NODE_ADDRESS_STRING="node";
   public static final String CHANNEL_ADDRESS_STRING="chan";
