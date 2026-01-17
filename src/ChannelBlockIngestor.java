@@ -18,6 +18,7 @@ import snowblossom.channels.proto.ChannelPeerMessage;
 import snowblossom.channels.proto.ContentChunk;
 import snowblossom.channels.proto.ContentInfo;
 import snowblossom.channels.proto.SignedMessage;
+import snowblossom.channels.proto.SignedMessagePayload;
 import snowblossom.lib.*;
 import snowblossom.lib.trie.ByteStringComparator;
 import snowblossom.lib.trie.HashUtils;
@@ -70,8 +71,12 @@ public class ChannelBlockIngestor
     {
       ChannelValidation.checkBlockBasics(cid, blk, true);
 
-      ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader()).getChannelBlockHeader();
-      if (header == null) throw new ValidationException("Header is null");
+      SignedMessagePayload smp = ChannelSigUtil.validateSignedMessage(blk.getSignedHeader());
+      if (!smp.hasChannelBlockHeader())
+      {
+        throw new ValidationException("Header is null");
+      }
+      ChannelBlockHeader header = smp.getChannelBlockHeader();
 
       blockhash = new ChainHash(blk.getSignedHeader().getMessageId());
 

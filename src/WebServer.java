@@ -337,7 +337,7 @@ public class WebServer
     private void sendFile(WebContext wctx, ChannelContext ctx, ChainHash content_id, ContentInfo ci, List<String> channel_base_tokens)
       throws IOException, ValidationException
     {
-      if (ci.getMimeType() != null)
+      //if (ci.getMimeType() != null)
       {
         wctx.setContentType( ci.getMimeType() );
       }

@@ -24,8 +24,8 @@ public class NeedPeersWarden extends BaseWarden
   public void onContent(ChannelID cid, SignedMessage sm)
   {
     ContentInfo ci = ChannelSigUtil.quickPayload(sm).getContentInfo();
+    if (ci.hasParentRef()) return;
     ContentReference cr = ci.getParentRef();
-    if (cr == null) return;
 
     ChannelID new_cid = new ChannelID(cr.getChannelId());
     logger.info("Joining channel from need peers channel: " + new_cid);

@@ -1,5 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
+
+load("@com_google_protobuf//bazel:proto_library.bzl", "proto_library")
+load("@io_grpc_grpc_java//:java_grpc_library.bzl", "java_grpc_library")
+load("@com_google_protobuf//bazel:java_proto_library.bzl", "java_proto_library")
+
 java_library(
   name = "channelslib",
   srcs = glob(["src/**/*.java", "src/*.java"]),
@@ -20,7 +25,13 @@ java_library(
     "@maven//:org_bitlet_weupnp",
     "@maven//:io_netty_netty_handler",
     "@com_google_protobuf//:protobuf_java_util",
-    ":protolib",
+    "@maven//:com_google_protobuf_protobuf_java",
+    "@snowblossom//protolib:snow_java_proto",
+    "@maven//:com_google_guava_guava",
+    "@maven//:io_grpc_grpc_stub",
+    "@maven//:io_grpc_grpc_api",
+    ":chan_grpc_lib",
+    ":chan_java_proto",
   ],
 )
 
@@ -40,7 +51,6 @@ java_binary(
   ],
 )
 
-
 java_binary(
   name = "ChannelIceLeaf",
   main_class = "snowblossom.channels.iceleaf.ChannelIceLeaf",
@@ -49,25 +59,25 @@ java_binary(
     ":channelslib",
   ]
 )
- 
-
 
 proto_library(
-  name = "protosrc",
+  name = "chan_proto",
   srcs = glob(["protolib/*.proto", "protolib/**/*.proto"]),
   visibility = [
     "//visibility:public",
   ],
-  deps = ["@snowblossom//protolib:protosrc"]
+  deps = ["@snowblossom//protolib:snow_proto"]
 )
 
-
-load("@build_stack_rules_proto//java:java_grpc_library.bzl", "java_grpc_library")
-
+java_proto_library(
+  name = "chan_java_proto",
+  deps = [":chan_proto"],
+)
 
 java_grpc_library(
-  name = "protolib",
-  deps = [":protosrc"],
+  name = "chan_grpc_lib",
+  srcs = [":chan_proto"],
+  deps = [":chan_java_proto"],
 )
 
 java_test(
@@ -103,8 +113,12 @@ java_test(
       "@duckutil//:duckutil_lib",
       "@io_grpc_grpc_java//netty",
       "@maven//:io_netty_netty_handler",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@snowblossom//protolib:snow_java_proto",
+      "@maven//:io_grpc_grpc_api",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
+      ":chan_grpc_lib",
     ],
 )
 
@@ -117,8 +131,10 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@snowblossom//protolib:snow_java_proto",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -131,8 +147,9 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -146,7 +163,7 @@ java_test(
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -160,14 +177,13 @@ java_test(
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
       "@com_google_protobuf//:protobuf_java_util",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@snowblossom//protolib:snow_java_proto",
+      "@maven//:com_google_guava_guava",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
-
-
-
-
 
 java_test(
     name = "channel_peer_test",
@@ -178,8 +194,10 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@snowblossom//protolib:snow_java_proto",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -192,8 +210,10 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@snowblossom//protolib:snow_java_proto",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -206,12 +226,12 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@snowblossom//protolib:snow_java_proto",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
-
-
 
 java_test(
     name = "channel_test",
@@ -222,8 +242,9 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -236,8 +257,10 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
+      "@snowblossom//protolib:snow_java_proto",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -250,8 +273,9 @@ java_test(
       "@snowblossom//lib:lib",
       "@snowblossom//client:client",
       "@duckutil//:duckutil_lib",
+      "@maven//:com_google_protobuf_protobuf_java",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 java_test(
@@ -261,8 +285,9 @@ java_test(
     size="medium",
     deps = [
       "@snowblossom//lib:lib",
+      "@maven//:com_google_protobuf_protobuf_java",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 
@@ -274,7 +299,7 @@ java_test(
     deps = [
       "@snowblossom//lib:lib",
       ":channelslib",
-      ":protolib",
+      ":chan_java_proto",
     ],
 )
 

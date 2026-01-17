@@ -28,8 +28,12 @@ public class ChannelValidation
   public static ChannelBlockHeader checkBlockHeaderBasics(ChannelID chan_id, SignedMessage signed_header)
     throws ValidationException
   {
-    ChannelBlockHeader header = ChannelSigUtil.validateSignedMessage(signed_header).getChannelBlockHeader();
-    if (header == null) throw new ValidationException("No header in signed header");
+    SignedMessagePayload smp = ChannelSigUtil.validateSignedMessage(signed_header);
+    if (!smp.hasChannelBlockHeader())
+    {
+      throw new ValidationException("No header in signed header");
+    }
+    ChannelBlockHeader header = smp.getChannelBlockHeader();
     if (!chan_id.equals(header.getChannelId()))
     {
       throw new ValidationException("Block on wrong channel");
@@ -37,8 +41,13 @@ public class ChannelValidation
 
     if (header.getBlockHeight() == 0)
     {
-      ChannelSettings settings = ChannelSigUtil.validateSignedMessage(header.getInitialSettings()).getChannelSettings();
-      if (settings == null) throw new ValidationException("Missing initial settings on block zero");
+      SignedMessagePayload smp2 = ChannelSigUtil.validateSignedMessage(header.getInitialSettings());  
+      if (!smp2.hasChannelSettings())
+      {
+        throw new ValidationException("Missing initial settings on block zero");
+      }
+      ChannelSettings settings = smp2.getChannelSettings();
+      
 
       AddressSpecHash channel_id = ChannelSigUtil.getChannelId( new ChainHash(header.getInitialSettings().getMessageId() ));
       if (!channel_id.equals(header.getChannelId()))
